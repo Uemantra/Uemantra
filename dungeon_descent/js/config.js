@@ -14,6 +14,7 @@ const C = {
   DW: 7, DH: 5,
   MIN_ROOMS: 10,
   MAX_ROOMS: 16,
+  MAX_FLOORS: 5,
 
   // Player
   P_SPEED: 90,

@@ -43,6 +43,10 @@ const Game = {
   // Room clear flash
   clearFlash: 0,
 
+  // Floor history (for pit falls back to previous floor)
+  floorHistory: [],
+  floorFlash: 1,
+
   // Stats
   totalRooms: 0,
   clearedRooms: 0,
@@ -76,6 +80,8 @@ const Game = {
   _startGame() {
     rngSeed(Date.now());
     this.floor = 1;
+    this.floorHistory = [];
+    this.floorFlash = 1;
     this.player = new Player();
     this._loadDungeon();
     this.state = STATE.PLAYING;
@@ -128,6 +134,81 @@ const Game = {
     }
   },
 
+  _ascendFloor() {
+    this.floorHistory.push({
+      dungeon: this.dungeon,
+      floor: this.floor,
+      clearedRooms: this.clearedRooms,
+      totalRooms: this.totalRooms,
+    });
+    this.floor++;
+    this.projectiles = [];
+    this.items = [];
+    this.boss = null;
+    Particles.clear();
+
+    this.dungeon = new Dungeon(this.floor);
+    const room = this.dungeon.startRoom;
+    this.dungeon.currentRoom = room;
+    this.player.x = C.VW / 2;
+    this.player.y = C.VH / 2;
+    this.totalRooms = Object.values(this.dungeon.rooms).filter(r => r.type !== RTYPE.START).length;
+    this.clearedRooms = 0;
+    this._populateRoom(room);
+
+    this.floorFlash = 0;
+    Audio.play('stair_up');
+  },
+
+  _descendFloor() {
+    const saved = this.floorHistory.pop();
+    if (!saved) return;
+
+    this.floor = saved.floor;
+    this.dungeon = saved.dungeon;
+    this.clearedRooms = saved.clearedRooms;
+    this.totalRooms = saved.totalRooms;
+    this.projectiles = [];
+    this.items = [];
+    this.boss = null;
+    Particles.clear();
+
+    // Land in a random cleared+visited room from the restored floor
+    const rooms = Object.values(saved.dungeon.rooms).filter(r => r.visited && r.cleared);
+    const landRoom = rooms.length > 0 ? rPick(rooms) : saved.dungeon.startRoom;
+    saved.dungeon.currentRoom = landRoom;
+
+    const pts = landRoom.spawnPoints();
+    const pt = pts.length > 0 ? pts[rInt(0, Math.min(pts.length - 1, 4))] : null;
+    this.player.x = pt ? pt.x : C.VW / 2;
+    this.player.y = pt ? pt.y : C.VH / 2;
+    this.enemies = landRoom.enemies.filter(e => !e.dead);
+
+    this.floorFlash = 0;
+    CameraShake.shake(4, 0.3);
+    Audio.play('pit_fall');
+  },
+
+  _checkStairs() {
+    const room = this.dungeon.currentRoom;
+    if (!room.hasStairs) return;
+    const tx = Math.floor(this.player.x / C.TS);
+    const ty = Math.floor(this.player.y / C.TS);
+    if (isStairs(room.getTile(tx, ty)) && (Input.just('KeyE') || Input.just('Enter'))) {
+      this._ascendFloor();
+    }
+  },
+
+  _checkPit() {
+    if (!this.floorHistory.length || this.floorFlash < 1) return;
+    const room = this.dungeon.currentRoom;
+    const tx = Math.floor(this.player.x / C.TS);
+    const ty = Math.floor(this.player.y / C.TS);
+    if (isPit(room.getTile(tx, ty))) {
+      this._descendFloor();
+    }
+  },
+
   _enterRoom(room, fromDir) {
     if (!room) return;
     const prev = this.dungeon.currentRoom;
@@ -153,7 +234,7 @@ const Game = {
   _checkDoorTransition() {
     const player = this.player;
     const room = this.dungeon.currentRoom;
-    const margin = 4;
+    const margin = 8;
 
     const tryEnter = (dir, nextRoom, condition) => {
       if (!nextRoom || !condition) return;
@@ -217,18 +298,11 @@ const Game = {
       }
     }
 
-    // Boss victory!
+    // Boss cleared — show upgrade choices (victory/stairs handled in _selectUpgrade)
     if (room.type === RTYPE.BOSS) {
       const boss = this.enemies.find(e => e instanceof Boss);
       if (boss && boss.dead) {
-        setTimeout(() => {
-          this._showUpgrades(4); // 4 choices on boss kill!
-          setTimeout(() => {
-            if (this.state === STATE.PLAYING) {
-              this.state = STATE.VICTORY;
-            }
-          }, 500);
-        }, 1500);
+        setTimeout(() => { this._showUpgrades(4); }, 1500);
       }
     }
   },
@@ -248,10 +322,14 @@ const Game = {
     Particles.magic(this.player.x, this.player.y);
     Audio.play('upgrade');
 
-    // After boss upgrade, go to next floor
     const room = this.dungeon.currentRoom;
     if (room && room.type === RTYPE.BOSS) {
-      this.state = STATE.VICTORY;
+      if (this.floor >= C.MAX_FLOORS) {
+        this.state = STATE.VICTORY;
+      } else {
+        room.placeStairs();
+        this.state = STATE.PLAYING;
+      }
     } else {
       this.state = STATE.PLAYING;
     }
@@ -488,6 +566,13 @@ const Game = {
     // Door transition
     this._checkDoorTransition();
 
+    // Stair / pit transitions
+    this._checkStairs();
+    this._checkPit();
+
+    // Floor flash animation
+    if (this.floorFlash < 1) this.floorFlash = Math.min(1, this.floorFlash + dt * 2.5);
+
     // Keyboard input for upgrades
     if (Input.wantPause()) {
       this.state = STATE.PAUSED;
@@ -508,6 +593,15 @@ const Game = {
         if (d < 20) {
           drawTextShadow(ctx, '[E] Open', room.chest.x + 6, room.chest.y - 4, 4, '#ffffff', '#000');
         }
+      }
+    }
+
+    // Draw stair tile interaction hint
+    if (room.hasStairs) {
+      const sx = Math.floor(C.RW / 2) * C.TS + C.TS / 2;
+      const sy = Math.floor(C.RH / 2) * C.TS + C.TS / 2;
+      if (dist(this.player.x, this.player.y, sx, sy) < 28) {
+        drawTextShadow(ctx, '[E] Ascend', sx, sy - 14, 4, '#80c0ff', '#000');
       }
     }
 
@@ -588,6 +682,14 @@ const Game = {
       if (enemiesLeft > 0) {
         drawTextShadow(ctx, `${enemiesLeft} enemy${enemiesLeft>1?'s':''} remaining`, C.VW/2, 8, 5, C.COL.UI_DIM, '#000');
       }
+    }
+
+    // Floor transition flash
+    if (this.floorFlash < 1) {
+      ctx.globalAlpha = (1 - this.floorFlash) * 0.75;
+      ctx.fillStyle = '#b8d8ff';
+      ctx.fillRect(0, 0, C.VW, C.VH);
+      ctx.globalAlpha = 1;
     }
 
     // HUD

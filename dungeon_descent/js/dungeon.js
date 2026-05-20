@@ -15,6 +15,8 @@ const TILE = {
   DOOR_S_O: 15,
   DOOR_E_O: 16,
   DOOR_W_O: 17,
+  STAIRS:   18,
+  PIT:      19,
 };
 
 const RTYPE = {
@@ -40,6 +42,9 @@ function isOpenDoor(t) {
          t === TILE.DOOR_E_O || t === TILE.DOOR_W_O;
 }
 
+function isStairs(t) { return t === TILE.STAIRS; }
+function isPit(t)    { return t === TILE.PIT; }
+
 // ------- Room -------
 class Room {
   constructor(gx, gy, type) {
@@ -53,6 +58,7 @@ class Room {
     this.items = [];
     this.chest = null;
     this.chestOpened = false;
+    this.hasStairs = false;
     this.shopItems = [];
     this._generate();
   }
@@ -174,6 +180,25 @@ class Room {
     const cx = Math.floor(C.RW/2), cy = Math.floor(C.RH/2);
     return { x: cx*C.TS+4, y: cy*C.TS+2 };
   }
+
+  placeStairs() {
+    const cx = Math.floor(C.RW / 2);
+    const cy = Math.floor(C.RH / 2);
+    this.tiles[cy][cx] = TILE.STAIRS;
+    this.hasStairs = true;
+  }
+
+  placePits(count) {
+    const candidates = [];
+    for (let y = 2; y < C.RH - 2; y++) {
+      for (let x = 2; x < C.RW - 2; x++) {
+        const t = this.tiles[y][x];
+        if (t === TILE.FLOOR || t === TILE.FLOOR2) candidates.push({x, y});
+      }
+    }
+    const chosen = rShuffle(candidates).slice(0, count);
+    for (const {x, y} of chosen) this.tiles[y][x] = TILE.PIT;
+  }
 }
 
 // ------- Dungeon -------
@@ -254,6 +279,16 @@ class Dungeon {
       room.connections.n=n; room.connections.s=s;
       room.connections.e=e; room.connections.w=w;
       room.setDoors(!!n,!!s,!!e,!!w);
+    }
+
+    // Place pits in some normal rooms on floors 2+ (so falling takes you back down)
+    if (this.floor >= 2) {
+      for (const k of Object.keys(this.rooms)) {
+        const room = this.rooms[k];
+        if (room.type === RTYPE.NORMAL && rBool(0.45)) {
+          room.placePits(rInt(1, 3));
+        }
+      }
     }
 
     // Start room pre-cleared

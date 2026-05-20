@@ -90,6 +90,40 @@ function renderRoom(ctx, room) {
           ctx.fillRect(px2, py2, 2, TS);
           ctx.fillRect(px2+TS-2, py2, 2, TS);
           break;
+
+        case TILE.STAIRS:
+          // Floor base
+          ctx.fillStyle = C.COL.FLOOR;
+          ctx.fillRect(px2, py2, TS, TS);
+          // Three ascending steps
+          ctx.fillStyle = '#304858';
+          ctx.fillRect(px2+2, py2+TS-5, TS-4, 2);
+          ctx.fillStyle = '#406878';
+          ctx.fillRect(px2+3, py2+TS-8, TS-6, 2);
+          ctx.fillStyle = '#5090b0';
+          ctx.fillRect(px2+4, py2+TS-11, TS-8, 2);
+          // Glow accent at top step
+          ctx.fillStyle = 'rgba(128,200,255,0.55)';
+          ctx.fillRect(px2+4, py2+TS-11, TS-8, 1);
+          // Up-arrow hint dot
+          ctx.fillStyle = 'rgba(128,200,255,0.4)';
+          ctx.fillRect(px2+6, py2+3, 4, 3);
+          break;
+
+        case TILE.PIT:
+          // Dark void centre
+          ctx.fillStyle = '#06040e';
+          ctx.fillRect(px2, py2, TS, TS);
+          // Crumbling edge
+          ctx.fillStyle = '#2e1a0a';
+          ctx.fillRect(px2,        py2,        TS, 2);
+          ctx.fillRect(px2,        py2+TS-2,   TS, 2);
+          ctx.fillRect(px2,        py2,        2,  TS);
+          ctx.fillRect(px2+TS-2,   py2,        2,  TS);
+          // Inner shadow
+          ctx.fillStyle = 'rgba(0,0,0,0.55)';
+          ctx.fillRect(px2+2, py2+2, TS-4, TS-4);
+          break;
       }
     }
   }
@@ -138,8 +172,8 @@ function renderHUD(ctx, player, dungeon, floor, roomNum, totalRooms) {
   drawText(ctx, '◎', cdX+44, cdY-6, 5, dc > 0 ? '#205060' : '#40c0e0');
 
   // === Floor / room info ===
-  drawText(ctx, `Floor ${floor}`, C.VW - 4, 4, 5, C.COL.UI_DIM, 'right');
-  drawText(ctx, `${roomNum}/${totalRooms}`, C.VW - 4, 11, 5, C.COL.UI_DIM, 'right');
+  drawText(ctx, `Floor ${floor}/${C.MAX_FLOORS}`, C.VW - 4, 4, 5, C.COL.UI_DIM, 'right');
+  drawText(ctx, `${roomNum}/${totalRooms} rms`, C.VW - 4, 11, 4, C.COL.UI_DIM, 'right');
 
   // === Upgrades (small icons top right area) ===
   let uIdx = 0;
@@ -162,11 +196,11 @@ function renderHUD(ctx, player, dungeon, floor, roomNum, totalRooms) {
   }
 
   // === Minimap ===
-  renderMinimap(ctx, dungeon, C.VW - 4, C.VH - 4);
+  renderMinimap(ctx, dungeon, floor, C.VW - 4, C.VH - 4);
 }
 
-function renderMinimap(ctx, dungeon, rx, ry) {
-  const CELL = 5, PAD = 2;
+function renderMinimap(ctx, dungeon, floor, rx, ry) {
+  const CELL = 7, GAP = 1, PAD = 3;
   const allRooms = Object.values(dungeon.rooms);
   if (!allRooms.length) return;
 
@@ -175,39 +209,93 @@ function renderMinimap(ctx, dungeon, rx, ry) {
   const maxGX = Math.max(...allRooms.map(r => r.gx));
   const maxGY = Math.max(...allRooms.map(r => r.gy));
 
-  const mapW = (maxGX - minGX + 1) * (CELL + 1) + PAD * 2;
-  const mapH = (maxGY - minGY + 1) * (CELL + 1) + PAD * 2;
+  const cols = maxGX - minGX + 1;
+  const rows = maxGY - minGY + 1;
+  const mapW = cols * (CELL + GAP) - GAP + PAD * 2;
+  const mapH = rows * (CELL + GAP) - GAP + PAD * 2 + 8;
   const mapX = rx - mapW, mapY = ry - mapH;
 
-  // Background
-  ctx.fillStyle = 'rgba(0,0,0,0.6)';
+  // Background + border
+  ctx.fillStyle = 'rgba(4,2,12,0.82)';
   ctx.fillRect(mapX, mapY, mapW, mapH);
   ctx.strokeStyle = C.COL.UI_BORDER;
   ctx.lineWidth = 0.5;
   ctx.strokeRect(mapX, mapY, mapW, mapH);
 
+  // Floor label
+  drawText(ctx, `B${floor}/${C.MAX_FLOORS}`, mapX + PAD, mapY + 2, 4, C.COL.UI_DIM);
+
+  const contentY = mapY + PAD + 8;
+  const cellX = (r) => mapX + PAD + (r.gx - minGX) * (CELL + GAP);
+  const cellY = (r) => contentY + (r.gy - minGY) * (CELL + GAP);
+
+  // Pass 1: faint outlines for unvisited rooms adjacent to visited ones
+  for (const room of allRooms) {
+    if (room.visited) continue;
+    const hasNeighbor = Object.values(room.connections).some(n => n && n.visited);
+    if (!hasNeighbor) continue;
+    ctx.strokeStyle = 'rgba(80,60,110,0.45)';
+    ctx.lineWidth = 0.5;
+    ctx.strokeRect(cellX(room), cellY(room), CELL, CELL);
+  }
+
+  // Pass 2: visited rooms
   for (const room of allRooms) {
     if (!room.visited) continue;
-    const cx = mapX + PAD + (room.gx - minGX) * (CELL + 1);
-    const cy = mapY + PAD + (room.gy - minGY) * (CELL + 1);
+    const cx = cellX(room), cy = cellY(room);
+    const isCurrent = room === dungeon.currentRoom;
 
+    // Base fill
     let col;
-    if (room === dungeon.currentRoom)   col = '#ffffff';
-    else if (!room.cleared)              col = room.type === RTYPE.BOSS ? '#ff4040' : '#606070';
-    else if (room.type === RTYPE.BOSS)   col = '#804080';
-    else if (room.type === RTYPE.TREASURE) col = '#80a030';
-    else if (room.type === RTYPE.SHOP)  col = '#408060';
-    else col = '#384048';
+    if      (isCurrent)                          col = '#3a5060';
+    else if (room.type === RTYPE.BOSS && !room.cleared) col = '#4a1020';
+    else if (room.type === RTYPE.BOSS)           col = '#2e1530';
+    else if (room.type === RTYPE.TREASURE && !room.cleared) col = '#38400a';
+    else if (room.type === RTYPE.TREASURE)       col = '#252c08';
+    else if (room.type === RTYPE.SHOP)           col = '#0e2e20';
+    else if (room.type === RTYPE.START)          col = '#182535';
+    else if (!room.cleared)                      col = '#28263e';
+    else                                         col = '#181a24';
 
     ctx.fillStyle = col;
     ctx.fillRect(cx, cy, CELL, CELL);
 
-    // Connection lines
-    ctx.fillStyle = 'rgba(100,80,120,0.8)';
+    // Type corner dot (top-right, 2×2)
+    if (room.type === RTYPE.BOSS) {
+      ctx.fillStyle = room.cleared ? '#804080' : '#ff2840';
+      ctx.fillRect(cx + CELL - 2, cy, 2, 2);
+    } else if (room.type === RTYPE.TREASURE) {
+      ctx.fillStyle = '#f0c030';
+      ctx.fillRect(cx + CELL - 2, cy, 2, 2);
+    } else if (room.type === RTYPE.SHOP) {
+      ctx.fillStyle = '#40e090';
+      ctx.fillRect(cx + CELL - 2, cy, 2, 2);
+    } else if (room.type === RTYPE.START) {
+      ctx.fillStyle = '#80c0ff';
+      ctx.fillRect(cx + CELL - 2, cy, 2, 2);
+    }
+
+    // Stairs dot (bottom-left, 2×2)
+    if (room.hasStairs) {
+      ctx.fillStyle = '#80c0ff';
+      ctx.fillRect(cx, cy + CELL - 2, 2, 2);
+    }
+
+    // Current room: white border + yellow player dot
+    if (isCurrent) {
+      ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+      ctx.lineWidth = 0.5;
+      ctx.strokeRect(cx, cy, CELL, CELL);
+      ctx.fillStyle = '#ffff50';
+      ctx.fillRect(cx + 2, cy + 2, 3, 3);
+    }
+
+    // Connection corridors to visited neighbours
+    ctx.fillStyle = 'rgba(110,90,140,0.75)';
     if (room.connections.e && room.connections.e.visited)
-      ctx.fillRect(cx + CELL, cy + 1, 1, CELL - 2);
+      ctx.fillRect(cx + CELL, cy + 2, GAP, CELL - 4);
     if (room.connections.s && room.connections.s.visited)
-      ctx.fillRect(cx + 1, cy + CELL, CELL - 2, 1);
+      ctx.fillRect(cx + 2, cy + CELL, CELL - 4, GAP);
   }
 }
 
@@ -367,7 +455,7 @@ function renderVictory(ctx, player, floor, anim) {
 
   const pulse = Math.sin(anim * 4) * 2;
   drawTextShadow(ctx, '✦ VICTORY! ✦', C.VW/2, 55 + pulse, 14, C.COL.UI_GOLD, '#000');
-  drawText(ctx, 'The Lich has been vanquished!', C.VW/2, 76, 5, C.COL.UI_TEXT, 'center');
+  drawText(ctx, `All ${C.MAX_FLOORS} floors cleared!`, C.VW/2, 76, 5, C.COL.UI_TEXT, 'center');
   drawText(ctx, '— — — — —', C.VW/2, 86, 7, C.COL.UI_BORDER, 'center');
 
   drawTextShadow(ctx, `Floor ${floor}`, C.VW/2, 98, 7, C.COL.UI_DIM, '#000');

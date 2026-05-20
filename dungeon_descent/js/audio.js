@@ -129,6 +129,17 @@ const Audio = {
         this._osc('sine', 200, 0, 0.1, 0.15, 160);
         this._noise(0, 0.06, 0.08);
         break;
+      case 'stair_up':
+        this._osc('sine',   400, 0,    0.12, 0.2,  700);
+        this._osc('sine',   550, 0.10, 0.14, 0.2,  900);
+        this._osc('sine',   700, 0.22, 0.18, 0.25, 1100);
+        this._osc('square', 300, 0,    0.22, 0.07, 600);
+        break;
+      case 'pit_fall':
+        this._osc('sawtooth', 280, 0,    0.18, 0.3, 60);
+        this._osc('square',   180, 0.06, 0.22, 0.2, 40);
+        this._noise(0, 0.3, 0.25);
+        break;
     }
   },
 

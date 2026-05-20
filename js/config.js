@@ -1,0 +1,106 @@
+'use strict';
+
+const C = {
+  // Display
+  W: 800, H: 600,
+  VW: 320, VH: 240,
+  S: 2.5,
+
+  // Tiles & room
+  TS: 16,
+  RW: 20, RH: 15,
+
+  // Dungeon grid
+  DW: 7, DH: 5,
+  MIN_ROOMS: 10,
+  MAX_ROOMS: 16,
+
+  // Player
+  P_SPEED: 90,
+  P_MAX_HP: 10,
+  P_ATK: 2,
+  P_DEF: 0,
+  P_SIZE: 5,
+  P_SWORD_RANGE: 22,
+  P_SWORD_DURATION: 0.13,
+  P_SWORD_COOLDOWN: 0.35,
+  P_SHOOT_COOLDOWN: 0.45,
+  P_PROJ_SPEED: 150,
+  P_PROJ_RANGE: 160,
+  P_DODGE_SPEED: 220,
+  P_DODGE_DURATION: 0.17,
+  P_DODGE_COOLDOWN: 0.85,
+  P_INVINCIBLE_DURATION: 0.9,
+
+  // Colors
+  COL: {
+    BG:         '#0d0b12',
+    FLOOR:      '#2d2535',
+    FLOOR2:     '#332b3a',
+    WALL:       '#1a1226',
+    WALL_FACE:  '#3d2d52',
+    WALL_TOP:   '#5a4070',
+    WALL_LIT:   '#6a4f82',
+    DOOR_SHUT:  '#1a0d00',
+    DOOR_OPEN:  '#3d1f00',
+    DOOR_FRAME: '#7a5020',
+    VOID:       '#050308',
+    PILLAR:     '#4a3560',
+    PILLAR_TOP: '#6a5080',
+
+    PLAYER:     '#7ec8e3',
+    PLAYER_D:   '#3a8fa8',
+    PLAYER_EYE: '#ffffff',
+    SWORD:      '#e8e0f0',
+    SWORD_GLOW: 'rgba(200,180,255,0.5)',
+    ARROW:      '#c8a870',
+    ARROW_TIP:  '#e0e0e0',
+
+    SLIME:      '#5dc95d',
+    SLIME_D:    '#2a8a2a',
+    SLIME_EYE:  '#1a4a1a',
+    BAT:        '#9b6ec8',
+    BAT_D:      '#5a3a8a',
+    SKELETON:   '#e0d8c8',
+    SKELETON_D: '#a09888',
+    GOBLIN:     '#e87820',
+    GOBLIN_D:   '#a04a10',
+    DEMON:      '#d02040',
+    DEMON_D:    '#801030',
+    BOSS:       '#8020c0',
+    BOSS_D:     '#501080',
+
+    HP_FG:      '#e83050',
+    HP_BG:      '#3a1020',
+    MANA_FG:    '#3080e8',
+    MANA_BG:    '#102040',
+    XP_FG:      '#a030e0',
+    XP_BG:      '#200830',
+    SHIELD_FG:  '#30c8e8',
+
+    COIN:       '#f0c030',
+    COIN_D:     '#c09010',
+    HEART:      '#e83050',
+    CHEST:      '#8a5a20',
+    CHEST_LID:  '#b07830',
+    CHEST_BAND: '#604010',
+
+    UI_BG:      'rgba(10,6,20,0.92)',
+    UI_BG2:     'rgba(20,12,40,0.95)',
+    UI_BORDER:  '#4a3070',
+    UI_BORDER2: '#7a50a8',
+    UI_TEXT:    '#e8e0f8',
+    UI_DIM:     '#907890',
+    UI_GOLD:    '#f0c830',
+    UI_RED:     '#e83050',
+    UI_GREEN:   '#50e870',
+    UI_BLUE:    '#50a8e8',
+    UI_PURPLE:  '#b060e8',
+
+    PARTICLE_HIT:   '#ff6040',
+    PARTICLE_HEAL:  '#60ff80',
+    PARTICLE_STAR:  '#ffd060',
+    PARTICLE_MAGIC: '#c060ff',
+    PARTICLE_DEATH: '#ff3060',
+  },
+};

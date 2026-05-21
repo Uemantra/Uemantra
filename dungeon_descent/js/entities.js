@@ -4,7 +4,7 @@
 // DRAWING HELPERS
 // ===========================
 
-function drawPlayer(ctx, x, y, dir, anim, dodging, swordT, upgrades) {
+function drawPlayer(ctx, x, y, dir, anim, dodging, swordT, swordAngle, upgrades) {
   const t = Math.floor(anim * 4) % 2; // walk frame
   const bob = dodging ? 0 : Math.sin(anim * 12) * 0.8;
 
@@ -51,25 +51,70 @@ function drawPlayer(ctx, x, y, dir, anim, dodging, swordT, upgrades) {
 
   // Sword swing
   if (swordT > 0) {
-    const angle = swordT * Math.PI * 1.5;
-    const sx = x + Math.cos(angle) * 14;
-    const sy = bodyY + 4 + Math.sin(angle) * 14;
-    // Glow
-    ctx.strokeStyle = C.COL.SWORD_GLOW;
-    ctx.lineWidth = 3;
+    const HALF_ARC = Math.PI * 0.65;
+    const progress  = 1 - swordT;                              // 0 = start, 1 = finish
+    const curAngle  = swordAngle - HALF_ARC + progress * HALF_ARC * 2;
+    const ox = x, oy = y - 2;                                  // pivot near hands
+
+    // Sweep-zone wedge (fades as swing completes)
+    ctx.save();
+    ctx.globalAlpha = swordT * 0.22;
+    ctx.fillStyle = C.COL.SWORD_GLOW;
     ctx.beginPath();
-    ctx.moveTo(x, bodyY+4);
-    ctx.lineTo(sx, sy);
+    ctx.moveTo(ox, oy);
+    ctx.arc(ox, oy, 20, swordAngle - HALF_ARC, swordAngle + HALF_ARC);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
+    const cos = Math.cos(curAngle), sin = Math.sin(curAngle);
+    const HILT = 4, BLADE = 15, GUARD = 4;
+
+    // Grip
+    ctx.strokeStyle = '#7a5530';
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(ox, oy);
+    ctx.lineTo(ox + cos * HILT, oy + sin * HILT);
     ctx.stroke();
+
+    // Crossguard
+    const gx = ox + cos * HILT, gy = oy + sin * HILT;
+    const perpA = curAngle + Math.PI / 2;
+    ctx.strokeStyle = '#c09040';
+    ctx.lineWidth = 1.5;
+    ctx.lineCap = 'square';
+    ctx.beginPath();
+    ctx.moveTo(gx + Math.cos(perpA) * GUARD, gy + Math.sin(perpA) * GUARD);
+    ctx.lineTo(gx - Math.cos(perpA) * GUARD, gy - Math.sin(perpA) * GUARD);
+    ctx.stroke();
+
+    // Blade glow
+    const tipX = ox + cos * (HILT + BLADE), tipY = oy + sin * (HILT + BLADE);
+    ctx.save();
+    ctx.globalAlpha = 0.4;
+    ctx.strokeStyle = C.COL.SWORD_GLOW;
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(gx, gy); ctx.lineTo(tipX, tipY);
+    ctx.stroke();
+    ctx.restore();
+
     // Blade
     ctx.strokeStyle = C.COL.SWORD;
     ctx.lineWidth = 1.5;
+    ctx.lineCap = 'round';
     ctx.beginPath();
-    ctx.moveTo(x, bodyY+4);
-    ctx.lineTo(sx, sy);
+    ctx.moveTo(gx, gy); ctx.lineTo(tipX, tipY);
     ctx.stroke();
-    ctx.fillStyle = '#c0c0e8';
-    ctx.fillRect(sx-1, sy-1, 3, 3);
+
+    // Tip glint
+    ctx.fillStyle = '#e8f0ff';
+    ctx.fillRect(tipX - 1, tipY - 1, 2, 2);
+
+    ctx.lineCap = 'butt';
   }
 
   // Dodge trail
@@ -1194,7 +1239,7 @@ class Player {
     }
 
     // Sword swing
-    const mouseAngle = ang(C.VW/2, C.VH/2, Input.mouse.x, Input.mouse.y);
+    const mouseAngle = ang(this.x, this.y, Input.mouse.x, Input.mouse.y);
     if (Input.wantSword() && this.swordCooldown <= 0) {
       this.swordTimer = C.P_SWORD_DURATION;
       this.swordAngle = mouseAngle;
@@ -1275,7 +1320,7 @@ class Player {
       ctx.globalAlpha = 0.4;
     }
     drawPlayer(ctx, this.x, this.y, this.dir, this.anim, this.dodging,
-      this.swordTimer / C.P_SWORD_DURATION, this.upgradeSet);
+      this.swordTimer / C.P_SWORD_DURATION, this.swordAngle, this.upgradeSet);
     ctx.globalAlpha = 1;
   }
 }

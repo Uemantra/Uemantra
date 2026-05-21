@@ -35,6 +35,7 @@ const Game = {
   // Upgrade state
   upgradeChoices: [],
   upgradeHover: 0,
+  upgradeOpenTime: 0,
 
   // Room transition
   transitionDir: null,
@@ -74,7 +75,9 @@ const Game = {
   _handleClick() {
     if (this.state === STATE.MENU)      this._startGame();
     else if (this.state === STATE.GAME_OVER || this.state === STATE.VICTORY) this._startGame();
-    else if (this.state === STATE.UPGRADE) this._selectUpgrade(this.upgradeHover);
+    else if (this.state === STATE.UPGRADE) {
+      if (Date.now() - this.upgradeOpenTime >= 500) this._selectUpgrade(this.upgradeHover);
+    }
   },
 
   _startGame() {
@@ -311,6 +314,7 @@ const Game = {
     this.upgradeChoices = Upgrades.buildPool(this.player, count || 3);
     if (!this.upgradeChoices.length) return;
     this.upgradeHover = 0;
+    this.upgradeOpenTime = Date.now();
     this.state = STATE.UPGRADE;
     Audio.play('upgrade');
   },
@@ -697,7 +701,8 @@ const Game = {
 
     // Overlays
     if (this.state === STATE.UPGRADE) {
-      renderUpgradeScreen(ctx, this.upgradeChoices, this.upgradeHover, this.anim);
+      renderUpgradeScreen(ctx, this.upgradeChoices, this.upgradeHover, this.anim,
+        Date.now() - this.upgradeOpenTime >= 500);
     } else if (this.state === STATE.PAUSED) {
       renderPause(ctx, this.player, this.anim);
     }
@@ -715,22 +720,25 @@ const Game = {
       if (Input.just('KeyM')) Audio.toggle();
     } else if (this.state === STATE.UPGRADE) {
       const n = this.upgradeChoices.length;
-      if (Input.just('ArrowLeft')  || Input.just('KeyA')) this.upgradeHover = (this.upgradeHover - 1 + n) % n;
-      if (Input.just('ArrowRight') || Input.just('KeyD')) this.upgradeHover = (this.upgradeHover + 1) % n;
-      if (Input.just('Enter') || Input.just('KeyE') || Input.just('Space')) {
-        this._selectUpgrade(this.upgradeHover);
+      const canSelect = Date.now() - this.upgradeOpenTime >= 500;
+
+      if (canSelect) {
+        if (Input.just('ArrowLeft')  || Input.just('KeyA')) this.upgradeHover = (this.upgradeHover - 1 + n) % n;
+        if (Input.just('ArrowRight') || Input.just('KeyD')) this.upgradeHover = (this.upgradeHover + 1) % n;
+        if (Input.just('Enter') || Input.just('KeyE') || Input.just('Space')) {
+          this._selectUpgrade(this.upgradeHover);
+        }
+        for (let i = 0; i < n; i++) {
+          if (Input.just(`Digit${i+1}`)) { this._selectUpgrade(i); break; }
+        }
       }
-      // Number keys 1-3
-      for (let i = 0; i < n; i++) {
-        if (Input.just(`Digit${i+1}`)) { this._selectUpgrade(i); break; }
-      }
-      // Mouse hover
-      const mc = this.upgradeChoices.length;
+
+      // Mouse hover always active so the player can read cards during the delay
       const cardW = 80, gap = 10;
-      const totalW = mc * cardW + (mc - 1) * gap;
+      const totalW = n * cardW + (n - 1) * gap;
       const startX = (C.VW - totalW) / 2;
       const mx = Input.mouse.x, my = Input.mouse.y;
-      for (let i = 0; i < mc; i++) {
+      for (let i = 0; i < n; i++) {
         const cx = startX + i * (cardW + gap);
         if (mx >= cx && mx <= cx + cardW && my >= 50 && my <= 160) {
           this.upgradeHover = i;

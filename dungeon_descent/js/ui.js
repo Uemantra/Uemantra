@@ -302,7 +302,7 @@ function renderMinimap(ctx, dungeon, floor, rx, ry) {
 // ===========================
 // UPGRADE SELECTION SCREEN
 // ===========================
-function renderUpgradeScreen(ctx, choices, hoverIdx, anim) {
+function renderUpgradeScreen(ctx, choices, hoverIdx, anim, inputReady) {
   // Dim background
   ctx.fillStyle = 'rgba(5,3,15,0.88)';
   ctx.fillRect(0, 0, C.VW, C.VH);
@@ -393,14 +393,18 @@ function renderUpgradeScreen(ctx, choices, hoverIdx, anim) {
       ctx.globalAlpha = 1;
     }
 
-    // Select hint
-    if (hovered) {
+    // Select hint — only shown once input is unlocked
+    if (hovered && inputReady) {
       drawTextShadow(ctx, '[CLICK or ENTER]', cx + cardW/2, cardY + cardH - 6, 4, '#ffffff', '#000');
     }
   }
 
   // Key hints
-  drawText(ctx, '← → to browse   Click or Enter to select', C.VW/2, C.VH - 10, 4, C.COL.UI_DIM, 'center');
+  if (inputReady) {
+    drawText(ctx, '← → to browse   Click or Enter to select', C.VW/2, C.VH - 10, 4, C.COL.UI_DIM, 'center');
+  } else {
+    drawText(ctx, '— take a moment to choose —', C.VW/2, C.VH - 10, 4, C.COL.UI_DIM, 'center');
+  }
 }
 
 // ===========================
@@ -499,7 +503,7 @@ function renderMainMenu(ctx, anim) {
   const t = anim * 2;
   ctx.save();
   ctx.translate(C.VW/2, 105);
-  drawPlayer(ctx, 0, 0, 'down', t, false, 0, new Set());
+  drawPlayer(ctx, 0, 0, 'down', t, false, 0, 0, new Set());
   ctx.restore();
 
   // Feature bullets

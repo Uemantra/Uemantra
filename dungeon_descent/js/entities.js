@@ -4,9 +4,9 @@
 // DRAWING HELPERS
 // ===========================
 
-function drawPlayer(ctx, x, y, dir, anim, dodging, swordT, swordAngle, upgrades) {
+function drawPlayer(ctx, x, y, dir, anim, blocking, swordT, swordAngle, aimAngle, upgrades) {
   const t = Math.floor(anim * 4) % 2; // walk frame
-  const bob = dodging ? 0 : Math.sin(anim * 12) * 0.8;
+  const bob = blocking ? 0 : Math.sin(anim * 12) * 0.8;
 
   // Shadow
   ctx.fillStyle = 'rgba(0,0,0,0.3)';
@@ -117,12 +117,23 @@ function drawPlayer(ctx, x, y, dir, anim, dodging, swordT, swordAngle, upgrades)
     ctx.lineCap = 'butt';
   }
 
-  // Dodge trail
-  if (dodging) {
-    ctx.globalAlpha = 0.3;
-    ctx.fillStyle = C.COL.PLAYER;
-    ctx.fillRect(x-4, bodyY, 8, 14);
-    ctx.globalAlpha = 1;
+  // Block shield arc
+  if (blocking) {
+    ctx.save();
+    ctx.globalAlpha = 0.7;
+    ctx.strokeStyle = C.COL.SHIELD_FG;
+    ctx.lineWidth = 3.5;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.arc(x, y - 2, 10, aimAngle - Math.PI * 0.5, aimAngle + Math.PI * 0.5);
+    ctx.stroke();
+    ctx.globalAlpha = 0.9;
+    ctx.strokeStyle = '#b0f0ff';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(x, y - 2, 8, aimAngle - Math.PI * 0.4, aimAngle + Math.PI * 0.4);
+    ctx.stroke();
+    ctx.restore();
   }
 
   // Orbiting shields upgrade
@@ -443,6 +454,37 @@ function drawBoneBolt(ctx, x, y, angle) {
   ctx.restore();
 }
 
+function drawBoomerang(ctx, x, y, spin, color) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(spin);
+  // Glow
+  ctx.globalAlpha = 0.35;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 5;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.moveTo(-9, 2); ctx.lineTo(0, -5); ctx.lineTo(9, 2);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  // Body
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(-9, 2); ctx.lineTo(0, -5); ctx.lineTo(9, 2);
+  ctx.stroke();
+  // Highlight
+  ctx.strokeStyle = '#ffffc0';
+  ctx.lineWidth = 0.8;
+  ctx.globalAlpha = 0.8;
+  ctx.beginPath();
+  ctx.moveTo(-7, 1); ctx.lineTo(0, -3); ctx.lineTo(7, 1);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  ctx.restore();
+}
+
 // ===========================
 // PROJECTILE
 // ===========================
@@ -508,7 +550,7 @@ class Projectile {
     }
 
     // Player hit (enemy projectiles)
-    if (this.owner === 'enemy' && player && !player.invincible && !player.dodging) {
+    if (this.owner === 'enemy' && player && !player.invincible) {
       if (circleCircle(this.x, this.y, this.size, player.x, player.y, C.P_SIZE)) {
         player.takeDamage(this.dmg);
         Particles.hit(this.x, this.y, C.COL.PARTICLE_HIT);
@@ -523,6 +565,109 @@ class Projectile {
     if (this.type === 'arrow')       drawArrow(ctx, this.x, this.y, angle);
     else if (this.type === 'magic')  drawMagicBolt(ctx, this.x, this.y, angle, this.color);
     else if (this.type === 'bone')   drawBoneBolt(ctx, this.x, this.y, angle);
+  }
+}
+
+// ===========================
+// BOOMERANG
+// ===========================
+class Boomerang {
+  constructor(x, y, angle, opts) {
+    this.x = x; this.y = y;
+    this.vx = Math.cos(angle) * C.P_BOOMERANG_SPEED;
+    this.vy = Math.sin(angle) * C.P_BOOMERANG_SPEED;
+    this.owner = 'player';
+    this.dmg = opts.dmg || 2;
+    this.range = opts.range || C.P_BOOMERANG_RANGE;
+    this.piercing = opts.piercing || false;
+    this.homing   = opts.homing   || false;
+    this.color = opts.color || C.COL.BOOMERANG;
+    this.phase = 'out';
+    this.traveled = 0;
+    this.spinAngle = 0;
+    this.alive = true;
+    this.hitOut = new Set();
+    this.hitReturn = new Set();
+  }
+
+  update(dt, room, enemies, player) {
+    if (!this.alive) return;
+    this.spinAngle += dt * 12;
+
+    if (this.phase === 'out') {
+      if (this.homing && enemies.length > 0) {
+        let nearest = null, nearD = Infinity;
+        for (const e of enemies) {
+          const d = dist2(this.x, this.y, e.x, e.y);
+          if (d < nearD) { nearD = d; nearest = e; }
+        }
+        if (nearest) {
+          const n = norm(nearest.x - this.x, nearest.y - this.y);
+          const spd = Math.sqrt(this.vx**2 + this.vy**2);
+          this.vx = lerp(this.vx, n.x * spd, 2 * dt);
+          this.vy = lerp(this.vy, n.y * spd, 2 * dt);
+        }
+      }
+
+      const spd = Math.sqrt(this.vx**2 + this.vy**2);
+      this.x += this.vx * dt;
+      this.y += this.vy * dt;
+      this.traveled += spd * dt;
+
+      const tx = Math.floor(this.x / C.TS), ty = Math.floor(this.y / C.TS);
+      if (isSolid(room.getTile(tx, ty)) && !isOpenDoor(room.getTile(tx, ty))) {
+        this.phase = 'return';
+        this.traveled = 0;
+        this.vx *= -0.5; this.vy *= -0.5;
+        return;
+      }
+
+      if (this.traveled >= this.range) {
+        this.phase = 'return';
+        this.traveled = 0;
+      }
+
+      for (const e of enemies) {
+        if (e.dead || this.hitOut.has(e)) continue;
+        if (circleCircle(this.x, this.y, 5, e.x, e.y, e.size)) {
+          e.takeDamage(this.dmg, this.x, this.y);
+          this.hitOut.add(e);
+          if (!this.piercing) {
+            this.phase = 'return';
+            this.traveled = 0;
+            return;
+          }
+        }
+      }
+    } else {
+      const n = norm(player.x - this.x, player.y - this.y);
+      const returnSpd = C.P_BOOMERANG_SPEED * 1.3;
+      this.vx = lerp(this.vx, n.x * returnSpd, 10 * dt);
+      this.vy = lerp(this.vy, n.y * returnSpd, 10 * dt);
+      this.x += this.vx * dt;
+      this.y += this.vy * dt;
+      this.traveled += Math.sqrt(this.vx**2 + this.vy**2) * dt;
+
+      for (const e of enemies) {
+        if (e.dead || this.hitReturn.has(e)) continue;
+        if (this.hitOut.has(e) && !this.piercing) continue;
+        if (circleCircle(this.x, this.y, 5, e.x, e.y, e.size)) {
+          e.takeDamage(this.dmg, this.x, this.y);
+          this.hitReturn.add(e);
+        }
+      }
+
+      if (dist(this.x, this.y, player.x, player.y) < 10) {
+        this.alive = false;
+        return;
+      }
+      if (this.traveled > this.range * 4) this.alive = false;
+    }
+  }
+
+  draw(ctx) {
+    if (!this.alive) return;
+    drawBoomerang(ctx, this.x, this.y, this.spinAngle, this.color);
   }
 }
 
@@ -702,7 +847,7 @@ class Slime extends Enemy {
     this.x += this.vx * dt; this.y += this.vy * dt;
     this._resolveWall(room);
     if (d < this.size + C.P_SIZE) {
-      player.takeDamage(this.atk);
+      player.takeDamage(this.atk, this);
     }
   }
 
@@ -758,7 +903,7 @@ class Bat extends Enemy {
     this.x += this.vx * dt; this.y += this.vy * dt;
     this._resolveWall(room);
     const d = dist(this.x, this.y, player.x, player.y);
-    if (d < this.size + C.P_SIZE) player.takeDamage(this.atk);
+    if (d < this.size + C.P_SIZE) player.takeDamage(this.atk, this);
   }
 
   _deathColor() { return C.COL.BAT; }
@@ -858,7 +1003,7 @@ class Goblin extends Enemy {
 
     this.x += this.vx * dt; this.y += this.vy * dt;
     this._resolveWall(room);
-    if (d < this.size + C.P_SIZE) player.takeDamage(this.atk);
+    if (d < this.size + C.P_SIZE) player.takeDamage(this.atk, this);
   }
 
   _deathColor() { return C.COL.GOBLIN; }
@@ -916,7 +1061,7 @@ class Demon extends Enemy {
 
     this.x += this.vx * dt; this.y += this.vy * dt;
     this._resolveWall(room);
-    if (d < this.size + C.P_SIZE) player.takeDamage(this.atk);
+    if (d < this.size + C.P_SIZE) player.takeDamage(this.atk, this);
   }
 
   _deathColor() { return C.COL.DEMON; }
@@ -985,7 +1130,7 @@ class Boss extends Enemy {
       if (onSummon) onSummon();
     }
 
-    if (d < this.size + C.P_SIZE) player.takeDamage(this.atk);
+    if (d < this.size + C.P_SIZE) player.takeDamage(this.atk, this);
   }
 
   takeDamage(dmg, sx, sy) {
@@ -1039,12 +1184,10 @@ class Player {
     this.swordTimer = 0;
     this.swordCooldown = 0;
     this.swordAngle = 0;
+    this.aimAngle = 0;
     this.shootCooldown = 0;
-    this.dodgeSpeed = C.P_DODGE_SPEED;
-    this.dodgeTimer = 0;
-    this.dodgeCooldown = 0;
-    this.dodging = false;
-    this.dodgeVx = 0; this.dodgeVy = 0;
+    this.blocking = false;
+    this.knockbackForce = C.P_KNOCKBACK_FORCE;
     this.invincibleTimer = 0;
 
     // Upgrades
@@ -1071,7 +1214,7 @@ class Player {
     this.stepTimer = 0;
   }
 
-  get invincible() { return this.invincibleTimer > 0 || this.dodging; }
+  get invincible() { return this.invincibleTimer > 0; }
 
   addUpgrade(id) {
     const lvl = (this.upgrades.get(id) || 0) + 1;
@@ -1083,23 +1226,33 @@ class Player {
   hasUpgrade(id) { return this.upgradeSet.has(id); }
   upgradeLevel(id) { return this.upgrades.get(id) || 0; }
 
-  takeDamage(dmg) {
+  takeDamage(dmg, attacker) {
     if (this.invincible) return;
-    const actual = Math.max(1, dmg - this.def);
 
-    // Shield block upgrade: 20% chance
+    // Active block: reduce melee damage
+    if (this.blocking && attacker) {
+      const reduction = this.hasUpgrade('dodge_master') ? 0.80 : C.P_BLOCK_REDUCTION;
+      dmg = Math.max(0, Math.floor(dmg * (1 - reduction)));
+      Audio.play('block');
+      Particles.magic(this.x, this.y);
+      if (this.hasUpgrade('shield_bash') && attacker.stunTimer !== undefined) {
+        attacker.stunTimer = Math.max(attacker.stunTimer, 1.5);
+      }
+      if (dmg === 0) return;
+    }
+
+    // Shield block upgrade: 20% chance to negate any hit
     if (this.hasUpgrade('shield_block') && Math.random() < 0.2) {
       Particles.magic(this.x, this.y);
       return;
     }
 
+    const actual = Math.max(1, dmg - this.def);
     this.hp -= actual;
     this.invincibleTimer = C.P_INVINCIBLE_DURATION;
     Particles.hit(this.x, this.y - 4, C.COL.PARTICLE_HIT);
     Particles.damage(this.x, this.y - 8, actual);
     Audio.play('player_hit');
-
-    // Thorns: dealt nearby (handled externally)
     if (this.hp <= 0) { this.hp = 0; }
   }
 
@@ -1155,8 +1308,10 @@ class Player {
     if (this.invincibleTimer > 0) this.invincibleTimer -= dt;
     if (this.swordCooldown > 0) this.swordCooldown -= dt;
     if (this.shootCooldown > 0) this.shootCooldown -= dt;
-    if (this.dodgeCooldown > 0) this.dodgeCooldown -= dt;
     if (this.swordTimer > 0) this.swordTimer -= dt;
+
+    // Always track mouse aim angle
+    this.aimAngle = ang(this.x, this.y, Input.mouse.x, Input.mouse.y);
 
     // Regen
     if (this.regenRate > 0) {
@@ -1176,17 +1331,8 @@ class Player {
       }
     }
 
-    // Dodge
-    if (this.dodging) {
-      this.dodgeTimer -= dt;
-      if (this.dodgeTimer <= 0) this.dodging = false;
-      else {
-        this.x += this.dodgeVx * dt;
-        this.y += this.dodgeVy * dt;
-        this._resolveWall(room);
-        return;
-      }
-    }
+    // Block (held button)
+    this.blocking = Input.wantBlock();
 
     // Movement
     let mx = Input.moveX(), my = Input.moveY();
@@ -1205,8 +1351,9 @@ class Player {
       }
     }
 
-    // Momentum upgrade: speed increases while moving
+    // Speed — blocking slows movement unless Stalwart
     let spd = this.speed;
+    if (this.blocking && !this.hasUpgrade('shadow_cloak')) spd *= 0.4;
     if (this.hasUpgrade('momentum') && moving) {
       spd *= 1 + Math.min(this.anim * 0.1, 0.4);
     }
@@ -1219,58 +1366,31 @@ class Player {
 
     this._resolveWall(room);
 
-    // Orbiting shield collision
-    if (this.hasUpgrade('orbit_shield')) {
-      // Handled externally in game update
-    }
-
-    // Dodge input
-    if (Input.wantDodge() && this.dodgeCooldown <= 0) {
-      const dx = mx || (this.dir === 'right' ? 1 : this.dir === 'left' ? -1 : 0);
-      const dy = my || (this.dir === 'down' ? 1 : this.dir === 'up' ? -1 : 0);
-      if (dx !== 0 || dy !== 0) {
-        const n = norm(dx, dy);
-        this.dodgeVx = n.x * this.dodgeSpeed;
-        this.dodgeVy = n.y * this.dodgeSpeed;
-        this.dodging = true;
-        this.dodgeTimer = C.P_DODGE_DURATION;
-        this.dodgeCooldown = C.P_DODGE_COOLDOWN * (this.hasUpgrade('dodge_master') ? 0.65 : 1);
-      }
-    }
-
-    // Sword swing
-    const mouseAngle = ang(this.x, this.y, Input.mouse.x, Input.mouse.y);
-    if (Input.wantSword() && this.swordCooldown <= 0) {
+    // Sword swing (can't swing while blocking)
+    if (!this.blocking && Input.wantSword() && this.swordCooldown <= 0) {
       this.swordTimer = C.P_SWORD_DURATION;
-      this.swordAngle = mouseAngle;
+      this.swordAngle = this.aimAngle;
       this.swordCooldown = C.P_SWORD_COOLDOWN * (this.hasUpgrade('swift_strikes') ? 0.75 : 1);
       Audio.play('sword');
-
-      // Return hit result to caller (handled in game.js)
       this._swingPending = true;
     }
 
-    // Shoot
+    // Throw boomerang
     if (Input.wantShoot() && this.shootCooldown <= 0) {
       this.shootCooldown = C.P_SHOOT_COOLDOWN;
-      const spd2 = C.P_PROJ_SPEED;
       const count = this.getProjCount();
-      const spread = 0.18;
+      const spread = 0.22;
       for (let i = 0; i < count; i++) {
-        const a = mouseAngle + (i - (count-1)/2) * spread;
-        const dmg = this.getProjDmg();
-        const p = new Projectile(this.x, this.y, Math.cos(a)*spd2, Math.sin(a)*spd2, {
-          owner: 'player', dmg,
-          range: C.P_PROJ_RANGE * (this.hasUpgrade('longer_range') ? 1.4 : 1),
+        const a = this.aimAngle + (i - (count - 1) / 2) * spread;
+        projectiles.push(new Boomerang(this.x, this.y, a, {
+          dmg: this.getProjDmg(),
+          range: C.P_BOOMERANG_RANGE * (1 + (this.upgradeLevel('longer_range') || 0) * 0.4),
           piercing: this.hasUpgrade('piercing_shots'),
-          homing: this.hasUpgrade('homing_bolts'),
-          type: 'magic',
-          color: this.hasUpgrade('fire_aspect') ? '#ff8020' : C.COL.UI_PURPLE,
-          size: 4,
-        });
-        projectiles.push(p);
+          homing:   this.hasUpgrade('homing_bolts'),
+          color: this.hasUpgrade('fire_aspect') ? '#ff8020' : C.COL.BOOMERANG,
+        }));
       }
-      Audio.play('shoot');
+      Audio.play('boomerang');
     }
   }
 
@@ -1293,14 +1413,19 @@ class Player {
           e.takeDamage(dmg, this.x, this.y);
           hit.push(e);
 
+          // Knockback impulse
+          const kbForce = this.knockbackForce * (1 + (this.upgradeLevel('knockback_force') || 0) * 0.5);
+          const kn = norm(e.x - this.x, e.y - this.y);
+          e.vx = kn.x * kbForce;
+          e.vy = kn.y * kbForce;
+          e.stunTimer = Math.max(e.stunTimer, 0.1 + (this.upgradeLevel('knockback_force') || 0) * 0.1);
+
           // Poison touch
           if (this.hasUpgrade('poison_touch')) e.applyPoison(4);
           // Fire aspect
           if (this.hasUpgrade('fire_aspect')) e.applyFire(3);
           // Lifesteal
           if (this.hasUpgrade('vampiric')) this.heal(1);
-          // Stun on dodge
-          if (this.dodging && this.hasUpgrade('shield_bash')) e.stunTimer = 1.5;
         }
       }
     }
@@ -1319,8 +1444,8 @@ class Player {
     if (this.invincibleTimer > 0 && Math.floor(this.anim * 15) % 2 === 0) {
       ctx.globalAlpha = 0.4;
     }
-    drawPlayer(ctx, this.x, this.y, this.dir, this.anim, this.dodging,
-      this.swordTimer / C.P_SWORD_DURATION, this.swordAngle, this.upgradeSet);
+    drawPlayer(ctx, this.x, this.y, this.dir, this.anim, this.blocking,
+      this.swordTimer / C.P_SWORD_DURATION, this.swordAngle, this.aimAngle, this.upgradeSet);
     ctx.globalAlpha = 1;
   }
 }

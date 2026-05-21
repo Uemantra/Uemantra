@@ -162,14 +162,14 @@ function renderHUD(ctx, player, dungeon, floor, roomNum, totalRooms) {
   const sc = player.swordCooldown / C.P_SWORD_COOLDOWN;
   drawBar(ctx, cdX, cdY, 18, 3, 1 - sc, 1, '#e0d060', '#222');
   drawText(ctx, '⚔', cdX, cdY-6, 5, sc > 0 ? '#808060' : '#e0d060');
-  // Shoot cooldown
+  // Boomerang cooldown
   const pc = player.shootCooldown / C.P_SHOOT_COOLDOWN;
-  drawBar(ctx, cdX+22, cdY, 18, 3, 1 - pc, 1, '#a060ff', '#222');
-  drawText(ctx, '✦', cdX+22, cdY-6, 5, pc > 0 ? '#604080' : '#a060ff');
-  // Dodge cooldown
-  const dc = player.dodgeCooldown / C.P_DODGE_COOLDOWN;
-  drawBar(ctx, cdX+44, cdY, 18, 3, 1 - dc, 1, '#40c0e0', '#222');
-  drawText(ctx, '◎', cdX+44, cdY-6, 5, dc > 0 ? '#205060' : '#40c0e0');
+  drawBar(ctx, cdX+22, cdY, 18, 3, 1 - pc, 1, '#e8c850', '#222');
+  drawText(ctx, '↩', cdX+22, cdY-6, 5, pc > 0 ? '#806830' : '#e8c850');
+  // Block indicator (lit when actively blocking)
+  const blockActive = player.blocking;
+  drawBar(ctx, cdX+44, cdY, 18, 3, blockActive ? 1 : 0, 1, '#40c0e0', '#222');
+  drawText(ctx, '🛡', cdX+44, cdY-6, 5, blockActive ? '#40c0e0' : '#205060');
 
   // === Floor / room info ===
   drawText(ctx, `Floor ${floor}/${C.MAX_FLOORS}`, C.VW - 4, 4, 5, C.COL.UI_DIM, 'right');
@@ -503,7 +503,7 @@ function renderMainMenu(ctx, anim) {
   const t = anim * 2;
   ctx.save();
   ctx.translate(C.VW/2, 105);
-  drawPlayer(ctx, 0, 0, 'down', t, false, 0, 0, new Set());
+  drawPlayer(ctx, 0, 0, 'down', t, false, 0, 0, 0, new Set());
   ctx.restore();
 
   // Feature bullets

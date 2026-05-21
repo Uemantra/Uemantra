@@ -67,6 +67,15 @@ const Audio = {
         this._osc('sine', 700, 0, 0.08, 0.18, 300);
         this._osc('square', 400, 0, 0.05, 0.1, 200);
         break;
+      case 'boomerang':
+        this._osc('sawtooth', 220, 0,    0.07, 0.22, 380);
+        this._osc('sawtooth', 360, 0.04, 0.09, 0.14, 560);
+        break;
+      case 'block':
+        this._osc('square', 320, 0,    0.04, 0.35, 260);
+        this._osc('square', 190, 0.02, 0.07, 0.20, 150);
+        this._noise(0, 0.03, 0.12);
+        break;
       case 'proj_hit':
         this._osc('square', 250, 0, 0.06, 0.2, 120);
         this._noise(0, 0.05, 0.15);

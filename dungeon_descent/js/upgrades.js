@@ -34,21 +34,21 @@ const UPGRADE_DEFS = [
     category: 'offense',
   },
   {
-    id: 'multishot', name: 'Multishot', tier: 2, maxLevel: 2,
+    id: 'multishot', name: 'Multiboomerang', tier: 2, maxLevel: 2,
     icon: '✦', color: '#a060ff',
-    desc: (lvl) => `+${lvl} extra projectile${lvl > 1 ? 's' : ''}`,
+    desc: (lvl) => `+${lvl} extra boomerang${lvl > 1 ? 's' : ''} thrown`,
     category: 'offense',
   },
   {
-    id: 'piercing_shots', name: 'Piercing Shots', tier: 2, maxLevel: 1,
+    id: 'piercing_shots', name: 'Piercing Rang', tier: 2, maxLevel: 1,
     icon: '➤', color: '#80c0ff',
-    desc: () => 'Projectiles pierce enemies',
+    desc: () => 'Boomerang passes through enemies',
     category: 'offense',
   },
   {
-    id: 'homing_bolts', name: 'Homing Bolts', tier: 3, maxLevel: 1,
+    id: 'homing_bolts', name: 'Seeking Rang', tier: 3, maxLevel: 1,
     icon: '↺', color: '#c080ff',
-    desc: () => 'Projectiles home in on enemies',
+    desc: () => 'Boomerang homes in on enemies',
     category: 'offense',
   },
   {
@@ -70,9 +70,15 @@ const UPGRADE_DEFS = [
     category: 'offense',
   },
   {
-    id: 'longer_range', name: 'Hawk Eye', tier: 1, maxLevel: 2,
+    id: 'longer_range', name: 'Long Arm', tier: 1, maxLevel: 2,
     icon: '🏹', color: '#c8a860',
-    desc: (lvl) => `Projectile range +${lvl * 30}%`,
+    desc: (lvl) => `Boomerang range +${lvl * 40}%`,
+    category: 'offense',
+  },
+  {
+    id: 'knockback_force', name: 'Knockback Force', tier: 2, maxLevel: 2,
+    icon: '💨', color: '#e09030',
+    desc: (lvl) => `Sword knockback +${lvl * 50}%`,
     category: 'offense',
   },
 
@@ -102,15 +108,15 @@ const UPGRADE_DEFS = [
     category: 'defense',
   },
   {
-    id: 'dodge_master', name: 'Dodge Master', tier: 2, maxLevel: 1,
+    id: 'dodge_master', name: 'Block Mastery', tier: 2, maxLevel: 1,
     icon: '◎', color: '#40c0e0',
-    desc: () => 'Dodge cooldown -35%',
+    desc: () => 'Blocking reduces 80% damage (up from 50%)',
     category: 'defense',
   },
   {
-    id: 'shield_bash', name: 'Shield Bash', tier: 2, maxLevel: 1,
+    id: 'shield_bash', name: 'Riposte', tier: 2, maxLevel: 1,
     icon: '🔰', color: '#60a0ff',
-    desc: () => 'Dodging into enemy stuns it',
+    desc: () => 'Blocking when hit stuns the attacker 1.5s',
     category: 'defense',
   },
   {
@@ -164,9 +170,9 @@ const UPGRADE_DEFS = [
     category: 'utility',
   },
   {
-    id: 'shadow_cloak', name: 'Shadow Cloak', tier: 2, maxLevel: 1,
+    id: 'shadow_cloak', name: 'Stalwart', tier: 2, maxLevel: 1,
     icon: '🌑', color: '#6060a0',
-    desc: () => 'Dodge makes you invisible briefly',
+    desc: () => 'Blocking no longer slows movement',
     category: 'utility',
   },
   {

@@ -5,7 +5,7 @@ const Input = {
   pressed: new Set(),
   released: new Set(),
   mouse: { x: C.VW/2, y: C.VH/2, left: false, right: false, leftDown: false, rightDown: false },
-  touch: { dx: 0, dy: 0, sword: false, shoot: false, dodge: false },
+  touch: { dx: 0, dy: 0, sword: false, shoot: false, block: false },
 
   init(canvas) {
     window.addEventListener('keydown', e => {
@@ -41,7 +41,7 @@ const Input = {
     this._bindTouchBtn('btn-right', () => { this.touch.dx =  1; }, () => { if (this.touch.dx > 0) this.touch.dx = 0; });
     this._bindTouchBtn('btn-sword', () => { this.touch.sword = true; }, () => { this.touch.sword = false; });
     this._bindTouchBtn('btn-shoot', () => { this.touch.shoot = true; }, () => { this.touch.shoot = false; });
-    this._bindTouchBtn('btn-dodge', () => { this.touch.dodge = true; }, () => { this.touch.dodge = false; });
+    this._bindTouchBtn('btn-block', () => { this.touch.block = true; }, () => { this.touch.block = false; });
   },
 
   _bindTouchBtn(id, onDown, onUp) {
@@ -78,8 +78,8 @@ const Input = {
   wantShoot() {
     return this.touch.shoot || this.mouse.rightDown || this.just('KeyX') || this.just('KeyK');
   },
-  wantDodge() {
-    return this.touch.dodge || this.just('Space') || this.just('ShiftLeft') || this.just('ShiftRight');
+  wantBlock() {
+    return this.touch.block || this.down('Space') || this.down('ShiftLeft') || this.down('ShiftRight');
   },
   wantConfirm() {
     return this.just('Space') || this.just('Enter') || this.just('KeyE') || this.mouse.leftDown;

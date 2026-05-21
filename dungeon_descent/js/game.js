@@ -361,9 +361,10 @@ const Game = {
   },
 
   _onEnemyDied(enemy) {
+    if (enemy._deathHandled) return;
+    enemy._deathHandled = true;
     this.player.kills++;
     this.player.gainXP(enemy.xp);
-    Audio.play('kill');
 
     // Drop coins
     if (enemy.coins > 0) this._dropCoins(enemy.x, enemy.y, enemy.coins);
@@ -530,12 +531,17 @@ const Game = {
       if (enemy.dead) this._onEnemyDied(enemy);
     }
 
-    // Update projectiles
+    // Update projectiles/boomerangs
     const activeEnemies = this.enemies.filter(e => !e.dead);
     for (const p of this.projectiles) {
       p.update(dt, room, activeEnemies, player);
     }
     this.projectiles = this.projectiles.filter(p => p.alive);
+
+    // Handle enemy deaths caused by projectiles/boomerangs this frame
+    for (const enemy of this.enemies) {
+      if (enemy.dead && !enemy._deathHandled) this._onEnemyDied(enemy);
+    }
 
     // Player damage from proj
     if (player.hp <= 0) {

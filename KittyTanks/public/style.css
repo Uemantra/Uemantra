@@ -1,0 +1,169 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0d1117;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  overflow: hidden;
+  user-select: none;
+}
+
+#app {
+  position: relative;
+  display: inline-block;
+}
+
+#game-canvas {
+  display: block;
+  border: 3px solid #30363d;
+  border-radius: 10px;
+  max-width: 100vw;
+  max-height: 100vh;
+  cursor: crosshair;
+}
+
+/* ---- Overlays ---- */
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.82);
+  border-radius: 8px;
+  z-index: 10;
+}
+
+.overlay.hidden { display: none; }
+
+.overlay-box {
+  text-align: center;
+  color: #e6edf3;
+  padding: 40px 60px;
+  background: rgba(22, 27, 34, 0.95);
+  border: 2px solid #30363d;
+  border-radius: 16px;
+  min-width: 380px;
+  max-width: 520px;
+}
+
+.title-art {
+  font-size: 3em;
+  font-weight: 900;
+  letter-spacing: 4px;
+  background: linear-gradient(135deg, #ff6b9d, #ffd700, #ff6b6b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 6px;
+}
+
+.subtitle {
+  color: #8b949e;
+  font-size: 1em;
+  margin-bottom: 28px;
+  font-style: italic;
+}
+
+#lobby-status {
+  font-size: 1.1em;
+  color: #58a6ff;
+  margin-bottom: 16px;
+}
+
+#player-label {
+  font-size: 1.2em;
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+
+.url-box {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-family: monospace;
+  font-size: 1.05em;
+  color: #79c0ff;
+  margin-top: 12px;
+  word-break: break-all;
+}
+
+.win-text {
+  font-size: 2.5em;
+  font-weight: 900;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, #ffd700, #ff6b9d);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+#winner-sub {
+  color: #8b949e;
+  margin-bottom: 24px;
+  font-size: 1.1em;
+}
+
+.btn-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+button {
+  padding: 12px 28px;
+  font-size: 1.05em;
+  font-weight: 700;
+  background: linear-gradient(135deg, #238636, #2ea043);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: all 0.15s;
+}
+
+button:hover {
+  background: linear-gradient(135deg, #2ea043, #3fb950);
+  transform: translateY(-1px);
+}
+
+.muted { color: #8b949e; font-size: 0.9em; margin-top: 10px; }
+.hidden { display: none !important; }
+
+/* ---- Chat Messages ---- */
+#chat-messages {
+  position: absolute;
+  bottom: 120px;
+  left: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  pointer-events: none;
+  z-index: 5;
+  max-width: 340px;
+}
+
+.chat-msg {
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 0.88em;
+  border-left: 3px solid #58a6ff;
+  animation: fadeMsg 4s forwards;
+}
+
+.chat-msg.p1 { border-left-color: #ff9944; }
+.chat-msg.p2 { border-left-color: #44aaff; }
+
+@keyframes fadeMsg {
+  0%   { opacity: 1; }
+  70%  { opacity: 1; }
+  100% { opacity: 0; }
+}

@@ -1,0 +1,21 @@
+{
+	"id": "cache_002",
+	"media_type": "flash",
+	"media_condition": "intact",
+	"zone": "flooded",
+	"vera_field_note": "Handheld recorder, the kind journalists used. One file. The battery bay is corroded but the flash memory was separate.",
+	"tier_required": 2,
+	"tool_required": "echo",
+	"processing_time_seconds": 28,
+	"requires_active_attention": false,
+	"yields": [
+		{
+			"type": "catalogue_entry",
+			"entry_id": "msg_flooded_voicemail_001",
+			"catalogue_section": "people_we_never_knew",
+			"content": "Hey, it's me. Are you— okay so you're not there. I just wanted to say the, uh— [pause] okay it's a message. I left a message. [longer pause] Hi. I just wanted to say the flooding on Trescott is getting close to the corner building and I thought you should know in case you haven't checked. [pause] I don't know why I'm explaining myself. I just— I was walking by and I thought, she doesn't know, probably. [pause] Okay. Call me back. Or don't. [pause] Are you okay? I guess I'm asking if you're okay. You don't have to— you can just call me back and say you're fine and I'll believe you. [pause] Okay. Bye.",
+			"vera_note": "Echo recovered this clean. The pauses are all there — that's what makes it. Whoever this was called someone they hadn't spoken to in a while and couldn't quite figure out what they wanted to say once the recording started. They were checking in. The flooding on Trescott would have been close to the apartment block. I think this was left in the recorder and the recorder was left on the kitchen table because neither of them made it out.",
+			"theory_contributions": {}
+		}
+	]
+}

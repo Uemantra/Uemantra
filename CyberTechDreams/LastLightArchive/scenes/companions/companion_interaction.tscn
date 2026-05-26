@@ -1,0 +1,24 @@
+[gd_scene load_steps=2 format=3 uid="uid://companion_interaction"]
+
+[ext_resource type="Script" path="res://scripts/companions/companion_interaction.gd" id="1_ci"]
+
+[node name="CompanionInteraction" type="Control"]
+script = ExtResource("1_ci")
+
+[node name="VBox" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 4
+
+[node name="NameLabel" type="Label" parent="VBox"]
+layout_mode = 2
+text = ""
+
+[node name="TalkButton" type="Button" parent="VBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Talk"

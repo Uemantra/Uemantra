@@ -1,0 +1,26 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/catalogue/section_map.gd" id="1"]
+
+[node name="SectionMap" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1")
+
+[node name="SectionHeader" type="Label" parent="."]
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 400.0
+offset_bottom = 24.0
+text = "The Archive Map"
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.35, 0.3, 0.25, 1.0)
+
+[node name="ScrollContainer" type="ScrollContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 30.0
+
+[node name="MapContainer" type="VBoxContainer" parent="ScrollContainer"]
+size_flags_horizontal = Control.SIZE_EXPAND_FILL
+theme_override_constants/separation = 0

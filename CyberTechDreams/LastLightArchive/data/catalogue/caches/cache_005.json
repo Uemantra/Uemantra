@@ -1,0 +1,24 @@
+{
+	"id": "cache_005",
+	"media_type": "optical",
+	"media_condition": "worn",
+	"zone": "university",
+	"vera_field_note": "A disc in a standard jewel case with no label. Found in the engineering lab on a shelf above the waterline. The case is cracked but the disc survived.",
+	"tier_required": 2,
+	"tool_required": "lattice",
+	"processing_time_seconds": 75,
+	"requires_active_attention": true,
+	"yields": [
+		{
+			"type": "catalogue_entry",
+			"entry_id": "repo_university_arbor_001",
+			"catalogue_section": "people_we_never_knew",
+			"content": "# arbor\n\n**A lightweight framework for distributed task handoff between heterogeneous systems.**\n\narbor is opinionated about one thing: when a task moves from one system to another, both systems should know it happened and agree on when.\n\n## Status\n\nThis project is actively maintained. See [CHANGELOG.md] for recent updates.\n\n*[Note: CHANGELOG.md last modified 847 days before most recent README access. Eleven commits in the final week. None after.]*\n\n## Why arbor\n\nWe built arbor because existing handoff protocols assumed synchronous acknowledgement. In practice, systems that need to hand off tasks are often under load, intermittent, or operating at different speeds. arbor is designed for the realistic case.\n\n## What arbor does not do\n\narbor does not decide which system should receive a task. That decision is yours. arbor only ensures that if a task moves, it moves cleanly.\n\n## TODO\n\n- [ ] Implement retry backoff for timeout cases (see issue #44)\n- [ ] Write the tutorial — Def has notes, ask her\n- [ ] Figure out the memory leak in the async handler (see issue #51 — known, annoying, not critical)\n- [ ] Add the visualiser (stretch goal, will be cool)\n- [ ] Conference talk submission — deadline March\n- [ ] Get Def to review the acknowledgement logic, she had concerns\n- [ ] Actually fix issue #51 before the conference\n- [ ] Celebrate if we get into the conference\n\n## Contributors\n\nK. Osei, D. Osei-Mensah\n\n## License\n\nMIT",
+			"vera_note": "Lattice reconstructed the README well. The commit history stopped abruptly — eleven commits in a week and then nothing. The project was gaining speed when it stopped. K. Osei appears on the faculty ID lanyard from the administration courtyard: Dr. K. Osei, Computational Ethics. D. Osei-Mensah is likely a student, or a sibling, given the surname. The tutorial was never written. Issue #51 was never fixed. The conference submission deadline passed about six weeks after the final commit. I don't know if they were celebrating or not.",
+			"theory_contributions": {
+				"alignment_cascade": 0.3,
+				"the_choice": 0.2
+			}
+		}
+	]
+}

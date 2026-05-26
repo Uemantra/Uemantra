@@ -1,0 +1,51 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/catalogue/catalogue.gd" id="1"]
+
+[node name="Catalogue" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1")
+
+[node name="Background" type="ColorRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.91, 0.88, 0.78, 1.0)
+
+[node name="NotebookPanel" type="VBoxContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = 12.0
+offset_right = -24.0
+offset_bottom = -12.0
+theme_override_constants/separation = 0
+
+[node name="TabStrip" type="HBoxContainer" parent="NotebookPanel"]
+custom_minimum_size = Vector2(0, 32)
+theme_override_constants/separation = 4
+
+[node name="PageArea" type="HBoxContainer" parent="NotebookPanel"]
+size_flags_vertical = Control.SIZE_EXPAND_FILL
+theme_override_constants/separation = 0
+
+[node name="LeftPage" type="ColorRect" parent="NotebookPanel/PageArea"]
+custom_minimum_size = Vector2(8, 0)
+size_flags_vertical = Control.SIZE_EXPAND_FILL
+color = Color(0.72, 0.65, 0.52, 1.0)
+
+[node name="PageBody" type="PanelContainer" parent="NotebookPanel/PageArea"]
+size_flags_horizontal = Control.SIZE_EXPAND_FILL
+size_flags_vertical = Control.SIZE_EXPAND_FILL
+
+[node name="RightPage" type="MarginContainer" parent="NotebookPanel/PageArea/PageBody"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 16
+
+[node name="SectionContainer" type="Control" parent="NotebookPanel/PageArea/PageBody/RightPage"]
+anchor_right = 1.0
+anchor_bottom = 1.0

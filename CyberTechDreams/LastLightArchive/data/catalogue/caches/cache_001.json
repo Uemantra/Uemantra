@@ -1,0 +1,21 @@
+{
+	"id": "cache_001",
+	"media_type": "personal_device",
+	"media_condition": "degraded",
+	"zone": "residential",
+	"vera_field_note": "Personal. The labels are gone.",
+	"tier_required": 2,
+	"tool_required": "glean",
+	"processing_time_seconds": 45,
+	"requires_active_attention": false,
+	"yields": [
+		{
+			"type": "catalogue_entry",
+			"entry_id": "pwtk_001",
+			"catalogue_section": "people_we_never_knew",
+			"content": "Someone's photo library. Four thousand images. Faces I'll never name. One recurring figure — teenager, braces, always making the same face at the camera. Probably annoying their family. Probably missed.",
+			"vera_note": "Glean recovered 847 images. The rest are noise. I've kept twelve.",
+			"theory_contributions": {}
+		}
+	]
+}

@@ -1,0 +1,88 @@
+{
+	"ambient": {
+		"zone_residential": {
+			"track": "ambient/zone_residential",
+			"description": "Wind through broken windows, low and directionless. Distant birdsong — sparrows, nothing dramatic. The deep creak of a roof joist settling. Occasional: a loose shutter tapping against a frame, once, then quiet. The neighbourhood sounds inhabited by weather, not by people.",
+			"volume_db": -6
+		},
+		"zone_university": {
+			"track": "ambient/zone_university",
+			"description": "Quieter than a building this size should be. Tall trees outside buffering the wind so it arrives muffled, almost polite. Water dripping on stone somewhere in a corridor — slow, irregular. The faint resonance of large empty rooms. A building holding its breath.",
+			"volume_db": -8
+		},
+		"zone_flooded": {
+			"track": "ambient/zone_flooded",
+			"description": "Water. Not rushing — standing, slow, lapping. The hollow knock of something buoyant against concrete. Wind at water level sounds different: lower, more horizontal. Occasional distant bird, probably a heron. The zone has been absorbing silence for years and now sounds like the silence has texture.",
+			"volume_db": -5
+		},
+		"village_square": {
+			"track": "ambient/village_square",
+			"description": "The village's living ambience. Voices at distance — not decipherable, just present. The sound of something being built or repaired. A child somewhere. Fire in a barrel. The baseline against which the ruin zones feel emptied.",
+			"volume_db": -4
+		},
+		"village_workshop": {
+			"track": "ambient/village_workshop",
+			"description": "Interior. The Rig's own idle hum when powered on — low, not musical. Tools on a workbench. Settling timbers. The contrast with the Rig's active terminal sound should be marked: this is the workshop at rest.",
+			"volume_db": -10
+		},
+		"location_sealed_basement": {
+			"track": "ambient/location_sealed_basement",
+			"description": "True silence, which isn't silent. The hiss of compressed air when the seal was broken. Now: near-total quiet, broken only by the faint sound of the player's own movement. This location should feel like being inside a document.",
+			"volume_db": -14
+		},
+		"location_archive_room": {
+			"track": "ambient/location_archive_room",
+			"description": "Dry, dead acoustic — heavy shelving absorbs echo. Occasional: the pop and tick of aging paper, the micro-sounds of a room full of slowly decaying objects. Should feel like time passing very slowly.",
+			"volume_db": -12
+		}
+	},
+	"tools": {
+		"glean": {
+			"signature_type": "hum",
+			"description": "A soft, constant electrical hum. Lower than a fluorescent ballast, steadier. Not musical — it has no pitch you could name, just presence. The sound of a system that is always thinking and never announces it. It should feel like it was already there when you walked in.",
+			"loop": true
+		},
+		"lattice": {
+			"signature_type": "relay_tick",
+			"description": "An irregular mechanical click, like a relay or a telegraph key held by someone thinking. Not metronomic — the interval breathes, 0.8 to 1.4 seconds. Single click, clean transient, low mid-range. Should suggest old electromechanical logic, not a modern processor. The irregularity is the point: Lattice is working through something, not running a loop.",
+			"loop": false,
+			"tick_interval_min": 0.8,
+			"tick_interval_max": 1.4
+		},
+		"echo": {
+			"signature_type": "silence_fragments",
+			"description": "Mostly silence. Then, without warning, a fragment surfaces — half a word spoken in a room you cannot place, three notes of something that was almost music, a breath. Then silence again for another 5 to 15 seconds. The silence is the primary texture; the fragment is what it finds. Each of the five fragment files should be distinct and short (under 3 seconds). They should sound like something retrieved from very far away.",
+			"loop": false,
+			"fragment_interval_min": 5.0,
+			"fragment_interval_max": 15.0,
+			"fragment_count": 5
+		}
+	},
+	"music": {
+		"corvus_composition": {
+			"track": "music/corvus_composition",
+			"description": "Corvus's piece, built from fragments he has catalogued. Solo instrument — likely piano or guitar, but the choice is the composer's. Should feel assembled rather than composed: phrases that don't quite resolve, a motif that appears twice in different registers, a long silence before the final note. Represents the Catalogue at its most complete expression. Changes across the arc through authored variation, not procedural mixing.",
+			"volume_db": -10
+		},
+		"broadcast_sequence": {
+			"track": "music/broadcast_sequence",
+			"description": "The piece Corvus plays on broadcast night. More complete than the composition — this is the performance, not the rehearsal. Emotional peak of the game's final act. Should be able to carry silence before and after it without awkwardness. If the composition has unresolved phrases, this resolves them.",
+			"volume_db": -8
+		},
+		"rig_overnight": {
+			"track": "music/rig_overnight",
+			"description": "Plays during the overnight Rig processing sequence — the transition between day and the next morning's results. Sparse, slow. Should feel like waiting and like time passing. Not tense, not hopeful: present. A few notes, a long rest, a few more.",
+			"volume_db": -12
+		},
+		"epilogue_paper": {
+			"track": "music/epilogue_paper",
+			"description": "Background for the paper epilogue cards. Minimal — perhaps single sustained notes, long decay. Should not compete with the text being read. The emotional weight is in the cards themselves; the music is what the silence sounds like after.",
+			"volume_db": -14
+		},
+		"expedition_return": {
+			"track": "music/expedition_return",
+			"description": "Brief cue for the moment of returning from an expedition with a full carry weight — the village visible, the find confirmed. Short, 30–60 seconds. Should feel like relief and small triumph without heroism. Optional: silent if the player returns empty-handed.",
+			"volume_db": -9
+		}
+	}
+}

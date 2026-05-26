@@ -1,0 +1,439 @@
+{
+	"conversations": [
+		{
+			"id": "eli_first_workshop",
+			"trigger_conditions": {
+				"relationship_min": 0,
+				"relationship_max": 30,
+				"time": "any",
+				"flags_required": [],
+				"flags_excluded": ["conv_seen_eli_first_workshop"]
+			},
+			"lines": [
+				{
+					"id": "eli_workshop1_001",
+					"speaker": "eli",
+					"text": "Oh — hey. Sorry, I thought you were — I was going to say I thought you were someone else but I don't know who I thought you were. Anyway. Hi. I'm Eli.",
+					"vera_response": null
+				},
+				{
+					"id": "eli_workshop1_002",
+					"speaker": "vera",
+					"text": "I know. You fixed my drive casing in the spring. I'm Vera.",
+					"vera_response": null
+				},
+				{
+					"id": "eli_workshop1_003",
+					"speaker": "eli",
+					"text": "Right, the drive with the — yeah, I remember that one. The outer shell was mostly carbon scoring, I wasn't sure the boards were going to be readable. They were, though.",
+					"vera_response": null
+				},
+				{
+					"id": "eli_workshop1_004",
+					"speaker": "eli",
+					"text": "What kind of archive are you running? Maren said something about old recordings but I didn't want to ask her too many questions because sometimes she gets a little — I mean she's wonderful. I just didn't want to derail her. She was mid-story.",
+					"vera_response": null
+				},
+				{
+					"id": "eli_workshop1_005",
+					"speaker": "vera",
+					"text": "Pre-war oral history, mostly. I have a reconstruction model I run on the damaged audio. What I can't recover directly I can sometimes interpolate from the text transcripts.",
+					"vera_response": null
+				},
+				{
+					"id": "eli_workshop1_006",
+					"speaker": "eli",
+					"text": "Wait — you mean you can pull the actual voices back? Like, from corrupted files?",
+					"vera_response": null
+				},
+				{
+					"id": "eli_workshop1_007",
+					"speaker": "vera",
+					"text": "Not the voices exactly. An approximation of the tonal range. It's a guess with structure, not a recovery.",
+					"vera_response": null
+				},
+				{
+					"id": "eli_workshop1_008",
+					"speaker": "eli",
+					"text": "Still. That's — yeah. Okay. Come back anytime, I want to hear more about this. I have — I have questions.",
+					"vera_response": null
+				}
+			],
+			"on_complete": {
+				"relationship_change": 5,
+				"flags_set": ["conv_seen_eli_first_workshop"]
+			}
+		},
+		{
+			"id": "eli_workshop_salvage",
+			"trigger_conditions": {
+				"relationship_min": 5,
+				"relationship_max": 50,
+				"time": "any",
+				"flags_required": ["conv_seen_eli_first_workshop"],
+				"flags_excluded": ["conv_seen_eli_workshop_salvage"]
+			},
+			"lines": [
+				{
+					"id": "eli_salvage_001",
+					"speaker": "eli",
+					"text": "Okay, so I've been thinking about your interpolation thing. Can I ask — when the model guesses, does it guess per-sample or is it doing something more like pattern completion across longer windows?",
+					"vera_response": null
+				},
+				{
+					"id": "eli_salvage_002",
+					"speaker": "vera",
+					"text": "Longer windows. It looks for structure over thirty-second segments and fills from adjacent material. Shorter gaps are easier. Longer ones are more — interpretive.",
+					"vera_response": null
+				},
+				{
+					"id": "eli_salvage_003",
+					"speaker": "eli",
+					"text": "Interpretive. I like that word for it.",
+					"vera_response": null
+				},
+				{
+					"id": "eli_salvage_004",
+					"speaker": "eli",
+					"text": "I found something last week in the south depot salvage — it's a portable DAT recorder, which — okay, nobody's made DAT in a long time, but the tape heads are intact. Like, genuinely intact. I think if you had tapes I could actually read them for you. Physically. No interpolation needed.",
+					"vera_response": null
+				},
+				{
+					"id": "eli_salvage_005",
+					"speaker": "vera",
+					"text": "I have three tapes I thought were unreadable. What would you need to try?",
+					"vera_response": null
+				},
+				{
+					"id": "eli_salvage_006",
+					"speaker": "eli",
+					"text": "Bring them tomorrow. I can't promise anything, but I'm — I want to try. I like fixing things that everyone else decided were done.",
+					"vera_response": null
+				},
+				{
+					"id": "eli_salvage_007",
+					"speaker": "vera",
+					"text": "So do I.",
+					"vera_response": null
+				},
+				{
+					"id": "eli_salvage_008",
+					"speaker": "eli",
+					"text": "Yeah. I kind of thought so.",
+					"vera_response": null
+				}
+			],
+			"on_complete": {
+				"relationship_change": 6,
+				"flags_set": ["conv_seen_eli_workshop_salvage"]
+			}
+		},
+		{
+			"id": "eli_workshop_current_project",
+			"trigger_conditions": {
+				"relationship_min": 10,
+				"relationship_max": 60,
+				"time": "daytime",
+				"flags_required": ["conv_seen_eli_workshop_salvage"],
+				"flags_excluded": ["conv_seen_eli_workshop_current_project"]
+			},
+			"lines": [
+				{
+					"id": "eli_current_001",
+					"speaker": "eli",
+					"text": "Can I show you something? This is what I'm working on right now — it's a charge controller for the new solar array panels. The old one was burning about thirty percent of what the panels were generating.",
+					"vera_response": null
+				},
+				{
+					"id": "eli_current_002",
+					"speaker": "vera",
+					"text": "And this version?",
+					"vera_response": null
+				},
+				{
+					"id": "eli_current_003",
+					"speaker": "eli",
+					"text": "I'm getting it down to maybe six percent loss. I think. I keep second-guessing my thermal calculations. I should probably just run it, but I don't want to fry anything if I'm wrong about the — actually, you know what, I'm going to run it. I've been thinking about this for three weeks. At some point you just run it.",
+					"vera_response": null
+				},
+				{
+					"id": "eli_current_004",
+					"speaker": "vera",
+					"text": "What happens if you're wrong about the thermal calculations?",
+					"vera_response": null
+				},
+				{
+					"id": "eli_current_005",
+					"speaker": "eli",
+					"text": "Best case: the controller shuts itself off. Worst case: I smell something bad and have to start over. Third case — well, there's a reason I do this in the workshop and not in anyone's house.",
+					"vera_response": null
+				},
+				{
+					"id": "eli_current_006",
+					"speaker": "vera",
+					"text": "You've done this before.",
+					"vera_response": null
+				},
+				{
+					"id": "eli_current_007",
+					"speaker": "eli",
+					"text": "Many, many times. I'm very good at starting over.",
+					"vera_response": null
+				}
+			],
+			"on_complete": {
+				"relationship_change": 5,
+				"flags_set": ["conv_seen_eli_workshop_current_project"]
+			}
+		},
+		{
+			"id": "eli_hardware_rig_first",
+			"trigger_conditions": {
+				"relationship_min": 20,
+				"relationship_max": 100,
+				"time": "any",
+				"flags_required": ["conv_seen_eli_first_workshop"],
+				"flags_excluded": ["conv_seen_eli_hardware_rig_first"]
+			},
+			"lines": [
+				{
+					"id": "eli_rig1_001",
+					"speaker": "eli",
+					"text": "Alright, I've been looking at your Rig's thermal output when it's running the reconstruction model. Do you have a minute?",
+					"vera_response": null
+				},
+				{
+					"id": "eli_rig1_002",
+					"speaker": "vera",
+					"text": "Yes.",
+					"vera_response": null
+				},
+				{
+					"id": "eli_rig1_003",
+					"speaker": "eli",
+					"text": "So the problem is your active cooling loop. The pump is original hardware, which means it's what, fifteen years old? Sixteen? It's still working but it's only moving about forty percent of its rated flow. Which means when you run long jobs, the chips throttle to keep from overheating, which is why your longer reconstructions take twice as long as they should.",
+					"vera_response": null
+				},
+				{
+					"id": "eli_rig1_004",
+					"speaker": "vera",
+					"text": "I thought the slowdown was a model complexity issue.",
+					"vera_response": null
+				},
+				{
+					"id": "eli_rig1_005",
+					"speaker": "eli",
+					"text": "Partly. But if I can get you a new pump — I found some compatible fittings in the salvage last month, I just need a pump head — your job times should drop by at least a third. Maybe half.",
+					"vera_response": null
+				},
+				{
+					"id": "eli_rig1_006",
+					"speaker": "vera",
+					"text": "What do you need from me?",
+					"vera_response": null
+				},
+				{
+					"id": "eli_rig1_007",
+					"speaker": "eli",
+					"text": "Permission to take it apart. And — patience. I've never worked on this specific configuration before. I'll be slow.",
+					"vera_response": null
+				},
+				{
+					"id": "eli_rig1_008",
+					"speaker": "vera",
+					"text": "That's fine. I'm good at waiting.",
+					"vera_response": null
+				},
+				{
+					"id": "eli_rig1_009",
+					"speaker": "eli",
+					"text": "Yeah. I figured.",
+					"vera_response": null
+				}
+			],
+			"on_complete": {
+				"relationship_change": 7,
+				"flags_set": ["conv_seen_eli_hardware_rig_first"]
+			}
+		},
+		{
+			"id": "eli_hardware_rig_second",
+			"trigger_conditions": {
+				"relationship_min": 30,
+				"relationship_max": 100,
+				"time": "any",
+				"flags_required": ["conv_seen_eli_hardware_rig_first"],
+				"flags_excluded": ["conv_seen_eli_hardware_rig_second"]
+			},
+			"lines": [
+				{
+					"id": "eli_rig2_001",
+					"speaker": "eli",
+					"text": "Okay so the pump swap is done. You should see better throughput on your next long job. But I want to talk to you about the drive array while you're here.",
+					"vera_response": null
+				},
+				{
+					"id": "eli_rig2_002",
+					"speaker": "vera",
+					"text": "Is something failing?",
+					"vera_response": null
+				},
+				{
+					"id": "eli_rig2_003",
+					"speaker": "eli",
+					"text": "Not failing. Just — one of your storage drives has bad sectors developing in the third partition. It's not critical yet. But 'not critical yet' has a way of becoming 'completely critical at the worst possible time.'",
+					"vera_response": null
+				},
+				{
+					"id": "eli_rig2_004",
+					"speaker": "vera",
+					"text": "Can you replace it?",
+					"vera_response": null
+				},
+				{
+					"id": "eli_rig2_005",
+					"speaker": "eli",
+					"text": "I can, but I need a compatible drive. I have a lead on a salvage cache about two days east. Someone else would have to go — I can't leave the workshop that long right now. But if you find the cache and bring back what I describe, I can do the swap in an afternoon.",
+					"vera_response": null
+				},
+				{
+					"id": "eli_rig2_006",
+					"speaker": "vera",
+					"text": "Tell me what I'm looking for.",
+					"vera_response": null
+				},
+				{
+					"id": "eli_rig2_007",
+					"speaker": "eli",
+					"text": "Write this down. Model prefix S-7 or later, SAS interface — it'll have a gold contact strip on the end, you can't miss it. Anything under ten years old won't be compatible. You want something with patina.",
+					"vera_response": null
+				},
+				{
+					"id": "eli_rig2_008",
+					"speaker": "vera",
+					"text": "Something with patina. Got it.",
+					"vera_response": null
+				},
+				{
+					"id": "eli_rig2_009",
+					"speaker": "eli",
+					"text": "The Rig matters. I know you know that. But I want you to know that I know it too.",
+					"vera_response": null
+				}
+			],
+			"on_complete": {
+				"relationship_change": 8,
+				"flags_set": ["conv_seen_eli_hardware_rig_second"]
+			}
+		},
+		{
+			"id": "eli_ren",
+			"trigger_conditions": {
+				"relationship_min": 60,
+				"relationship_max": 100,
+				"time": "evening",
+				"flags_required": [
+					"conv_seen_eli_hardware_rig_first",
+					"conv_seen_eli_workshop_salvage"
+				],
+				"flags_excluded": ["conv_arc_eli_ren"]
+			},
+			"lines": [
+				{
+					"id": "eli_ren_001",
+					"speaker": "eli",
+					"text": "Can I ask you something? About the archive?",
+					"vera_response": null
+				},
+				{
+					"id": "eli_ren_002",
+					"speaker": "vera",
+					"text": "Sure.",
+					"vera_response": null
+				},
+				{
+					"id": "eli_ren_003",
+					"speaker": "eli",
+					"text": "If someone made a specific trip — a research trip, east, before things got as bad as they are now — and they never came back, and they didn't leave any kind of record here... is there any chance anything about where they went would be in what you're recovering?",
+					"vera_response": null
+				},
+				{
+					"id": "eli_ren_004",
+					"speaker": "vera",
+					"text": "It depends what they were looking for, and where. Some of the caches have location data embedded in the headers. Not all.",
+					"vera_response": null
+				},
+				{
+					"id": "eli_ren_005",
+					"speaker": "eli",
+					"text": "She was looking for a research station. She had coordinates but I — I don't have them now. She was always the one who remembered numbers. I'm good at shapes, not numbers.",
+					"vera_response": null
+				},
+				{
+					"id": "eli_ren_006",
+					"speaker": "vera",
+					"text": "She?",
+					"vera_response": null
+				},
+				{
+					"id": "eli_ren_007",
+					"speaker": "eli",
+					"text": "My sister. Ren. We're — we were twins. She left five years ago. She had this idea that there was a research site that had kept running, somewhere in the eastern range. She thought someone there might still be doing something useful.",
+					"vera_response": null
+				},
+				{
+					"id": "eli_ren_008",
+					"speaker": "eli",
+					"text": "She was very — she had this thing where she believed that people were always doing something useful somewhere, you just had to find them. She never gave up on that.",
+					"vera_response": null
+				},
+				{
+					"id": "eli_ren_009",
+					"speaker": "vera",
+					"text": "I'll look. If there's anything in the location headers that matches — eastern range, research site — I'll tell you.",
+					"vera_response": null
+				},
+				{
+					"id": "eli_ren_010",
+					"speaker": "eli",
+					"text": "Don't — I don't want you to stop what you're doing to look. Just if you come across it. Passively.",
+					"vera_response": null
+				},
+				{
+					"id": "eli_ren_011",
+					"speaker": "vera",
+					"text": "Passively.",
+					"vera_response": null
+				},
+				{
+					"id": "eli_ren_012",
+					"speaker": "eli",
+					"text": "Yeah.",
+					"vera_response": null
+				},
+				{
+					"id": "eli_ren_013",
+					"speaker": "eli",
+					"text": "I haven't said her name out loud in a while. It's strange. It just sat there in my mouth, her name, and now it's out.",
+					"vera_response": null
+				},
+				{
+					"id": "eli_ren_014",
+					"speaker": "vera",
+					"text": "Ren.",
+					"vera_response": null
+				},
+				{
+					"id": "eli_ren_015",
+					"speaker": "eli",
+					"text": "Yeah. Thanks.",
+					"vera_response": null
+				}
+			],
+			"on_complete": {
+				"relationship_change": 14,
+				"flags_set": ["conv_arc_eli_ren"]
+			}
+		}
+	]
+}

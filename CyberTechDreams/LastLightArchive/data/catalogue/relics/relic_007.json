@@ -1,0 +1,11 @@
+{
+	"id": "relic_007",
+	"category": "code_and_systems",
+	"name": "A spiral-bound programming textbook",
+	"zone": "flooded",
+	"media_condition": "worn",
+	"tier_required": 2,
+	"vera_note": "Introduction to Systems Programming, third edition. The spine is cracked at chapter three, which means they read that far very hard. Pencil marginalia from the beginning, dense — 'WHY??' next to pointer arithmetic, a small drawing of a confused face next to a chapter on memory allocation. Then in chapter three: 'ok I understand now,' underlined twice, with a small star. After that the marginalia stop. Either they learned enough, or they stopped needing to write it down. The back cover has a long multiplication table someone was checking against, and a grocery list that ends with 'milk if remembered.'",
+	"catalogue_section": "relics",
+	"theory_contributions": {}
+}

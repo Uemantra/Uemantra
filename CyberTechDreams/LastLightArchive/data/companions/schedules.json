@@ -1,0 +1,131 @@
+{
+	"maren": {
+		"spring": [
+			{ "hour_start": 0,  "hour_end": 6,  "location": "maren_home",     "available_for_conversation": false },
+			{ "hour_start": 6,  "hour_end": 8,  "location": "community_hall", "available_for_conversation": false },
+			{ "hour_start": 8,  "hour_end": 17, "location": "archive_room",   "available_for_conversation": true  },
+			{ "hour_start": 17, "hour_end": 20, "location": "community_hall", "available_for_conversation": true  },
+			{ "hour_start": 20, "hour_end": 24, "location": "maren_home",     "available_for_conversation": false }
+		],
+		"summer": [
+			{ "hour_start": 0,  "hour_end": 6,  "location": "maren_home",     "available_for_conversation": false },
+			{ "hour_start": 6,  "hour_end": 8,  "location": "community_hall", "available_for_conversation": false },
+			{ "hour_start": 8,  "hour_end": 16, "location": "archive_room",   "available_for_conversation": true  },
+			{ "hour_start": 16, "hour_end": 19, "location": "farm",           "available_for_conversation": true  },
+			{ "hour_start": 19, "hour_end": 21, "location": "community_hall", "available_for_conversation": true  },
+			{ "hour_start": 21, "hour_end": 24, "location": "maren_home",     "available_for_conversation": false }
+		],
+		"autumn": [
+			{ "hour_start": 0,  "hour_end": 6,  "location": "maren_home",     "available_for_conversation": false },
+			{ "hour_start": 6,  "hour_end": 9,  "location": "farm",           "available_for_conversation": true  },
+			{ "hour_start": 9,  "hour_end": 17, "location": "archive_room",   "available_for_conversation": true  },
+			{ "hour_start": 17, "hour_end": 20, "location": "community_hall", "available_for_conversation": true  },
+			{ "hour_start": 20, "hour_end": 24, "location": "maren_home",     "available_for_conversation": false }
+		],
+		"winter": [
+			{ "hour_start": 0,  "hour_end": 7,  "location": "maren_home",     "available_for_conversation": false },
+			{ "hour_start": 7,  "hour_end": 9,  "location": "community_hall", "available_for_conversation": false },
+			{ "hour_start": 9,  "hour_end": 18, "location": "archive_room",   "available_for_conversation": true  },
+			{ "hour_start": 18, "hour_end": 21, "location": "community_hall", "available_for_conversation": true  },
+			{ "hour_start": 21, "hour_end": 24, "location": "maren_home",     "available_for_conversation": false }
+		]
+	},
+	"eli": {
+		"spring": [
+			{ "hour_start": 0,  "hour_end": 7,  "location": "eli_workshop",   "available_for_conversation": false },
+			{ "hour_start": 7,  "hour_end": 8,  "location": "community_hall", "available_for_conversation": false },
+			{ "hour_start": 8,  "hour_end": 18, "location": "eli_workshop",   "available_for_conversation": true  },
+			{ "hour_start": 18, "hour_end": 21, "location": "community_hall", "available_for_conversation": true  },
+			{ "hour_start": 21, "hour_end": 24, "location": "eli_workshop",   "available_for_conversation": false }
+		],
+		"summer": [
+			{ "hour_start": 0,  "hour_end": 7,  "location": "eli_workshop",   "available_for_conversation": false },
+			{ "hour_start": 7,  "hour_end": 9,  "location": "community_hall", "available_for_conversation": false },
+			{ "hour_start": 9,  "hour_end": 19, "location": "eli_workshop",   "available_for_conversation": true  },
+			{ "hour_start": 19, "hour_end": 22, "location": "community_hall", "available_for_conversation": true  },
+			{ "hour_start": 22, "hour_end": 24, "location": "eli_workshop",   "available_for_conversation": false }
+		],
+		"autumn": [
+			{ "hour_start": 0,  "hour_end": 7,  "location": "eli_workshop",   "available_for_conversation": false },
+			{ "hour_start": 7,  "hour_end": 8,  "location": "community_hall", "available_for_conversation": false },
+			{ "hour_start": 8,  "hour_end": 17, "location": "eli_workshop",   "available_for_conversation": true  },
+			{ "hour_start": 17, "hour_end": 20, "location": "community_hall", "available_for_conversation": true  },
+			{ "hour_start": 20, "hour_end": 24, "location": "eli_workshop",   "available_for_conversation": false }
+		],
+		"winter": [
+			{ "hour_start": 0,  "hour_end": 8,  "location": "eli_workshop",   "available_for_conversation": false },
+			{ "hour_start": 8,  "hour_end": 9,  "location": "community_hall", "available_for_conversation": false },
+			{ "hour_start": 9,  "hour_end": 20, "location": "eli_workshop",   "available_for_conversation": true  },
+			{ "hour_start": 20, "hour_end": 22, "location": "community_hall", "available_for_conversation": true  },
+			{ "hour_start": 22, "hour_end": 24, "location": "eli_workshop",   "available_for_conversation": false }
+		]
+	},
+	"sable": {
+		"spring": [
+			{ "hour_start": 0,  "hour_end": 5,  "location": "maren_home",     "available_for_conversation": false },
+			{ "hour_start": 5,  "hour_end": 11, "location": "farm",           "available_for_conversation": true  },
+			{ "hour_start": 11, "hour_end": 13, "location": "community_hall", "available_for_conversation": true  },
+			{ "hour_start": 13, "hour_end": 17, "location": "farm",           "available_for_conversation": true  },
+			{ "hour_start": 17, "hour_end": 19, "location": "community_hall", "available_for_conversation": false },
+			{ "hour_start": 19, "hour_end": 22, "location": "community_hall", "available_for_conversation": true  },
+			{ "hour_start": 22, "hour_end": 24, "location": "maren_home",     "available_for_conversation": false }
+		],
+		"summer": [
+			{ "hour_start": 0,  "hour_end": 5,  "location": "maren_home",     "available_for_conversation": false },
+			{ "hour_start": 5,  "hour_end": 10, "location": "farm",           "available_for_conversation": true  },
+			{ "hour_start": 10, "hour_end": 14, "location": "community_hall", "available_for_conversation": true  },
+			{ "hour_start": 14, "hour_end": 18, "location": "farm",           "available_for_conversation": true  },
+			{ "hour_start": 18, "hour_end": 22, "location": "community_hall", "available_for_conversation": true  },
+			{ "hour_start": 22, "hour_end": 24, "location": "maren_home",     "available_for_conversation": false }
+		],
+		"autumn": [
+			{ "hour_start": 0,  "hour_end": 5,  "location": "maren_home",     "available_for_conversation": false },
+			{ "hour_start": 5,  "hour_end": 12, "location": "farm",           "available_for_conversation": true  },
+			{ "hour_start": 12, "hour_end": 14, "location": "community_hall", "available_for_conversation": true  },
+			{ "hour_start": 14, "hour_end": 18, "location": "farm",           "available_for_conversation": true  },
+			{ "hour_start": 18, "hour_end": 21, "location": "community_hall", "available_for_conversation": true  },
+			{ "hour_start": 21, "hour_end": 24, "location": "maren_home",     "available_for_conversation": false }
+		],
+		"winter": [
+			{ "hour_start": 0,  "hour_end": 7,  "location": "maren_home",     "available_for_conversation": false },
+			{ "hour_start": 7,  "hour_end": 11, "location": "farm",           "available_for_conversation": true  },
+			{ "hour_start": 11, "hour_end": 14, "location": "community_hall", "available_for_conversation": true  },
+			{ "hour_start": 14, "hour_end": 16, "location": "archive_room",   "available_for_conversation": true  },
+			{ "hour_start": 16, "hour_end": 20, "location": "community_hall", "available_for_conversation": true  },
+			{ "hour_start": 20, "hour_end": 24, "location": "maren_home",     "available_for_conversation": false }
+		]
+	},
+	"wren": {
+		"spring": [
+			{ "hour_start": 0,  "hour_end": 7,  "location": "community_hall", "available_for_conversation": false },
+			{ "hour_start": 7,  "hour_end": 10, "location": "community_hall", "available_for_conversation": false },
+			{ "hour_start": 10, "hour_end": 13, "location": "archive_room",   "available_for_conversation": true  },
+			{ "hour_start": 13, "hour_end": 17, "location": "community_hall", "available_for_conversation": false },
+			{ "hour_start": 17, "hour_end": 21, "location": "community_hall", "available_for_conversation": true  },
+			{ "hour_start": 21, "hour_end": 24, "location": "community_hall", "available_for_conversation": false }
+		],
+		"summer": [
+			{ "hour_start": 0,  "hour_end": 7,  "location": "community_hall", "available_for_conversation": false },
+			{ "hour_start": 7,  "hour_end": 12, "location": "community_hall", "available_for_conversation": false },
+			{ "hour_start": 12, "hour_end": 15, "location": "archive_room",   "available_for_conversation": true  },
+			{ "hour_start": 15, "hour_end": 18, "location": "community_hall", "available_for_conversation": false },
+			{ "hour_start": 18, "hour_end": 22, "location": "community_hall", "available_for_conversation": true  },
+			{ "hour_start": 22, "hour_end": 24, "location": "community_hall", "available_for_conversation": false }
+		],
+		"autumn": [
+			{ "hour_start": 0,  "hour_end": 7,  "location": "community_hall", "available_for_conversation": false },
+			{ "hour_start": 7,  "hour_end": 9,  "location": "farm",           "available_for_conversation": false },
+			{ "hour_start": 9,  "hour_end": 13, "location": "community_hall", "available_for_conversation": false },
+			{ "hour_start": 13, "hour_end": 16, "location": "archive_room",   "available_for_conversation": true  },
+			{ "hour_start": 16, "hour_end": 20, "location": "community_hall", "available_for_conversation": true  },
+			{ "hour_start": 20, "hour_end": 24, "location": "community_hall", "available_for_conversation": false }
+		],
+		"winter": [
+			{ "hour_start": 0,  "hour_end": 8,  "location": "community_hall", "available_for_conversation": false },
+			{ "hour_start": 8,  "hour_end": 14, "location": "community_hall", "available_for_conversation": false },
+			{ "hour_start": 14, "hour_end": 17, "location": "archive_room",   "available_for_conversation": true  },
+			{ "hour_start": 17, "hour_end": 21, "location": "community_hall", "available_for_conversation": true  },
+			{ "hour_start": 21, "hour_end": 24, "location": "community_hall", "available_for_conversation": false }
+		]
+	}
+}

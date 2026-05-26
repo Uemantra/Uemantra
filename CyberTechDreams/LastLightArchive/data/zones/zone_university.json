@@ -1,0 +1,92 @@
+{
+	"id": "zone_university",
+	"name": "University Campus",
+	"description": "Something important was happening here when it stopped. The buildings are large and institutional. The quiet feels different — like interrupted work, not abandoned living.",
+	"primary_yield": ["echoes", "caches"],
+	"tier_required": 2,
+	"locations": {
+		"campus_gate": {
+			"id": "campus_gate",
+			"name": "Campus Gate",
+			"description": "Stone pillars, iron gates standing open. A hand-painted banner has rotted away but the frame is still bolted to the arch.",
+			"connections": ["admin_courtyard", "engineering_quad"],
+			"hazards": [],
+			"artifacts": [
+				{ "type": "scrap", "id": "scrap_iron_brackets", "weight": 0.5, "description": "Iron bolts from the banner frame. Still solid." }
+			]
+		},
+		"admin_courtyard": {
+			"id": "admin_courtyard",
+			"name": "Administration Courtyard",
+			"description": "A wide open space with a dry fountain at the centre. Offices ring the perimeter. Most doors are open.",
+			"connections": ["campus_gate", "library_entrance", "admin_records_room"],
+			"hazards": [],
+			"artifacts": [
+				{ "type": "relic", "id": "relic_university_lanyard", "weight": 0.5, "description": "A faculty ID lanyard. The photo is bleached, the name still legible: Dr. K. Osei, Computational Ethics." }
+			]
+		},
+		"admin_records_room": {
+			"id": "admin_records_room",
+			"name": "Records Room",
+			"description": "Filing cabinets, most hanging open. Somebody searched here in a hurry. One cabinet in the back is locked.",
+			"connections": ["admin_courtyard"],
+			"hazards": [{ "type": "unstable", "description": "The ceiling tiles have partially collapsed. Vera steps carefully around the debris." }],
+			"artifacts": [
+				{ "type": "cache", "id": "cache_university_records", "weight": 3.0, "description": "A locked filing cabinet. The lock is simple — a bent paperclip opens it.", "media_type": "flash", "field_note": "Flash drives, sealed in a grip-bag. Whoever packed this was hoping to come back." }
+			]
+		},
+		"library_entrance": {
+			"id": "library_entrance",
+			"name": "Library Entrance Hall",
+			"description": "High ceilings. Most of the shelves are still standing. Paper books hold up better than anyone expected.",
+			"connections": ["admin_courtyard", "library_special_collections", "library_server_room"],
+			"hazards": [],
+			"artifacts": [
+				{ "type": "relic", "id": "relic_checkout_stamp", "weight": 0.5, "description": "A date stamp from the circulation desk. Last stamped: October 14th." },
+				{ "type": "echo", "id": "echo_university_library_001", "weight": 1.0, "description": "A thumb drive taped inside the front cover of a book on information theory." }
+			]
+		},
+		"library_special_collections": {
+			"id": "library_special_collections",
+			"name": "Special Collections",
+			"description": "Climate-controlled, or it was. The seals held longer than expected. Archival boxes, acid-free. Someone was very deliberate about what they stored here — AI safety papers, alignment research preprints, printed and boxed by hand.",
+			"connections": ["library_entrance"],
+			"hazards": [],
+			"artifacts": [
+				{ "type": "cache", "id": "cache_university_special_collections", "weight": 3.0, "description": "A hardened research storage case, aluminium, foam-lined. Labelled in marker: 'ALIGNMENT — DO NOT RECYCLE'.", "media_type": "optical", "field_note": "Optical discs, individually sleeved. Someone printed every major alignment paper and burned them to disc as backup. They knew." },
+				{ "type": "relic", "id": "relic_alignment_preprint", "weight": 1.0, "description": "A printed preprint, annotated in two different inks. The margin notes disagree with each other." }
+			]
+		},
+		"library_server_room": {
+			"id": "library_server_room",
+			"name": "Library Server Room",
+			"description": "The door was propped open from the inside. Someone left in the middle of something. Server racks still standing, drives dark.",
+			"connections": ["library_entrance"],
+			"hazards": [{ "type": "darkness", "description": "No ambient light. The ventilation ducts are sealed and the room has no windows." }],
+			"artifacts": [
+				{ "type": "echo", "id": "echo_university_server_001", "weight": 1.0, "description": "A hot-swap drive bay still holding a drive. The label reads: 'LLA_BACKUP_FINAL_v3'." },
+				{ "type": "scrap", "id": "scrap_server_components", "weight": 0.5, "description": "Copper heat sinks, stripped clean." }
+			]
+		},
+		"engineering_quad": {
+			"id": "engineering_quad",
+			"name": "Engineering Quad",
+			"description": "The largest building on campus. Lab benches visible through ground-floor windows. The work was mid-step — instruments still on the tables, notebooks open.",
+			"connections": ["campus_gate", "engineering_lab_b3"],
+			"hazards": [],
+			"artifacts": [
+				{ "type": "relic", "id": "relic_lab_notebook", "weight": 1.0, "description": "A wire-bound lab notebook. Water-damaged but readable. The last entry is a list of things to do Monday." }
+			]
+		},
+		"engineering_lab_b3": {
+			"id": "engineering_lab_b3",
+			"name": "Lab B3 — Applied Systems",
+			"description": "A graduate student workspace. Personal effects mixed with equipment. Mugs with mould long since dried to dust. Whiteboards still full.",
+			"connections": ["engineering_quad"],
+			"hazards": [{ "type": "flooded", "description": "A pipe ruptured at some point. The floor holds a few centimetres of standing water." }],
+			"artifacts": [
+				{ "type": "cache", "id": "cache_university_lab_b3", "weight": 3.0, "description": "A waterproof case on a high shelf — the researcher who put it there was thinking ahead. Sticker on the lid: a small red triangle.", "media_type": "magnetic_tape", "field_note": "Tape reels in a waterproof case. The triangle sticker means hazard data. Or it meant something to whoever packed it." }
+			]
+		}
+	}
+}

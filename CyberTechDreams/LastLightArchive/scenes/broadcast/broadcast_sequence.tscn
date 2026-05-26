@@ -1,0 +1,43 @@
+[gd_scene load_steps=3 format=3 uid="uid://broadcast_sequence"]
+
+[ext_resource type="Script" path="res://scripts/broadcast/broadcast_sequence.gd" id="1"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bg"]
+bg_color = Color(0.07, 0.06, 0.05, 1.0)
+
+[node name="BroadcastSequence" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1")
+
+[node name="Background" type="ColorRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.07, 0.06, 0.05, 1.0)
+
+[node name="BeatLabel" type="RichTextLabel" parent="."]
+anchor_left = 0.1
+anchor_top = 0.35
+anchor_right = 0.9
+anchor_bottom = 0.65
+grow_horizontal = 2
+grow_vertical = 2
+bbcode_enabled = true
+fit_content = false
+scroll_active = false
+text = ""
+theme_override_font_sizes/normal_font_size = 18
+theme_override_colors/default_color = Color(0.88, 0.83, 0.72, 1.0)
+
+[node name="AdvanceButton" type="Button" parent="."]
+anchor_left = 0.5
+anchor_top = 0.85
+anchor_right = 0.5
+anchor_bottom = 0.85
+offset_left = -60.0
+offset_top = -18.0
+offset_right = 60.0
+offset_bottom = 18.0
+text = "Continue"
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.55, 0.5, 0.44, 1.0)

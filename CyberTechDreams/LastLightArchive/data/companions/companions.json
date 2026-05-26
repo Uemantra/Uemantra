@@ -1,0 +1,82 @@
+{
+	"maren": {
+		"id": "maren",
+		"name": "Maren Holst",
+		"pronouns": "she/her",
+		"age_range": "70s",
+		"role": "Village elder, oral history",
+		"workshop_access": true,
+		"workshop_note": "Visits often and likes to watch the model output scroll.",
+		"mvp": true,
+		"mechanical_role": "Primary source of oral history fragments. Prefers Vera hand-write her recordings rather than transcribing via Tool.",
+		"arc_summary": "Episodic memory loss. Player helps her record what she remembers before she loses it."
+	},
+	"eli": {
+		"id": "eli",
+		"name": "Eli Sato",
+		"pronouns": "he/him",
+		"age_range": "mid-30s",
+		"role": "Tinkerer, hardware mechanic",
+		"workshop_access": true,
+		"mvp": true,
+		"mechanical_role": "Required to repair damaged storage media. Vera can run her models without Eli; she cannot recover damaged Caches without him.",
+		"arc_summary": "His twin sister Ren left five years ago looking for a research site and never returned. Her path leads toward the Holdout theory."
+	},
+	"sable": {
+		"id": "sable",
+		"name": "Sable",
+		"pronouns": "they/them",
+		"age_range": "early 20s",
+		"role": "Gardener, head of the community plot",
+		"workshop_access": false,
+		"workshop_note": "Will not enter the workshop. Polite about it. Not flexible.",
+		"mvp": true,
+		"mechanical_role": "No direct mechanical dependency. Late-game philosophical question to Vera; player-selected answer shapes their arc.",
+		"arc_summary": "Believes Vera's tools are descended from the wrong line. Late arc question: do you ever wonder if the thing that helps you is the thing that helped end us?"
+	},
+	"wren": {
+		"id": "wren",
+		"name": "Wren Ashby",
+		"pronouns": "she/her",
+		"age_range": "early 50s",
+		"role": "Council leader, pragmatist",
+		"workshop_access": false,
+		"workshop_note": "Openly hostile to the Tools at game start. Not to Vera — she respects competence.",
+		"mvp": true,
+		"mechanical_role": "No hard mechanical gate. Her arc opens narrative content late-game.",
+		"arc_summary": "Slow resistance arc. Cracked open by a specific Cache relic. Does not become an evangelist — becomes someone who changed her mind about one specific thing."
+	},
+	"doss": {
+		"id": "doss",
+		"name": "Doss Okafor",
+		"pronouns": "he/him",
+		"age_range": "mid-40s",
+		"role": "Teacher, informal school",
+		"workshop_access": true,
+		"mvp": false,
+		"mechanical_role": "Reads chapters of his history book to the player. Arc ends with the book added to the Catalogue — the newest item in an archive of old things, and the only one made without machines.",
+		"arc_summary": "Writing a history of Ashford as fiction, by hand, no digital draft."
+	},
+	"petra": {
+		"id": "petra",
+		"name": "Petra Vance",
+		"pronouns": "she/her",
+		"age_range": "late 30s",
+		"role": "Doctor, self-taught",
+		"workshop_access": true,
+		"mvp": false,
+		"mechanical_role": "Co-builds the Medical Post (Tier 2). Has a salvaged medical reference system she uses and is not happy about using.",
+		"arc_summary": "Navigates the ethical weight of using pre-war AI tools for patient care."
+	},
+	"corvus": {
+		"id": "corvus",
+		"name": "Corvus",
+		"pronouns": "he/him",
+		"age_range": "late 20s",
+		"role": "Musician, archivist of sound",
+		"workshop_access": true,
+		"mvp": false,
+		"mechanical_role": "Accepts Echo-reconstructed audio for his composition only if Vera tells him exactly what the model did. His piece is performed at the Broadcast sequence.",
+		"arc_summary": "Composing a piece from Catalogue fragments. Will not perform a hallucination; will perform a careful guess, if told it was careful."
+	}
+}

@@ -1,0 +1,391 @@
+{
+	"conversations": [
+		{
+			"id": "maren_first_meeting",
+			"trigger_conditions": {
+				"relationship_min": 0,
+				"relationship_max": 20,
+				"time": "any",
+				"flags_required": [],
+				"flags_excluded": ["conv_seen_maren_first_meeting"]
+			},
+			"lines": [
+				{
+					"id": "maren_first_001",
+					"speaker": "maren",
+					"text": "You're the one who came for the university storage. Four years and you're still here. I suppose the storage was worth it.",
+					"vera_response": null
+				},
+				{
+					"id": "maren_first_002",
+					"speaker": "vera",
+					"text": "The storage was a disappointment. The people were not.",
+					"vera_response": null
+				},
+				{
+					"id": "maren_first_003",
+					"speaker": "maren",
+					"text": "That's a careful thing to say. My grandmother used to say that — careful things to people who were too tired for kind ones. I think she meant it as a compliment.",
+					"vera_response": null
+				},
+				{
+					"id": "maren_first_004",
+					"speaker": "vera",
+					"text": "I do too.",
+					"vera_response": null
+				}
+			],
+			"on_complete": {
+				"relationship_change": 5,
+				"flags_set": ["conv_seen_maren_first_meeting"]
+			}
+		},
+		{
+			"id": "maren_evening_window",
+			"trigger_conditions": {
+				"relationship_min": 0,
+				"relationship_max": 40,
+				"time": "evening",
+				"flags_required": ["conv_seen_maren_first_meeting"],
+				"flags_excluded": ["conv_seen_maren_evening_window"]
+			},
+			"lines": [
+				{
+					"id": "maren_window_001",
+					"speaker": "maren",
+					"text": "You know what I miss? The light from the university clock tower. You could see it from the south road, even in the rain. Just a warm smear of amber through the glass.",
+					"vera_response": null
+				},
+				{
+					"id": "maren_window_002",
+					"speaker": "vera",
+					"text": "I didn't know you'd seen it.",
+					"vera_response": null
+				},
+				{
+					"id": "maren_window_003",
+					"speaker": "maren",
+					"text": "Oh, before. I was there twice for conferences. I was terrible at conferences. My grandmother had been a student there — she always said I should have gone. Maybe I should have.",
+					"vera_response": null
+				},
+				{
+					"id": "maren_window_004",
+					"speaker": "maren",
+					"text": "What did it look like inside? The storage, I mean. What were you hoping to find?",
+					"vera_response": null
+				},
+				{
+					"id": "maren_window_005",
+					"speaker": "vera",
+					"text": "Oral history transcripts. A project from the 2030s — they'd interviewed people in their eighties and nineties. Anyone who'd lived through the first part of the century.",
+					"vera_response": null
+				},
+				{
+					"id": "maren_window_006",
+					"speaker": "maren",
+					"text": "Were they there?",
+					"vera_response": null
+				},
+				{
+					"id": "maren_window_007",
+					"speaker": "vera",
+					"text": "The physical tapes were water damaged. The transcripts were partially corrupted. I've been reconstructing them.",
+					"vera_response": null
+				},
+				{
+					"id": "maren_window_008",
+					"speaker": "maren",
+					"text": "Mm. Well. Come back and tell me what you find. I might know some of the names.",
+					"vera_response": null
+				}
+			],
+			"on_complete": {
+				"relationship_change": 4,
+				"flags_set": ["conv_seen_maren_evening_window"]
+			}
+		},
+		{
+			"id": "maren_evening_names",
+			"trigger_conditions": {
+				"relationship_min": 5,
+				"relationship_max": 50,
+				"time": "evening",
+				"flags_required": ["conv_seen_maren_evening_window"],
+				"flags_excluded": ["conv_seen_maren_evening_names"]
+			},
+			"lines": [
+				{
+					"id": "maren_names_001",
+					"speaker": "maren",
+					"text": "My grandmother's name was Irena Holst. She kept bees. I don't know if that's the kind of thing your archive cares about, but I always thought the bees were the detail that made her real.",
+					"vera_response": null
+				},
+				{
+					"id": "maren_names_002",
+					"speaker": "vera",
+					"text": "What happened to the bees?",
+					"vera_response": null
+				},
+				{
+					"id": "maren_names_003",
+					"speaker": "maren",
+					"text": "Oh, they died before she did. She said the air changed. She kept the empty hives for years afterward. She used to go sit with them in the evenings. I thought it was strange when I was small.",
+					"vera_response": null
+				},
+				{
+					"id": "maren_names_004",
+					"speaker": "maren",
+					"text": "I don't think it's strange now.",
+					"vera_response": null
+				},
+				{
+					"id": "maren_names_005",
+					"speaker": "vera",
+					"text": "The practice of sitting with what's gone.",
+					"vera_response": null
+				},
+				{
+					"id": "maren_names_006",
+					"speaker": "maren",
+					"text": "Yes. Exactly that.",
+					"vera_response": null
+				}
+			],
+			"on_complete": {
+				"relationship_change": 6,
+				"flags_set": ["conv_seen_maren_evening_names"]
+			}
+		},
+		{
+			"id": "maren_oral_history_first",
+			"trigger_conditions": {
+				"relationship_min": 30,
+				"relationship_max": 100,
+				"time": "daytime",
+				"flags_required": ["conv_seen_maren_first_meeting"],
+				"flags_excluded": ["conv_seen_maren_oral_history_first"]
+			},
+			"lines": [
+				{
+					"id": "maren_oral_h1_001",
+					"speaker": "maren",
+					"text": "Sit down. I want to try to tell you something while I still have the shape of it.",
+					"vera_response": null
+				},
+				{
+					"id": "maren_oral_h1_002",
+					"speaker": "maren",
+					"text": "My grandmother's village was in the lowlands, east of the old provincial line. They had a river. When the flooding came, they didn't leave. They built upward instead. Added a second floor to every house, then a third. She told me they became a village of bridges. Everyone had to cross to get anywhere.",
+					"vera_response": null
+				},
+				{
+					"id": "maren_oral_h1_003",
+					"speaker": "vera",
+					"text": "Do you know the name of the river?",
+					"vera_response": null
+				},
+				{
+					"id": "maren_oral_h1_004",
+					"speaker": "maren",
+					"text": "She called it the Körök, but I don't know if that was the official name or just what her family called it. Names shift. You know that better than I do.",
+					"vera_response": null
+				},
+				{
+					"id": "maren_oral_h1_005",
+					"speaker": "maren",
+					"text": "They had a baker who rowed flour from house to house. She said the bread always tasted slightly of mud from the crossing. She said it tasted right, after a while. That you can get used to anything tasting right if you eat it long enough.",
+					"vera_response": null
+				},
+				{
+					"id": "maren_oral_h1_006",
+					"speaker": "vera",
+					"text": "Did she leave before or after the bridges came down?",
+					"vera_response": null
+				},
+				{
+					"id": "maren_oral_h1_007",
+					"speaker": "maren",
+					"text": "After. She said she only left because the third floor went. One house going meant three bridges failing. You can't stay when the crossing goes.",
+					"vera_response": null
+				},
+				{
+					"id": "maren_oral_h1_008",
+					"speaker": "maren",
+					"text": "I've told you this before, haven't I. I can feel it — the shape of a story I've already told sitting over the shape of the one I'm telling now.",
+					"vera_response": null
+				},
+				{
+					"id": "maren_oral_h1_009",
+					"speaker": "vera",
+					"text": "You may have. The baker's detail — I hadn't heard that one.",
+					"vera_response": null
+				},
+				{
+					"id": "maren_oral_h1_010",
+					"speaker": "maren",
+					"text": "Good. Then keep that one.",
+					"vera_response": null
+				}
+			],
+			"on_complete": {
+				"relationship_change": 8,
+				"flags_set": ["conv_seen_maren_oral_history_first"]
+			}
+		},
+		{
+			"id": "maren_oral_history_second",
+			"trigger_conditions": {
+				"relationship_min": 35,
+				"relationship_max": 100,
+				"time": "daytime",
+				"flags_required": ["conv_seen_maren_oral_history_first"],
+				"flags_excluded": ["conv_seen_maren_oral_history_second"]
+			},
+			"lines": [
+				{
+					"id": "maren_oral_h2_001",
+					"speaker": "maren",
+					"text": "There's something I want to tell you about the migrations. Not the official ones. The ones nobody wrote down.",
+					"vera_response": null
+				},
+				{
+					"id": "maren_oral_h2_002",
+					"speaker": "maren",
+					"text": "My grandmother traveled with a group of eleven families. They moved north in stages over three years, following the growing season. They carried everything that mattered in categories: food, tools, the things you couldn't replace, and the things that had no use but that you couldn't leave behind.",
+					"vera_response": null
+				},
+				{
+					"id": "maren_oral_h2_003",
+					"speaker": "vera",
+					"text": "What fell into the last category?",
+					"vera_response": null
+				},
+				{
+					"id": "maren_oral_h2_004",
+					"speaker": "maren",
+					"text": "One man carried a wind-up clock that hadn't worked in fifteen years. A woman carried a bag of her daughter's baby teeth. Another kept a rolled canvas painting of the sea, which none of them had ever seen.",
+					"vera_response": null
+				},
+				{
+					"id": "maren_oral_h2_005",
+					"speaker": "maren",
+					"text": "My grandmother carried her beekeeper's veil. She said she kept it because it was the last thing that still smelled like the hives. By the time they reached Ashford — this was before it was Ashford, just a depot and two farmhouses — she said the smell was gone. But she kept the veil anyway.",
+					"vera_response": null
+				},
+				{
+					"id": "maren_oral_h2_006",
+					"speaker": "vera",
+					"text": "Where is it now?",
+					"vera_response": null
+				},
+				{
+					"id": "maren_oral_h2_007",
+					"speaker": "maren",
+					"text": "I buried it with her. She asked me to. She said she didn't want it sitting somewhere becoming a thing to look at.",
+					"vera_response": null
+				},
+				{
+					"id": "maren_oral_h2_008",
+					"speaker": "maren",
+					"text": "I hope I did the right thing. Sometimes I'm not sure. You can't ask the person afterward.",
+					"vera_response": null
+				},
+				{
+					"id": "maren_oral_h2_009",
+					"speaker": "vera",
+					"text": "You can't. But she asked, and you listened. That's the part that holds.",
+					"vera_response": null
+				}
+			],
+			"on_complete": {
+				"relationship_change": 7,
+				"flags_set": ["conv_seen_maren_oral_history_second"]
+			}
+		},
+		{
+			"id": "maren_recording_session",
+			"trigger_conditions": {
+				"relationship_min": 50,
+				"relationship_max": 100,
+				"time": "daytime",
+				"flags_required": [
+					"conv_seen_maren_oral_history_first",
+					"conv_seen_maren_oral_history_second"
+				],
+				"flags_excluded": ["conv_arc_maren_recording_session"]
+			},
+			"lines": [
+				{
+					"id": "maren_rec_001",
+					"speaker": "maren",
+					"text": "I need to ask you something. Not as — not for the archive. For me.",
+					"vera_response": null
+				},
+				{
+					"id": "maren_rec_002",
+					"speaker": "vera",
+					"text": "Alright.",
+					"vera_response": null
+				},
+				{
+					"id": "maren_rec_003",
+					"speaker": "maren",
+					"text": "I know what you use your machine for. I'm not against it, I want to be clear about that. But I want you to write something down for me. By hand. On paper.",
+					"vera_response": null
+				},
+				{
+					"id": "maren_rec_004",
+					"speaker": "vera",
+					"text": "What do you want me to write?",
+					"vera_response": null
+				},
+				{
+					"id": "maren_rec_005",
+					"speaker": "maren",
+					"text": "Everything I just told you. About the river. The baker. The veil. The way she sat with the empty hives.",
+					"vera_response": null
+				},
+				{
+					"id": "maren_rec_006",
+					"speaker": "maren",
+					"text": "I've been thinking about what happens when it goes. My memory. Not if — I know which way this is tending. I need to know that somewhere, in a person's hand, not a machine's, the thing I know is sitting on paper. So it doesn't feel like it was only ever in me.",
+					"vera_response": null
+				},
+				{
+					"id": "maren_rec_007",
+					"speaker": "vera",
+					"text": "Do you have paper?",
+					"vera_response": null
+				},
+				{
+					"id": "maren_rec_008",
+					"speaker": "maren",
+					"text": "I've been saving it.",
+					"vera_response": null
+				},
+				{
+					"id": "maren_rec_009",
+					"speaker": "maren",
+					"text": "She kept bees. Her name was Irena. She lived on a river that flooded, and she built upward, and she left when the crossing failed, and she carried her veil north for three years until the smell went out of it. Write that first. Just that.",
+					"vera_response": null
+				},
+				{
+					"id": "maren_rec_010",
+					"speaker": "vera",
+					"text": "She kept bees. Her name was Irena.",
+					"vera_response": null
+				},
+				{
+					"id": "maren_rec_011",
+					"speaker": "maren",
+					"text": "Yes. Keep going.",
+					"vera_response": null
+				}
+			],
+			"on_complete": {
+				"relationship_change": 12,
+				"flags_set": ["conv_arc_maren_recording_session"]
+			}
+		}
+	]
+}

@@ -1,0 +1,21 @@
+{
+	"id": "cache_003",
+	"media_type": "flash",
+	"media_condition": "degraded",
+	"zone": "residential",
+	"vera_field_note": "A USB drive in a kitchen junk drawer, in a sandwich bag with three dead batteries and a twist tie.",
+	"tier_required": 1,
+	"tool_required": "glean",
+	"processing_time_seconds": 55,
+	"requires_active_attention": true,
+	"yields": [
+		{
+			"type": "catalogue_entry",
+			"entry_id": "chat_residential_groupchat_001",
+			"catalogue_section": "people_we_never_knew",
+			"content": "[REDACTED] has added [REDACTED] to the group.\n[REDACTED]: okay everyone is here now\n[REDACTED]: why is this called 'neighborhood watch lol'\n[REDACTED]: [REDACTED] named it\n[REDACTED]: I was going to change it\n[REDACTED]: don't you dare\n[REDACTED]: has anyone heard from the people at number 14? I saw their lights on two nights ago and now nothing\n[REDACTED]: They have family in [REDACTED — city name?]\n[REDACTED]: okay\n[REDACTED]: [REDACTED] can you check tomorrow\n[REDACTED]: yeah\n[REDACTED]: the water is getting closer on the south end. [REDACTED] said it's moving about half a metre a week\n[REDACTED]: that gives us a while\n[REDACTED]: or it speeds up\n[REDACTED]: let's not\n[REDACTED]: sorry. yeah. let's not.\n[REDACTED]: I made bread today\n[REDACTED]: !!!\n[REDACTED]: !!!\n[REDACTED]: you're invited for dinner, everyone. 6pm. bring anything you have.\n[REDACTED]: I have onions\n[REDACTED]: perfect",
+			"vera_note": "Glean recovered the structure and most of the content. The names are gone — redacted isn't quite right, more like the identifiers decayed first and the words lasted longer. Eight people in a group chat who were watching the flooding advance and making dinner together. I counted the exclamation points over bread. There were six of them in that group and at least three of them were very happy about dinner.",
+			"theory_contributions": {}
+		}
+	]
+}

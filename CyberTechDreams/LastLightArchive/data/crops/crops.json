@@ -1,0 +1,57 @@
+{
+	"potato": {
+		"id": "potato",
+		"name": "Potato",
+		"growth_stages": 3,
+		"days_to_grow": 8,
+		"water_interval": 3,
+		"yield_min": 3,
+		"yield_max": 6,
+		"scrap_value": 2,
+		"seasons": ["spring", "autumn"]
+	},
+	"wheat": {
+		"id": "wheat",
+		"name": "Wheat",
+		"growth_stages": 3,
+		"days_to_grow": 10,
+		"water_interval": 4,
+		"yield_min": 4,
+		"yield_max": 8,
+		"scrap_value": 1,
+		"seasons": ["spring", "summer"]
+	},
+	"carrot": {
+		"id": "carrot",
+		"name": "Carrot",
+		"growth_stages": 3,
+		"days_to_grow": 7,
+		"water_interval": 2,
+		"yield_min": 2,
+		"yield_max": 5,
+		"scrap_value": 2,
+		"seasons": ["spring", "autumn"]
+	},
+	"sunflower": {
+		"id": "sunflower",
+		"name": "Sunflower",
+		"growth_stages": 3,
+		"days_to_grow": 9,
+		"water_interval": 3,
+		"yield_min": 1,
+		"yield_max": 3,
+		"scrap_value": 4,
+		"seasons": ["summer"]
+	},
+	"winter_squash": {
+		"id": "winter_squash",
+		"name": "Winter Squash",
+		"growth_stages": 3,
+		"days_to_grow": 12,
+		"water_interval": 5,
+		"yield_min": 2,
+		"yield_max": 4,
+		"scrap_value": 3,
+		"seasons": ["autumn", "winter"]
+	}
+}

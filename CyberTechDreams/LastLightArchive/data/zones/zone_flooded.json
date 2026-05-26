@@ -1,0 +1,91 @@
+{
+	"id": "zone_flooded",
+	"name": "Flooded District",
+	"description": "The low streets never drained. What flooded is still flooded — two centuries of standing water, slow and black and perfectly still. The buildings that went under first sealed themselves against the water in ways no one intended. The highest yield zone in the archive. Not because people tried to preserve things here. Because the water did it for them.",
+	"primary_yield": ["caches", "relics"],
+	"tier_required": 2,
+	"locations": {
+		"canal_approach": {
+			"id": "canal_approach",
+			"name": "Canal Approach",
+			"description": "The old canal path is mostly intact — raised above the waterline. The district spreads below and ahead. You can see the tops of streetlights poking out of the water. A raft is tied to a rusted bollard. It holds.",
+			"connections": ["flooded_main_street", "grain_warehouse_dock"],
+			"hazards": [],
+			"artifacts": [
+				{ "type": "relic", "id": "relic_008", "weight": 1.5, "description": "A laminated watercolour, tucked inside a rolled canvas tied to the bollard. Someone left it on purpose." },
+				{ "type": "scrap", "id": "scrap_rope_hardware", "weight": 0.5, "description": "Mooring hardware, still functional. Vera takes what she can use." }
+			]
+		},
+		"flooded_main_street": {
+			"id": "flooded_main_street",
+			"name": "Flooded Main Street",
+			"description": "You pole the raft between shop awnings just visible at water level. The water is dark but clear. Below the surface: tables still set. A cash register. A bicycle chained to nothing you can see anymore. Everything looks arranged, not abandoned.",
+			"connections": ["canal_approach", "record_shop_upper_floor", "apartment_stairwell"],
+			"hazards": [{ "type": "flooded", "description": "Requires raft. The water is two metres deep along the street channel. A misstep would be very cold and very dark." }],
+			"artifacts": [
+				{ "type": "relic", "id": "relic_flooded_street_sign", "weight": 0.5, "description": "A street sign, still bolted to its post above the waterline. Trescott Avenue. Someone has scratched a small heart into the post below the name." }
+			]
+		},
+		"record_shop_upper_floor": {
+			"id": "record_shop_upper_floor",
+			"name": "Record Shop — Upper Floor",
+			"description": "The lower floor went under years after the Quiet. The upper floor never did. Someone knew, or guessed, or just kept inventory in the safest place out of habit. Floor-to-ceiling wooden shelving, slightly warped but standing. The records are here. Most of them.",
+			"connections": ["flooded_main_street"],
+			"hazards": [],
+			"artifacts": [
+				{ "type": "relic", "id": "relic_003", "weight": 2.0, "description": "A vinyl sleeve, orange and white. The record is gone but the liner notes are still inside." },
+				{ "type": "cache", "id": "cache_004", "weight": 3.0, "description": "A sealed optical disc case behind the counter, labelled in felt-tip: STAFF PICKS vol. 7. Beneath that, someone added: for after.", "media_type": "optical", "field_note": "Optical. Dry. The felt-tip is still sharp." },
+				{ "type": "relic", "id": "relic_flooded_handwritten_setlist", "weight": 1.0, "description": "A handwritten setlist, pinned to the wall with a thumbtack. Eighteen songs. The last one has a question mark after it." }
+			]
+		},
+		"apartment_stairwell": {
+			"id": "apartment_stairwell",
+			"name": "Apartment Block Stairwell",
+			"description": "The ground floor is underwater. You come in through a second-floor window. The stairwell goes up and down. Down you can see the water line — high-tide mark from some past season, a faint brown stripe across the plaster. The upper floors are dry and untouched.",
+			"connections": ["flooded_main_street", "apartment_top_floor", "basement_archive"],
+			"hazards": [],
+			"artifacts": [
+				{ "type": "scrap", "id": "scrap_copper_pipe_fittings", "weight": 0.5, "description": "Copper fittings from the stairwell radiator. Eli would know if these were useful." }
+			]
+		},
+		"apartment_top_floor": {
+			"id": "apartment_top_floor",
+			"name": "Top-Floor Apartment",
+			"description": "Someone moved up here when the flooding started. The furniture is arranged around the windows, which face west. On clear days — and there are clear days now, the sky is very clear — you would have been able to see a long way. They stayed a while. The kitchen was restocked more than once.",
+			"connections": ["apartment_stairwell"],
+			"hazards": [],
+			"artifacts": [
+				{ "type": "relic", "id": "relic_005", "weight": 1.5, "description": "A board game, pieces missing but box intact. Someone penciled the missing pieces onto paper and tucked the sheets inside." },
+				{ "type": "cache", "id": "cache_002", "weight": 2.5, "description": "A small handheld recorder on the kitchen table. Still has battery residue in the bay but the flash memory survived.", "media_type": "flash", "field_note": "Flash. Handheld recorder, the kind journalists used. One file." },
+				{ "type": "relic", "id": "relic_flooded_calendar", "weight": 1.0, "description": "A wall calendar, open to a month with no year visible. Several days are circled in red. One has the word 'STILL HERE' written in capitals across it." }
+			]
+		},
+		"basement_archive": {
+			"id": "basement_archive",
+			"name": "Sealed Basement Archive",
+			"description": "The door at the bottom of the stairwell is sealed from the inside with expanding foam — someone did it themselves, carefully, filling every gap. The foam held. The water never got in. The room beyond is pitch black and perfectly dry. It smells like nothing. Paper and magnetic tape and optical media that haven't aged in two hundred years.",
+			"connections": ["apartment_stairwell"],
+			"hazards": [
+				{ "type": "darkness", "description": "No light source reaches here. Complete darkness. Vera needs her own light." },
+				{ "type": "sealed", "description": "The foam seal has to be cut to enter. It cannot be resealed. This is a one-way door." }
+			],
+			"artifacts": [
+				{ "type": "echo", "id": "echo_005", "weight": 1.0, "description": "A reel-to-reel tape on a dedicated player, still connected to a small portable speaker. The player has a hand-crank backup mechanism." },
+				{ "type": "echo", "id": "echo_006", "weight": 1.0, "description": "A stack of magnetic tape cartridges in archival sleeves, labelled in a careful hand. Each label is a date and two initials." },
+				{ "type": "cache", "id": "cache_flooded_basement_optical", "weight": 4.0, "description": "Six archive-quality optical disc cases, stacked and shrink-wrapped together. A handwritten index is taped to the outside: films, music, books — the categories of a library in miniature.", "media_type": "optical", "field_note": "Optical. Six cases. Someone built this like they had time. Like they thought someone would come." }
+			]
+		},
+		"grain_warehouse_dock": {
+			"id": "grain_warehouse_dock",
+			"name": "Grain Warehouse Dock",
+			"description": "The warehouse itself is half-submerged, but the loading dock sits above water on its raised concrete platform. The big rolling doors are rusted shut, but a side entry is open. Inside: the grain is long gone, replaced by something more durable. This was a secondary storage site. Someone used the warehouse after its original purpose ended.",
+			"connections": ["canal_approach"],
+			"hazards": [{ "type": "flooded", "description": "The warehouse floor inside dips below the waterline at the far end. You need the raft to reach the back shelving." }],
+			"artifacts": [
+				{ "type": "relic", "id": "relic_007", "weight": 1.5, "description": "A spiral-bound programming textbook, stored in a sealed Ziploc bag inside a plastic tote. The pencil marginalia are dense through chapter three." },
+				{ "type": "cache", "id": "cache_006", "weight": 3.5, "description": "A ruggedized external drive in a waterproof pelican case, yellow, latched shut. Sticker on the lid: a black circle with a white tree inside it.", "media_type": "magnetic_tape", "field_note": "Sealed drive, ruggedized case. The sticker is a project logo I don't recognise. Not a brand." },
+				{ "type": "echo", "id": "echo_004", "weight": 1.0, "description": "A flash drive in a sealed glass vial, corked. Someone took the time to make this waterproof by hand." }
+			]
+		}
+	}
+}

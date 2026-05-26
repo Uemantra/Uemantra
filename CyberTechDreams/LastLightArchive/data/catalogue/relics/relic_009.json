@@ -1,0 +1,11 @@
+{
+	"id": "relic_009",
+	"category": "code_and_systems",
+	"name": "A laminated quick reference card",
+	"zone": "university",
+	"media_condition": "intact",
+	"tier_required": 2,
+	"vera_note": "Laminated, A5, double-sided. A cheat sheet for a language called Ximble — I have found exactly two other references to Ximble in the archive, both in footnotes of academic papers. It was apparently a research language designed for formal verification of concurrent systems. The card lists twenty-three functions. Most are self-explanatory if you know the domain; three are crossed out in ballpoint pen with the note 'deprecated (thank god).' The reverse has a coffee ring and, inside the coffee ring, a small handwritten formula that seems to be a correction to one of the listed functions. Someone was still using this. Right up until they weren't.",
+	"catalogue_section": "relics",
+	"theory_contributions": {}
+}

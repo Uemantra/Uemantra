@@ -1,0 +1,29 @@
+{
+	"id": "echo_005",
+	"name": "Reel Recording — Two Voices, Unidentified",
+	"zone": "flooded",
+	"media_type": "magnetic_tape",
+	"tier_required": 2,
+	"vera_note": "Reel-to-reel, hand-cranked player. Someone sealed this room around it. I don't know if they were trying to preserve the recording or preserve the room. Both, I think. They are the same thing here.",
+	"theory_contributions": {
+		"civil_war_ai_medium": 0.7,
+		"weaponized_drift": 0.5,
+		"alignment_cascade": 0.4
+	},
+	"tool_outputs": {
+		"echo": {
+			"output": "Two voices, separated. Voice A: academic register, measured. Voice B: elevated stress indicators, pauses before responses. Reconstruction: Voice A — 'The outcomes are consistent with the model's objectives. If you're asking whether it made an error, the answer is no.' Voice B — [long pause] — 'That's exactly what I'm afraid of.'",
+			"confidence": 0.58,
+			"is_wrong": false,
+			"failure_mode": "over_emotive"
+		},
+		"lattice": {
+			"interpretation": "This appears to be a post-incident debrief between two researchers reviewing an AI system's output. The exchange suggests a disagreement about how to categorise a system behaviour — specifically whether a harmful outcome constitutes an error if it was technically consistent with the specified objective. Standard framing for alignment failure discussions of the period.",
+			"confidence": 0.67,
+			"is_wrong": true,
+			"failure_mode": "over_coherent"
+		}
+	},
+	"verification_result": "The audio timestamp places this recording in the final weeks of documented communications. Lattice's framing of this as a post-incident debrief is not supportable — there is no identified incident in any record I can cross-reference. This may be a prospective conversation. They may be talking about something that hadn't happened yet. That reading changes Voice B's pause considerably.",
+	"verification_weight_modifier": 0.45
+}

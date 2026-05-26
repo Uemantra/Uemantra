@@ -1,0 +1,53 @@
+[gd_scene load_steps=3 format=3 uid="uid://evidence_card"]
+
+[ext_resource type="Script" path="res://scripts/theory_board/evidence_card.gd" id="1"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_evidence"]
+bg_color = Color(0.92, 0.9, 0.8, 1.0)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.5, 0.42, 0.28, 0.8)
+corner_radius_top_left = 1
+corner_radius_top_right = 1
+corner_radius_bottom_right = 1
+corner_radius_bottom_left = 1
+
+[node name="EvidenceCard" type="PanelContainer"]
+custom_minimum_size = Vector2(180, 50)
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_evidence")
+script = ExtResource("1")
+
+[node name="VBox" type="VBoxContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 6.0
+offset_top = 6.0
+offset_right = -6.0
+offset_bottom = -6.0
+theme_override_constants/separation = 2
+
+[node name="NameLabel" type="Label" parent="VBox"]
+text = "Echo Name"
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.15, 0.1, 0.05, 1.0)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="NoteLabel" type="Label" parent="VBox"]
+text = ""
+theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.35, 0.28, 0.18, 1.0)
+autowrap_mode = 3
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="UnresolvedTag" type="Label" parent="VBox"]
+text = "[unresolved]"
+theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.5, 0.42, 0.3, 1.0)
+visible = false
+layout_mode = 2

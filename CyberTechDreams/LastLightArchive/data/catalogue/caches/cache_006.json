@@ -1,0 +1,21 @@
+{
+	"id": "cache_006",
+	"media_type": "magnetic_tape",
+	"media_condition": "degraded",
+	"zone": "flooded",
+	"vera_field_note": "Ruggedized pelican case, yellow, latched. The sticker is a black circle with a white tree inside it. I don't recognise the logo. Not a brand — something personal, or a group's mark.",
+	"tier_required": 2,
+	"tool_required": "lattice",
+	"processing_time_seconds": 85,
+	"requires_active_attention": true,
+	"yields": [
+		{
+			"type": "catalogue_entry",
+			"entry_id": "journal_flooded_codingnotes_001",
+			"catalogue_section": "people_we_never_knew",
+			"content": "--- DAY 1 ---\nfirst program: hello world. felt stupid writing 'hello world' but I did it. It worked. Ran it four times.\n\n--- DAY 8 ---\nvariables make sense, functions are starting to make sense, loops are the worst thing anyone has ever designed. WHY does it go from i=0 to i<length. Why not i=1 to i=length. Who decided this. I looked it up. Apparently historical reasons. I hate historical reasons.\n\n--- DAY 23 ---\nfixed the loop issue (it clicked, I won't explain). Wrote my first thing that was actually useful — a script that renames files in a folder. Ran it on the wrong folder. Renamed three hundred photos with sequential numbers. They're just numbers now. I'm sorry to the photos.\n\n--- DAY 41 ---\nStarted the greenhouse project. The idea: a small system that reads temperature/humidity sensors and sends an alert if conditions go outside range. For my mother's greenhouse. She doesn't know I'm doing this. It's a surprise.\n\n--- DAY 67 ---\nThe greenhouse monitor works. It has been running for eleven days without crashing, which I am counting as a success. My mother said 'you made me a robot gardener' and seemed genuinely delighted. She named it Fern. I didn't tell her it's named after a folder called /fern on my hard drive because that's where I kept the project files.\n\n--- DAY 89 ---\nI think I want to do more of this. Not as a job. I have a job. But as a — I don't know. A thing I do. It's the only thing I've learned as an adult that felt like something new in my head, like a new room I didn't know was there.\n\n--- DAY 140 ---\nFern is having issues. The sensor keeps reporting impossible temperatures. I think the sensor is bad, not the code. I hope it's the sensor. Haven't told my mother yet.\n\n--- DAY 141 ---\nIt was the sensor. The code was fine. Replaced the sensor, everything nominal. I was proud of myself for knowing it was the sensor and not the code. That's a new thing too.\n\n--- [ENTRIES MISSING — LATTICE ESTIMATES 60-80 DAYS OF ENTRIES UNRECOVERABLE] ---\n\n--- DAY [CORRUPTED] ---\nThe greenhouse isn't the point anymore. I've been thinking about the handoff problem — Def mentioned it at the last meeting and I can't stop thinking about it. What happens when one system finishes and another has to pick up. Who ensures the agreement. I wrote some notes. They look like the beginning of something.\n\n--- [FINAL RECOVERABLE ENTRY] ---\nFern is still running. I checked. My mother says it's been very accurate this season. She says Fern is a good name.",
+			"vera_note": "Lattice recovered most of this. The gap in the middle is real — the tape degraded unevenly. The person who wrote this taught themselves to code in the middle of whatever else was happening, built something for their mother, named a folder Fern and let their mother think she'd named the whole project. The last recoverable entry references 'the handoff problem' and 'Def' — Def also appears in the arbor README from the university lab, credited with notes on the tutorial. I think these are connected. I think the white tree logo was a group, not a brand.",
+			"theory_contributions": {}
+		}
+	]
+}

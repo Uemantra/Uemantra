@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>End Times Tactical — World Editor</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Courier New', monospace; background: #111; color: #ccc; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+/* ─── Toolbar ─────────────────────────────────────────────── */
+#toolbar {
+  background: #1a1a1a; border-bottom: 1px solid #333;
+  padding: 8px 16px; display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+}
+#toolbar h1 { color: #c8a84b; font-size: 14px; letter-spacing: 2px; margin-right: auto; }
+#toolbar button { background: #2a2a2a; color: #aaa; border: 1px solid #444; padding: 6px 12px; cursor: pointer; font-family: inherit; font-size: 12px; }
+#toolbar button:hover { background: #333; color: #ddd; }
+#file-input { display: none; }
+
+/* ─── Tab Bar ─────────────────────────────────────────────── */
+#tabs {
+  background: #151515; border-bottom: 1px solid #333;
+  display: flex; flex-shrink: 0;
+}
+.tab {
+  padding: 10px 18px; cursor: pointer; font-size: 13px; color: #777;
+  border-bottom: 2px solid transparent; user-select: none;
+}
+.tab.active { color: #c8a84b; border-bottom-color: #c8a84b; background: #1a1a1a; }
+.tab:hover:not(.active) { color: #aaa; background: #1c1c1c; }
+
+/* ─── Main Layout ─────────────────────────────────────────── */
+#main { display: flex; flex: 1; overflow: hidden; }
+
+/* ─── List Panel ─────────────────────────────────────────── */
+#list-panel {
+  width: 280px; background: #161616; border-right: 1px solid #2a2a2a;
+  display: flex; flex-direction: column; flex-shrink: 0;
+}
+#list-add-btn {
+  margin: 10px; background: #1e3a1e; color: #6a9; border: 1px solid #3a6a3a;
+  padding: 8px; cursor: pointer; font-family: inherit; font-size: 13px;
+}
+#list-add-btn:hover { background: #253a25; }
+#list-items { flex: 1; overflow-y: auto; }
+.list-item {
+  padding: 10px 14px; cursor: pointer; border-bottom: 1px solid #1e1e1e;
+  font-size: 13px; color: #999;
+}
+.list-item:hover { background: #1e1e1e; color: #ccc; }
+.list-item.selected { background: #1e2a1e; color: #c8a84b; border-left: 3px solid #c8a84b; }
+.list-item small { display: block; color: #555; font-size: 11px; margin-top: 2px; }
+
+/* ─── Form Panel ─────────────────────────────────────────── */
+#form-panel { flex: 1; overflow-y: auto; padding: 20px 24px; }
+#form-panel h2 { color: #c8a84b; font-size: 16px; margin-bottom: 16px; letter-spacing: 1px; }
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; color: #888; font-size: 11px; letter-spacing: 1px; margin-bottom: 4px; text-transform: uppercase; }
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%; background: #1c1c1c; border: 1px solid #333; color: #ddd;
+  padding: 8px 10px; font-family: inherit; font-size: 13px;
+}
+.form-group input:focus, .form-group select, .form-group textarea:focus {
+  outline: 1px solid #c8a84b; border-color: #c8a84b;
+}
+.form-group input[type=number] { width: 80px; }
+.form-group textarea { min-height: 80px; resize: vertical; }
+.form-group select { cursor: pointer; }
+.form-row { display: flex; gap: 12px; flex-wrap: wrap; }
+.form-row .form-group { flex: 1; min-width: 120px; }
+.form-section-header {
+  color: #666; font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+  border-bottom: 1px solid #222; padding-bottom: 4px; margin: 20px 0 12px;
+}
+.btn-primary { background: #1e3a1e; color: #6a9; border: 1px solid #3a6a3a; padding: 8px 16px; cursor: pointer; font-family: inherit; font-size: 13px; margin-right: 8px; }
+.btn-primary:hover { background: #253a25; }
+.btn-danger { background: #3a1e1e; color: #c66; border: 1px solid #6a3a3a; padding: 8px 16px; cursor: pointer; font-family: inherit; font-size: 13px; }
+.btn-danger:hover { background: #4a2020; }
+.btn-small { padding: 4px 10px; font-size: 12px; }
+.placeholder { color: #444; font-size: 14px; padding: 40px; text-align: center; }
+.stat-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.stat-item { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.stat-item label { font-size: 10px; color: #666; text-transform: uppercase; }
+.stat-item input { width: 52px; text-align: center; }
+
+/* ─── Dialogue Tree ───────────────────────────────────────── */
+.convo-card { background: #1a1a1a; border: 1px solid #2a2a2a; margin-bottom: 12px; }
+.convo-header { padding: 10px 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: #1e1e1e; }
+.convo-header:hover { background: #222; }
+.convo-body { padding: 14px; border-top: 1px solid #252525; }
+.node-card { background: #161616; border: 1px solid #252525; margin-bottom: 8px; padding: 10px 14px; }
+.node-card .node-type { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: #666; margin-bottom: 6px; }
+.node-card.npc-line .node-type { color: #5a8a5a; }
+.node-card.player-choice .node-type { color: #5a7aaa; }
+.choice-row { background: #1a1a1a; border: 1px solid #222; padding: 8px 12px; margin-bottom: 6px; }
+.choice-row label { color: #666; font-size: 11px; }
+.add-node-btn { background: #1a2a3a; color: #5a8aaa; border: 1px dashed #3a5a7a; padding: 6px 12px; cursor: pointer; font-family: inherit; font-size: 12px; width: 100%; }
+.add-node-btn:hover { background: #1e3040; }
+.on-complete-section { background: #1a1a1e; border: 1px solid #2a2a3a; padding: 12px; margin-top: 12px; }
+
+/* ─── Help Panel ─────────────────────────────────────────── */
+#help-panel {
+  background: #141414; border-top: 1px solid #2a2a2a;
+  padding: 10px 16px; flex-shrink: 0; min-height: 56px;
+  display: flex; align-items: flex-start; gap: 12px;
+}
+#help-panel strong { color: #c8a84b; font-size: 12px; white-space: nowrap; }
+#help-panel span { color: #777; font-size: 12px; line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<div id="toolbar">
+  <h1>END TIMES TACTICAL &mdash; WORLD EDITOR</h1>
+  <button onclick="importJSON()">&#x1F4C2; Import JSON</button>
+  <input type="file" id="file-input" accept=".json" onchange="handleImport(event)">
+  <button onclick="exportAll()">&#x1F4BE; Export All (zip)</button>
+  <button onclick="saveToLocal()">&#x1F4BB; Save to LocalStorage</button>
+  <button onclick="loadFromLocal()">&#x21BA; Load Saved</button>
+</div>
+
+<div id="tabs">
+  <div class="tab active" onclick="switchTab('factions')">Factions</div>
+  <div class="tab" onclick="switchTab('items')">Items</div>
+  <div class="tab" onclick="switchTab('locations')">Locations</div>
+  <div class="tab" onclick="switchTab('npcs')">NPCs</div>
+  <div class="tab" onclick="switchTab('quests')">Quests</div>
+  <div class="tab" onclick="switchTab('dialogue')">Dialogue</div>
+</div>
+
+<div id="main">
+  <div id="list-panel">
+    <button id="list-add-btn" onclick="addItem()">+ Add New</button>
+    <div id="list-items"></div>
+  </div>
+  <div id="form-panel"><div class="placeholder">Select an item from the left, or click &ldquo;+ Add New&rdquo;</div></div>
+</div>
+
+<div id="help-panel">
+  <strong id="help-title">HELP</strong>
+  <span id="help-body">Click any field to see what it does.</span>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  DATA STORE
+// ═══════════════════════════════════════════════════════════════
+const DB = {
+  factions: {},
+  items: { weapons: [], armor: [], consumables: [], misc: [] },
+  locations: {},
+  npcs: {},
+  dialogues: {},
+  quests: {},
+  world: { nodes: [] },
+};
+
+let currentTab = 'factions';
+let selectedId = null;
+let dialogueNpcId = null;
+
+// ═══════════════════════════════════════════════════════════════
+//  HELP SYSTEM
+// ═══════════════════════════════════════════════════════════════
+const HELP = {
+  // Factions
+  'faction-id': ['ID', 'Unique machine-readable identifier, e.g. "the_council". Use lowercase, underscores only. Cannot be changed after creation.'],
+  'faction-name': ['Name', 'The display name players see in dialogue and the faction rep strip.'],
+  'faction-description': ['Description', 'Internal notes about this faction. Useful for writers to understand who they are.'],
+  'faction-rep_starting': ['Starting Reputation', 'The player\'s reputation with this faction at the start of a new game. 0 = neutral.'],
+  'faction-rep_threshold_hostile': ['Hostile Threshold', 'If rep drops below this value, the faction treats the player as an enemy.'],
+  'faction-rep_threshold_friendly': ['Friendly Threshold', 'Rep must reach this value for the faction to be friendly to the player.'],
+  'faction-rep_label_0': ['Neutral Label', 'What the player\'s status is called when rep is at zero (e.g. "Outsider", "Civilian").'],
+  // NPC
+  'npc-name': ['Name', 'The full display name of this NPC, shown in dialogue boxes and location lists.'],
+  'npc-faction': ['Faction', 'Which faction this NPC belongs to. Affects faction rep when you interact with them.'],
+  'npc-role': ['Role', 'A short description of who this person is. Shown as a tooltip. Helps writers know the character.'],
+  'npc-location_default': ['Default Location', 'Which location this NPC can normally be found at.'],
+  'npc-stats-grit': ['Grit', 'Affects HP and resistance to bleeding. High grit = tough, hard to kill through attrition.'],
+  'npc-stats-reflex': ['Reflex', 'Affects action points per turn, initiative order, and evasion in combat.'],
+  'npc-stats-mind': ['Mind', 'Affects Speech, Tech, and Medicine skill bases. Smart characters are better at talking and tech.'],
+  'npc-stats-body': ['Body', 'Affects HP, carry weight, and melee damage. Physical strength and stamina.'],
+  'npc-stats-nerve': ['Nerve', 'Affects Intimidate and Guns accuracy. Coolness under fire and aggressive precision.'],
+  'npc-stats-presence': ['Presence', 'Affects Barter and Speech (secondary). Charm and force of personality.'],
+  'npc-has_combat': ['Has Combat Profile', 'Check this if the NPC can appear in tactical combat. If unchecked, they are dialogue-only.'],
+  // Location
+  'location-name': ['Location Name', 'The display name shown on the world map and in the location header.'],
+  'location-type': ['Type', '"settlement" = safe hub. "hostile_zone" = combat likely. "dungeon" = structured dungeon encounter.'],
+  'location-description': ['Description', 'Shown to the player when they arrive. Set the scene — smell, sounds, first impressions.'],
+  'location-ambient': ['Ambient Description', 'Short flavour note used for atmosphere. Writers can use this for creative reference.'],
+  // Item
+  'item-name': ['Item Name', 'Display name shown in the inventory and during dialogue.'],
+  'item-description': ['Description', 'Flavour text shown in the inventory detail view. Write it in-world.'],
+  'item-weight': ['Weight (kg)', 'How much this item adds to the player\'s carry weight. 0 = weightless (for documents, key items).'],
+  'item-value': ['Value (Caps)', 'The base trade value in caps. Used by barter skill checks.'],
+  'item-ap_cost': ['AP Cost', 'How many Action Points it costs to use this weapon in combat. Pistols: 2. Melee: 3. Rifles: 3.'],
+  'item-damage_dice': ['Damage Dice', 'Dice roll for damage, e.g. "1d8" or "2d6". Roll happens each hit.'],
+  'item-range_tiles': ['Range (tiles)', 'Maximum distance in grid tiles. Melee = 1. Pistols ~8. Rifles ~12.'],
+  // Dialogue
+  'node-type': ['Node Type', '"NPC Line" = the NPC speaks. "Player Choice" = the player picks from options. Conversations alternate between these.'],
+  'node-text': ['Text', 'What the NPC says (for NPC Line nodes). Should sound like the character, not a game instruction.'],
+  'node-next': ['Next Node', 'Which node to go to after this one. "END" closes the conversation.'],
+  'choice-text': ['Choice Text', 'What the player can say. Start with [SkillName 50] for a skill check option.'],
+  'choice-skill': ['Skill Required', 'For skill checks: which skill is tested (speech, intimidate, barter, etc.).'],
+  'choice-difficulty': ['Difficulty', 'The minimum skill score needed to pass. Player has ~50 base in most skills.'],
+  'trigger-flags_required': ['Flags Required', 'Comma-separated flag names. This conversation only shows if ALL these flags are set.'],
+  'trigger-flags_excluded': ['Flags Excluded', 'Comma-separated flag names. This conversation is hidden if ANY of these flags are set.'],
+  'on_complete-flags_set': ['Flags to Set', 'Comma-separated flags set when this conversation ends. Used to gate other events and quests.'],
+  'on_complete-relationship': ['Relationship Change', 'How much to change the player\'s relationship with this NPC when the conversation ends. Positive = warmer.'],
+  // Quest
+  'quest-title': ['Quest Title', 'The name shown in the quest journal.'],
+  'quest-summary': ['Summary', 'Brief description shown at the top of the journal entry.'],
+  'stage-title': ['Stage Title', 'Shown in the journal when this stage is active.'],
+  'objective-text': ['Objective Text', 'What the player needs to do, in plain English.'],
+  'objective-flag_complete': ['Completion Flag', 'This objective is ticked off when this flag is set anywhere in the game (dialogue, combat, etc.).'],
+};
+
+function showHelp(key) {
+  const h = HELP[key];
+  if (!h) return;
+  document.getElementById('help-title').textContent = h[0].toUpperCase();
+  document.getElementById('help-body').textContent = h[1];
+}
+
+function attachHelp(el, key) {
+  el.addEventListener('focus', () => showHelp(key));
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  TAB SWITCHING
+// ═══════════════════════════════════════════════════════════════
+function switchTab(tab) {
+  currentTab = tab;
+  selectedId = null;
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', ['factions','items','locations','npcs','quests','dialogue'][i] === tab);
+  });
+  renderList();
+  document.getElementById('form-panel').innerHTML = '<div class="placeholder">Select an item from the left, or click &ldquo;+ Add New&rdquo;</div>';
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  LIST RENDERING
+// ═══════════════════════════════════════════════════════════════
+function renderList() {
+  const container = document.getElementById('list-items');
+  container.innerHTML = '';
+  const items = getListItems();
+  items.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'list-item' + (item.id === selectedId ? ' selected' : '');
+    div.innerHTML = `<strong>${esc(item.label)}</strong><small>${esc(item.sub || '')}</small>`;
+    div.onclick = () => selectItem(item.id);
+    container.appendChild(div);
+  });
+}
+
+function getListItems() {
+  switch (currentTab) {
+    case 'factions':
+      return Object.values(DB.factions).map(f => ({ id: f.id, label: f.name || f.id, sub: f.description?.slice(0,50) }));
+    case 'items':
+      const allItems = [...DB.items.weapons, ...DB.items.armor, ...DB.items.consumables, ...DB.items.misc];
+      return allItems.map(i => ({ id: i.id, label: i.name || i.id, sub: i.type + (i.subtype ? ' / '+i.subtype : '') }));
+    case 'locations':
+      return Object.values(DB.locations).map(l => ({ id: l.id, label: l.name || l.id, sub: l.type }));
+    case 'npcs':
+      return Object.values(DB.npcs).map(n => ({ id: n.id, label: n.name || n.id, sub: n.faction || '' }));
+    case 'quests':
+      return Object.values(DB.quests).map(q => ({ id: q.id, label: q.title || q.id, sub: (q.stages||[]).length + ' stage(s)' }));
+    case 'dialogue':
+      return Object.values(DB.npcs).map(n => ({ id: n.id, label: n.name || n.id, sub: (DB.dialogues[n.id]?.conversations||[]).length + ' conversation(s)' }));
+  }
+  return [];
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  SELECTION + FORM RENDERING
+// ═══════════════════════════════════════════════════════════════
+function selectItem(id) {
+  selectedId = id;
+  if (currentTab === 'dialogue') dialogueNpcId = id;
+  renderList();
+  renderForm();
+}
+
+function renderForm() {
+  const panel = document.getElementById('form-panel');
+  switch (currentTab) {
+    case 'factions': panel.innerHTML = renderFactionForm(DB.factions[selectedId]); break;
+    case 'items': panel.innerHTML = renderItemForm(findItem(selectedId)); break;
+    case 'locations': panel.innerHTML = renderLocationForm(DB.locations[selectedId]); break;
+    case 'npcs': panel.innerHTML = renderNpcForm(DB.npcs[selectedId]); break;
+    case 'quests': panel.innerHTML = renderQuestForm(DB.quests[selectedId]); break;
+    case 'dialogue': panel.innerHTML = renderDialogueTab(DB.npcs[selectedId]); break;
+  }
+  attachHelpListeners();
+}
+
+function attachHelpListeners() {
+  document.querySelectorAll('[data-help]').forEach(el => {
+    el.addEventListener('focus', () => showHelp(el.dataset.help));
+  });
+}
+
+function esc(str) {
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  FACTION FORM
+// ═══════════════════════════════════════════════════════════════
+function renderFactionForm(f) {
+  if (!f) return '<div class="placeholder">Select a faction</div>';
+  return `
+  <h2>FACTION</h2>
+  <div class="form-row">
+    <div class="form-group">
+      <label>ID</label>
+      <input type="text" value="${esc(f.id)}" onchange="updateFaction('${f.id}','id',this.value)" data-help="faction-id">
+    </div>
+    <div class="form-group" style="flex:2">
+      <label>Display Name</label>
+      <input type="text" value="${esc(f.name)}" onchange="updateFaction('${f.id}','name',this.value)" data-help="faction-name">
+    </div>
+  </div>
+  <div class="form-group">
+    <label>Description</label>
+    <textarea onchange="updateFaction('${f.id}','description',this.value)" data-help="faction-description">${esc(f.description||'')}</textarea>
+  </div>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Starting Reputation</label>
+      <input type="number" value="${f.rep_starting||0}" onchange="updateFaction('${f.id}','rep_starting',+this.value)" data-help="faction-rep_starting">
+    </div>
+  </div>
+  <div class="form-section-header">Reputation Thresholds</div>
+  <div class="form-row">
+    ${['hostile','unfriendly','neutral','friendly','trusted','exalted'].map(tier => `
+    <div class="form-group">
+      <label>${tier}</label>
+      <input type="number" value="${(f.rep_thresholds||{})[tier]||0}"
+        onchange="updateFactionThreshold('${f.id}','${tier}',+this.value)"
+        data-help="faction-rep_threshold_${tier}">
+    </div>`).join('')}
+  </div>
+  <div class="form-section-header">Reputation Labels (shown at each threshold)</div>
+  <div class="form-row">
+    ${Object.entries(f.rep_thresholds||{}).map(([tier, val]) => `
+    <div class="form-group">
+      <label>At ${tier} (${val})</label>
+      <input type="text" value="${esc((f.rep_labels||{})[String(val)]||tier)}"
+        onchange="updateFactionLabel('${f.id}','${val}',this.value)"
+        data-help="faction-rep_label_0">
+    </div>`).join('')}
+  </div>
+  <div class="form-group">
+    <label>Accent Color (hex)</label>
+    <input type="text" value="${esc(f.color||'#888888')}" onchange="updateFaction('${f.id}','color',this.value)">
+  </div>
+  <div style="margin-top:20px">
+    <button class="btn-danger" onclick="deleteItem('${f.id}')">Delete Faction</button>
+  </div>`;
+}
+
+function updateFaction(id, key, val) {
+  if (key === 'id') { DB.factions[val] = DB.factions[id]; DB.factions[val].id = val; delete DB.factions[id]; selectedId = val; renderList(); return; }
+  DB.factions[id][key] = val;
+}
+function updateFactionThreshold(id, tier, val) {
+  if (!DB.factions[id].rep_thresholds) DB.factions[id].rep_thresholds = {};
+  DB.factions[id].rep_thresholds[tier] = val;
+}
+function updateFactionLabel(id, thresholdVal, label) {
+  if (!DB.factions[id].rep_labels) DB.factions[id].rep_labels = {};
+  DB.factions[id].rep_labels[String(thresholdVal)] = label;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  ITEM FORM
+// ═══════════════════════════════════════════════════════════════
+function findItem(id) {
+  for (const cat of ['weapons','armor','consumables','misc']) {
+    const found = DB.items[cat].find(i => i.id === id);
+    if (found) return found;
+  }
+  return null;
+}
+function findItemCategory(id) {
+  for (const cat of ['weapons','armor','consumables','misc']) {
+    if (DB.items[cat].find(i => i.id === id)) return cat;
+  }
+  return null;
+}
+
+function renderItemForm(item) {
+  if (!item) return '<div class="placeholder">Select an item</div>';
+  const cat = findItemCategory(item.id);
+  return `
+  <h2>ITEM — ${cat.toUpperCase()}</h2>
+  <div class="form-row">
+    <div class="form-group"><label>ID</label>
+      <input type="text" value="${esc(item.id)}" onchange="updateItemId('${item.id}',this.value)">
+    </div>
+    <div class="form-group" style="flex:2"><label>Display Name</label>
+      <input type="text" value="${esc(item.name)}" onchange="updateItem('${item.id}','name',this.value)" data-help="item-name">
+    </div>
+  </div>
+  <div class="form-group"><label>Description</label>
+    <textarea onchange="updateItem('${item.id}','description',this.value)" data-help="item-description">${esc(item.description||'')}</textarea>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Weight (kg)</label>
+      <input type="number" step="0.1" value="${item.weight||0}" onchange="updateItem('${item.id}','weight',+this.value)" data-help="item-weight">
+    </div>
+    <div class="form-group"><label>Value (caps)</label>
+      <input type="number" value="${item.value||0}" onchange="updateItem('${item.id}','value',+this.value)" data-help="item-value">
+    </div>
+  </div>
+  ${cat === 'weapons' ? renderWeaponFields(item) : ''}
+  ${cat === 'armor' ? renderArmorFields(item) : ''}
+  ${cat === 'consumables' ? renderConsumableFields(item) : ''}
+  <div style="margin-top:20px">
+    <button class="btn-danger" onclick="deleteItem('${item.id}')">Delete Item</button>
+  </div>`;
+}
+
+function renderWeaponFields(item) {
+  return `
+  <div class="form-section-header">Weapon Stats</div>
+  <div class="form-row">
+    <div class="form-group"><label>AP Cost</label>
+      <input type="number" value="${item.ap_cost||2}" onchange="updateItem('${item.id}','ap_cost',+this.value)" data-help="item-ap_cost">
+    </div>
+    <div class="form-group"><label>Damage Dice</label>
+      <input type="text" value="${esc(item.damage_dice||'1d6')}" onchange="updateItem('${item.id}','damage_dice',this.value)" data-help="item-damage_dice">
+    </div>
+    <div class="form-group"><label>Range (tiles)</label>
+      <input type="number" value="${item.range_tiles||1}" onchange="updateItem('${item.id}','range_tiles',+this.value)" data-help="item-range_tiles">
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Skill Used</label>
+      <select onchange="updateItem('${item.id}','skill_used',this.value)">
+        ${['guns','melee','stealth'].map(s => `<option ${item.skill_used===s?'selected':''}>${s}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group"><label>Subtype</label>
+      <select onchange="updateItem('${item.id}','subtype',this.value)">
+        ${['guns','melee'].map(s => `<option ${item.subtype===s?'selected':''}>${s}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group"><label>Ammo Type</label>
+      <input type="text" value="${esc(item.ammo_type||'')}" onchange="updateItem('${item.id}','ammo_type',this.value||null)">
+    </div>
+  </div>`;
+}
+
+function renderArmorFields(item) {
+  return `
+  <div class="form-section-header">Armor Stats</div>
+  <div class="form-row">
+    <div class="form-group"><label>Defense Bonus</label>
+      <input type="number" value="${item.defense_bonus||0}" onchange="updateItem('${item.id}','defense_bonus',+this.value)">
+    </div>
+    <div class="form-group"><label>Evasion Modifier</label>
+      <input type="number" value="${item.evasion_mod||0}" onchange="updateItem('${item.id}','evasion_mod',+this.value)">
+    </div>
+  </div>`;
+}
+
+function renderConsumableFields(item) {
+  const effects = item.effects || [];
+  return `
+  <div class="form-section-header">Effects</div>
+  ${effects.map((e,i) => `
+  <div class="form-row">
+    <div class="form-group"><label>Type</label>
+      <select onchange="updateItemEffect('${item.id}',${i},'type',this.value)">
+        ${['heal_hp','remove_status','boost_ap_temp'].map(t => `<option ${e.type===t?'selected':''}>${t}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group"><label>Value</label>
+      <input type="number" value="${e.value||0}" onchange="updateItemEffect('${item.id}',${i},'value',+this.value)">
+    </div>
+    <div class="form-group" style="flex:0">
+      <label>&nbsp;</label>
+      <button class="btn-danger btn-small" onclick="removeItemEffect('${item.id}',${i})">✕</button>
+    </div>
+  </div>`).join('')}
+  <button class="btn-primary btn-small" onclick="addItemEffect('${item.id}')">+ Add Effect</button>`;
+}
+
+function updateItem(id, key, val) {
+  const item = findItem(id);
+  if (item) { item[key] = val; }
+}
+function updateItemId(oldId, newId) {
+  const cat = findItemCategory(oldId);
+  const item = findItem(oldId);
+  if (item) { item.id = newId; selectedId = newId; renderList(); }
+}
+function updateItemEffect(id, index, key, val) {
+  const item = findItem(id);
+  if (item && item.effects) item.effects[index][key] = val;
+}
+function addItemEffect(id) {
+  const item = findItem(id);
+  if (item) { if (!item.effects) item.effects = []; item.effects.push({type:'heal_hp',value:10}); renderForm(); }
+}
+function removeItemEffect(id, index) {
+  const item = findItem(id);
+  if (item && item.effects) { item.effects.splice(index,1); renderForm(); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  LOCATION FORM
+// ═══════════════════════════════════════════════════════════════
+function renderLocationForm(loc) {
+  if (!loc) return '<div class="placeholder">Select a location</div>';
+  const npcOptions = Object.values(DB.npcs).map(n => `<option value="${esc(n.id)}">${esc(n.name||n.id)}</option>`).join('');
+  const presentIds = (loc.npcs_present||[]);
+  return `
+  <h2>LOCATION</h2>
+  <div class="form-row">
+    <div class="form-group"><label>ID</label>
+      <input type="text" value="${esc(loc.id)}" onchange="updateLocationId('${loc.id}',this.value)">
+    </div>
+    <div class="form-group" style="flex:2"><label>Display Name</label>
+      <input type="text" value="${esc(loc.name)}" onchange="updateLoc('${loc.id}','name',this.value)" data-help="location-name">
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Type</label>
+      <select onchange="updateLoc('${loc.id}','type',this.value)" data-help="location-type">
+        ${['settlement','hostile_zone','dungeon'].map(t => `<option ${loc.type===t?'selected':''}>${t}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group"><label>Overworld X</label>
+      <input type="number" value="${(loc.overworld_position||{}).x||0}" onchange="updateLocPos('${loc.id}','x',+this.value)">
+    </div>
+    <div class="form-group"><label>Overworld Y</label>
+      <input type="number" value="${(loc.overworld_position||{}).y||0}" onchange="updateLocPos('${loc.id}','y',+this.value)">
+    </div>
+  </div>
+  <div class="form-group"><label>Description</label>
+    <textarea onchange="updateLoc('${loc.id}','description',this.value)" data-help="location-description">${esc(loc.description||'')}</textarea>
+  </div>
+  <div class="form-group"><label>Ambient Description</label>
+    <textarea onchange="updateLoc('${loc.id}','ambient_description',this.value)" data-help="location-ambient">${esc(loc.ambient_description||'')}</textarea>
+  </div>
+  <div class="form-section-header">NPCs Present</div>
+  <div class="form-group">
+    <select multiple size="5" onchange="updateLocNpcs('${loc.id}',this)">
+      ${Object.values(DB.npcs).map(n => `<option value="${esc(n.id)}" ${presentIds.includes(n.id)?'selected':''}>${esc(n.name||n.id)}</option>`).join('')}
+    </select>
+    <small style="color:#555">Hold Ctrl/Cmd to select multiple</small>
+  </div>
+  <div style="margin-top:20px">
+    <button class="btn-danger" onclick="deleteItem('${loc.id}')">Delete Location</button>
+  </div>`;
+}
+
+function updateLoc(id, key, val) { if (DB.locations[id]) DB.locations[id][key] = val; }
+function updateLocationId(oldId, newId) { DB.locations[newId] = DB.locations[oldId]; DB.locations[newId].id = newId; delete DB.locations[oldId]; selectedId = newId; renderList(); }
+function updateLocPos(id, axis, val) { if (!DB.locations[id].overworld_position) DB.locations[id].overworld_position = {x:0,y:0}; DB.locations[id].overworld_position[axis] = val; }
+function updateLocNpcs(id, select) { DB.locations[id].npcs_present = Array.from(select.selectedOptions).map(o => o.value); }
+
+// ═══════════════════════════════════════════════════════════════
+//  NPC FORM
+// ═══════════════════════════════════════════════════════════════
+function renderNpcForm(npc) {
+  if (!npc) return '<div class="placeholder">Select an NPC</div>';
+  const factionOptions = Object.keys(DB.factions).map(fid => `<option value="${esc(fid)}" ${npc.faction===fid?'selected':''}>${esc(DB.factions[fid].name||fid)}</option>`).join('');
+  const locOptions = Object.keys(DB.locations).map(lid => `<option value="${esc(lid)}" ${npc.location_default===lid?'selected':''}>${esc(DB.locations[lid].name||lid)}</option>`).join('');
+  const stats = npc.stats || {grit:5,reflex:5,mind:5,body:5,nerve:5,presence:5};
+  const cp = npc.combat_profile || {};
+  const hasCombat = npc.combat_profile !== null && npc.combat_profile !== undefined;
+  return `
+  <h2>NPC</h2>
+  <div class="form-row">
+    <div class="form-group"><label>ID</label>
+      <input type="text" value="${esc(npc.id)}" onchange="updateNpcId('${npc.id}',this.value)">
+    </div>
+    <div class="form-group" style="flex:2"><label>Display Name</label>
+      <input type="text" value="${esc(npc.name)}" onchange="updateNpc('${npc.id}','name',this.value)" data-help="npc-name">
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Faction</label>
+      <select onchange="updateNpc('${npc.id}','faction',this.value)" data-help="npc-faction">
+        <option value="">— none —</option>${factionOptions}
+      </select>
+    </div>
+    <div class="form-group"><label>Default Location</label>
+      <select onchange="updateNpc('${npc.id}','location_default',this.value)" data-help="npc-location_default">
+        <option value="">— none —</option>${locOptions}
+      </select>
+    </div>
+  </div>
+  <div class="form-group"><label>Role / Notes</label>
+    <input type="text" value="${esc(npc.role||'')}" onchange="updateNpc('${npc.id}','role',this.value)" data-help="npc-role">
+  </div>
+  <div class="form-section-header">Stats</div>
+  <div class="stat-row">
+    ${['grit','reflex','mind','body','nerve','presence'].map(s => `
+    <div class="stat-item">
+      <label>${s}</label>
+      <input type="number" min="1" max="10" value="${stats[s]||5}" onchange="updateNpcStat('${npc.id}','${s}',+this.value)" data-help="npc-stats-${s}">
+    </div>`).join('')}
+  </div>
+  <div class="form-section-header">Combat Profile</div>
+  <div class="form-group">
+    <label><input type="checkbox" ${hasCombat?'checked':''} onchange="toggleCombatProfile('${npc.id}',this.checked)" data-help="npc-has_combat"> This NPC can appear in combat</label>
+  </div>
+  ${hasCombat ? `
+  <div class="form-row">
+    <div class="form-group"><label>Max HP</label>
+      <input type="number" value="${cp.max_hp||20}" onchange="updateNpcCombat('${npc.id}','max_hp',+this.value)">
+    </div>
+    <div class="form-group"><label>AP per Turn</label>
+      <input type="number" value="${cp.ap_per_turn||5}" onchange="updateNpcCombat('${npc.id}','ap_per_turn',+this.value)">
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Weapon ID</label>
+      <input type="text" value="${esc(cp.weapon_id||'')}" onchange="updateNpcCombat('${npc.id}','weapon_id',this.value)">
+    </div>
+    <div class="form-group"><label>Armor ID</label>
+      <input type="text" value="${esc(cp.armor_id||'')}" onchange="updateNpcCombat('${npc.id}','armor_id',this.value)">
+    </div>
+  </div>` : ''}
+  <div style="margin-top:20px">
+    <button class="btn-danger" onclick="deleteItem('${npc.id}')">Delete NPC</button>
+  </div>`;
+}
+
+function updateNpc(id, key, val) { if (DB.npcs[id]) DB.npcs[id][key] = val; }
+function updateNpcId(oldId, newId) { DB.npcs[newId] = DB.npcs[oldId]; DB.npcs[newId].id = newId; delete DB.npcs[oldId]; selectedId = newId; renderList(); }
+function updateNpcStat(id, stat, val) { if (!DB.npcs[id].stats) DB.npcs[id].stats = {}; DB.npcs[id].stats[stat] = val; }
+function updateNpcCombat(id, key, val) { if (!DB.npcs[id].combat_profile) DB.npcs[id].combat_profile = {}; DB.npcs[id].combat_profile[key] = val; }
+function toggleCombatProfile(id, on) {
+  DB.npcs[id].combat_profile = on ? {max_hp:20,ap_per_turn:5,weapon_id:'pistol_9mm',armor_id:'worn_clothes'} : null;
+  renderForm();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  QUEST FORM
+// ═══════════════════════════════════════════════════════════════
+function renderQuestForm(quest) {
+  if (!quest) return '<div class="placeholder">Select a quest</div>';
+  const stages = quest.stages || [];
+  return `
+  <h2>QUEST</h2>
+  <div class="form-row">
+    <div class="form-group"><label>ID</label>
+      <input type="text" value="${esc(quest.id)}" onchange="updateQuestId('${quest.id}',this.value)">
+    </div>
+    <div class="form-group" style="flex:2"><label>Title</label>
+      <input type="text" value="${esc(quest.title||'')}" onchange="updateQuest('${quest.id}','title',this.value)" data-help="quest-title">
+    </div>
+  </div>
+  <div class="form-group"><label>Summary</label>
+    <textarea onchange="updateQuest('${quest.id}','summary',this.value)" data-help="quest-summary">${esc(quest.summary||'')}</textarea>
+  </div>
+  <div class="form-section-header">Stages</div>
+  ${stages.map((stage,si) => `
+  <div style="background:#191919;border:1px solid #2a2a2a;padding:12px;margin-bottom:12px">
+    <div class="form-row">
+      <div class="form-group"><label>Stage ID</label>
+        <input type="text" value="${esc(stage.id)}" onchange="updateStage('${quest.id}',${si},'id',this.value)">
+      </div>
+      <div class="form-group" style="flex:2"><label>Stage Title</label>
+        <input type="text" value="${esc(stage.title||'')}" onchange="updateStage('${quest.id}',${si},'title',this.value)" data-help="stage-title">
+      </div>
+    </div>
+    <div class="form-group"><label>Description</label>
+      <input type="text" value="${esc(stage.description||'')}" onchange="updateStage('${quest.id}',${si},'description',this.value)">
+    </div>
+    <div class="form-section-header" style="margin-top:8px">Objectives</div>
+    ${(stage.objectives||[]).map((obj,oi) => `
+    <div style="display:flex;gap:8px;margin-bottom:6px;align-items:flex-end">
+      <div class="form-group" style="flex:3">
+        <label>Objective Text</label>
+        <input type="text" value="${esc(obj.text||'')}" onchange="updateObjective('${quest.id}',${si},${oi},'text',this.value)" data-help="objective-text">
+      </div>
+      <div class="form-group" style="flex:2">
+        <label>Completion Flag</label>
+        <input type="text" value="${esc(obj.flag_complete||'')}" onchange="updateObjective('${quest.id}',${si},${oi},'flag_complete',this.value)" data-help="objective-flag_complete">
+      </div>
+      <div class="form-group" style="flex:0">
+        <label>&nbsp;</label>
+        <button class="btn-danger btn-small" onclick="removeObjective('${quest.id}',${si},${oi})">✕</button>
+      </div>
+    </div>`).join('')}
+    <button class="btn-primary btn-small" onclick="addObjective('${quest.id}',${si})">+ Add Objective</button>
+    <div class="form-section-header" style="margin-top:10px">Completion</div>
+    <div class="form-row">
+      <div class="form-group"><label>Flags All (comma-sep)</label>
+        <input type="text" value="${esc(((stage.completion_condition||{}).flags_all||[]).join(','))}"
+          onchange="updateStageCompletion('${quest.id}',${si},this.value)">
+      </div>
+      <div class="form-group"><label>Next Stage ID</label>
+        <input type="text" value="${esc((stage.on_complete||{}).next_stage||'')}"
+          onchange="updateStageNextStage('${quest.id}',${si},this.value)">
+      </div>
+    </div>
+    <div class="form-group"><label>Flags to Set on Complete (comma-sep)</label>
+      <input type="text" value="${esc(((stage.on_complete||{}).flags_set||[]).join(','))}"
+        onchange="updateStageFlagsSet('${quest.id}',${si},this.value)">
+    </div>
+    <button class="btn-danger btn-small" style="margin-top:8px" onclick="removeStage('${quest.id}',${si})">Remove Stage</button>
+  </div>`).join('')}
+  <button class="btn-primary" onclick="addStage('${quest.id}')">+ Add Stage</button>
+  <div style="margin-top:16px">
+    <button class="btn-danger" onclick="deleteItem('${quest.id}')">Delete Quest</button>
+  </div>`;
+}
+
+function updateQuest(id, key, val) { if (DB.quests[id]) DB.quests[id][key] = val; }
+function updateQuestId(oldId, newId) { DB.quests[newId] = DB.quests[oldId]; DB.quests[newId].id = newId; delete DB.quests[oldId]; selectedId = newId; renderList(); }
+function updateStage(qid, si, key, val) { DB.quests[qid].stages[si][key] = val; }
+function updateObjective(qid, si, oi, key, val) { DB.quests[qid].stages[si].objectives[oi][key] = val; }
+function addObjective(qid, si) { DB.quests[qid].stages[si].objectives.push({id:'obj_new',text:'',flag_complete:''}); renderForm(); }
+function removeObjective(qid, si, oi) { DB.quests[qid].stages[si].objectives.splice(oi,1); renderForm(); }
+function addStage(qid) { DB.quests[qid].stages.push({id:'stage_new',title:'',description:'',objectives:[],completion_condition:{flags_all:[]},on_complete:{flags_set:[],next_stage:''}}); renderForm(); }
+function removeStage(qid, si) { DB.quests[qid].stages.splice(si,1); renderForm(); }
+function updateStageCompletion(qid,si,val) { DB.quests[qid].stages[si].completion_condition = {flags_all: val.split(',').map(s=>s.trim()).filter(Boolean)}; }
+function updateStageNextStage(qid,si,val) { if (!DB.quests[qid].stages[si].on_complete) DB.quests[qid].stages[si].on_complete = {}; DB.quests[qid].stages[si].on_complete.next_stage = val||null; }
+function updateStageFlagsSet(qid,si,val) { if (!DB.quests[qid].stages[si].on_complete) DB.quests[qid].stages[si].on_complete = {}; DB.quests[qid].stages[si].on_complete.flags_set = val.split(',').map(s=>s.trim()).filter(Boolean); }
+
+// ═══════════════════════════════════════════════════════════════
+//  DIALOGUE TAB
+// ═══════════════════════════════════════════════════════════════
+function renderDialogueTab(npc) {
+  if (!npc) return '<div class="placeholder">Select an NPC from the list to edit their dialogue</div>';
+  const dlg = DB.dialogues[npc.id] || {conversations:[]};
+  const convos = dlg.conversations || [];
+  return `
+  <h2>DIALOGUE — ${esc(npc.name||npc.id)}</h2>
+  <p style="color:#666;font-size:12px;margin-bottom:16px">Each conversation is a branching tree of nodes. NPC Lines auto-advance; Player Choices let the player pick an option.</p>
+  ${convos.map((convo,ci) => renderConvoCard(npc.id, convo, ci)).join('')}
+  <button class="btn-primary" onclick="addConversation('${npc.id}')">+ Add Conversation</button>`;
+}
+
+function renderConvoCard(npcId, convo, ci) {
+  const nodes = convo.nodes || {};
+  const trigger = convo.trigger_conditions || {};
+  const onComplete = convo.on_complete || {};
+  const nodeIds = Object.keys(nodes);
+  const nodeOptions = ['END', ...nodeIds].map(id => `<option value="${esc(id)}">${esc(id)}</option>`).join('');
+
+  return `
+  <div class="convo-card">
+    <div class="convo-header" onclick="toggleConvo('convo-body-${ci}')">
+      <span><strong>${esc(convo.id)}</strong> &nbsp;<small style="color:#555">${nodeIds.length} nodes</small></span>
+      <span style="color:#555;font-size:12px">▼</span>
+    </div>
+    <div class="convo-body" id="convo-body-${ci}">
+      <div class="form-row" style="margin-bottom:12px">
+        <div class="form-group" style="flex:2"><label>Conversation ID</label>
+          <input type="text" value="${esc(convo.id)}" onchange="updateConvoId('${npcId}',${ci},this.value)">
+        </div>
+        <div class="form-group"><label>Entry Node</label>
+          <select onchange="updateConvoField('${npcId}',${ci},'entry_node',this.value)">
+            ${nodeIds.map(id => `<option ${convo.entry_node===id?'selected':''}>${esc(id)}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="form-section-header">Trigger Conditions</div>
+      <div class="form-row">
+        <div class="form-group"><label>Flags Required (comma-sep)</label>
+          <input type="text" value="${esc((trigger.flags_required||[]).join(','))}"
+            onchange="updateTrigger('${npcId}',${ci},'flags_required',this.value)" data-help="trigger-flags_required">
+        </div>
+        <div class="form-group"><label>Flags Excluded (comma-sep)</label>
+          <input type="text" value="${esc((trigger.flags_excluded||[]).join(','))}"
+            onchange="updateTrigger('${npcId}',${ci},'flags_excluded',this.value)" data-help="trigger-flags_excluded">
+        </div>
+      </div>
+      <div class="form-section-header">Dialogue Nodes</div>
+      ${nodeIds.map(nodeId => renderNodeCard(npcId, ci, nodeId, nodes[nodeId], nodeOptions)).join('')}
+      <button class="add-node-btn" onclick="addNode('${npcId}',${ci},'npc_line')">+ Add NPC Line Node</button>
+      <button class="add-node-btn" style="margin-top:4px" onclick="addNode('${npcId}',${ci},'player_choice')">+ Add Player Choice Node</button>
+      <div class="on-complete-section">
+        <div class="form-section-header" style="margin-top:0">On Complete</div>
+        <div class="form-row">
+          <div class="form-group"><label>Flags to Set (comma-sep)</label>
+            <input type="text" value="${esc((onComplete.flags_set||[]).join(','))}"
+              onchange="updateOnComplete('${npcId}',${ci},'flags_set',this.value)" data-help="on_complete-flags_set">
+          </div>
+          <div class="form-group"><label>Relationship Change</label>
+            <input type="number" value="${onComplete.relationship_change||0}"
+              onchange="updateOnComplete('${npcId}',${ci},'relationship_change',+this.value)" data-help="on_complete-relationship">
+          </div>
+        </div>
+      </div>
+      <button class="btn-danger btn-small" style="margin-top:10px" onclick="removeConversation('${npcId}',${ci})">Remove Conversation</button>
+    </div>
+  </div>`;
+}
+
+function renderNodeCard(npcId, ci, nodeId, node, nodeOptions) {
+  const isChoice = node.type === 'player_choice';
+  const choices = node.choices || [];
+  return `
+  <div class="node-card ${isChoice?'player-choice':'npc-line'}">
+    <div class="node-type">${isChoice ? 'PLAYER CHOICE' : 'NPC LINE'} — ${esc(nodeId)}</div>
+    ${!isChoice ? `
+    <div class="form-group"><label>Speaker</label>
+      <input type="text" value="${esc(node.speaker||'')}" onchange="updateNode('${npcId}',${ci},'${nodeId}','speaker',this.value)">
+    </div>
+    <div class="form-group"><label>Text</label>
+      <textarea onchange="updateNode('${npcId}',${ci},'${nodeId}','text',this.value)" data-help="node-text">${esc(node.text||'')}</textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Next Node</label>
+        <select onchange="updateNode('${npcId}',${ci},'${nodeId}','next',this.value==='END'?null:this.value)" data-help="node-next">
+          ${nodeOptions.replace(`value="${nodeId}"`, '').replace(`<option value="${esc(node.next||'')}">`,`<option value="${esc(node.next||'')}" selected>`)}
+        </select>
+      </div>
+      <div class="form-group"><label>Mid-Node Flags Set (comma-sep)</label>
+        <input type="text" value="${esc((node.flags_set||[]).join(','))}" onchange="updateNode('${npcId}',${ci},'${nodeId}','flags_set',this.value.split(',').map(s=>s.trim()).filter(Boolean))">
+      </div>
+      <div class="form-group"><label>Relationship Change</label>
+        <input type="number" value="${node.relationship_change||0}" onchange="updateNode('${npcId}',${ci},'${nodeId}','relationship_change',+this.value)">
+      </div>
+    </div>` : `
+    <div style="margin-bottom:6px;color:#666;font-size:12px">${choices.length} choice(s):</div>
+    ${choices.map((c,chi) => `
+    <div class="choice-row">
+      <div class="form-group"><label>Choice Text</label>
+        <input type="text" value="${esc(c.text||'')}" onchange="updateChoice('${npcId}',${ci},'${nodeId}',${chi},'text',this.value)" data-help="choice-text">
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Condition Type</label>
+          <select onchange="updateChoiceCondType('${npcId}',${ci},'${nodeId}',${chi},this.value)">
+            ${['none','skill_check','flag_required','flag_excluded','faction_rep_min'].map(t=>`<option ${(c.condition?c.condition.type:'none')===t?'selected':''}>${t}</option>`).join('')}
+          </select>
+        </div>
+        ${c.condition?.type==='skill_check' ? `
+        <div class="form-group"><label>Skill</label>
+          <select onchange="updateChoiceCond('${npcId}',${ci},'${nodeId}',${chi},'skill',this.value)" data-help="choice-skill">
+            ${['speech','intimidate','barter','medicine','lockpick','tech','stealth','guns','melee'].map(s=>`<option ${c.condition.skill===s?'selected':''}>${s}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group"><label>Difficulty</label>
+          <input type="number" value="${c.condition.difficulty||50}" onchange="updateChoiceCond('${npcId}',${ci},'${nodeId}',${chi},'difficulty',+this.value)" data-help="choice-difficulty">
+        </div>
+        <div class="form-group"><label>On Fail Node</label>
+          <select onchange="updateChoiceCond('${npcId}',${ci},'${nodeId}',${chi},'on_fail',this.value==='END'?null:this.value)">
+            ${nodeOptions}
+          </select>
+        </div>` : ''}
+        ${(c.condition?.type==='flag_required'||c.condition?.type==='flag_excluded') ? `
+        <div class="form-group"><label>Flag</label>
+          <input type="text" value="${esc(c.condition.flag||'')}" onchange="updateChoiceCond('${npcId}',${ci},'${nodeId}',${chi},'flag',this.value)">
+        </div>` : ''}
+        <div class="form-group"><label>Next Node</label>
+          <select onchange="updateChoice('${npcId}',${ci},'${nodeId}',${chi},'next',this.value==='END'?null:this.value)">
+            ${nodeOptions.replace(`<option value="${esc(c.next||'')}">`,`<option value="${esc(c.next||'')}" selected>`)}
+          </select>
+        </div>
+        <div class="form-group" style="flex:0">
+          <label>&nbsp;</label>
+          <button class="btn-danger btn-small" onclick="removeChoice('${npcId}',${ci},'${nodeId}',${chi})">✕</button>
+        </div>
+      </div>
+    </div>`).join('')}
+    <button class="btn-primary btn-small" onclick="addChoice('${npcId}',${ci},'${nodeId}')">+ Add Choice</button>`}
+    <div style="margin-top:8px">
+      <button class="btn-danger btn-small" onclick="removeNode('${npcId}',${ci},'${nodeId}')">Remove Node</button>
+    </div>
+  </div>`;
+}
+
+function toggleConvo(id) { const el = document.getElementById(id); if(el) el.style.display = el.style.display==='none'?'':'none'; }
+
+function updateConvoField(npcId, ci, key, val) { ensureDialogue(npcId); DB.dialogues[npcId].conversations[ci][key] = val; }
+function updateConvoId(npcId, ci, val) { ensureDialogue(npcId); DB.dialogues[npcId].conversations[ci].id = val; renderForm(); }
+function updateTrigger(npcId, ci, key, val) {
+  ensureDialogue(npcId);
+  if (!DB.dialogues[npcId].conversations[ci].trigger_conditions) DB.dialogues[npcId].conversations[ci].trigger_conditions = {};
+  DB.dialogues[npcId].conversations[ci].trigger_conditions[key] = val.split(',').map(s=>s.trim()).filter(Boolean);
+}
+function updateOnComplete(npcId, ci, key, val) {
+  ensureDialogue(npcId);
+  if (!DB.dialogues[npcId].conversations[ci].on_complete) DB.dialogues[npcId].conversations[ci].on_complete = {};
+  DB.dialogues[npcId].conversations[ci].on_complete[key] = key==='relationship_change' ? val : val.split(',').map(s=>s.trim()).filter(Boolean);
+}
+function updateNode(npcId, ci, nodeId, key, val) {
+  ensureDialogue(npcId);
+  if (!DB.dialogues[npcId].conversations[ci].nodes) DB.dialogues[npcId].conversations[ci].nodes = {};
+  DB.dialogues[npcId].conversations[ci].nodes[nodeId][key] = val;
+}
+function updateChoice(npcId, ci, nodeId, chi, key, val) {
+  DB.dialogues[npcId].conversations[ci].nodes[nodeId].choices[chi][key] = val;
+}
+function updateChoiceCondType(npcId, ci, nodeId, chi, type) {
+  const choice = DB.dialogues[npcId].conversations[ci].nodes[nodeId].choices[chi];
+  choice.condition = type === 'none' ? null : {type};
+  if (type === 'skill_check') choice.condition = {type:'skill_check',skill:'speech',difficulty:50};
+  renderForm();
+}
+function updateChoiceCond(npcId, ci, nodeId, chi, key, val) {
+  const choice = DB.dialogues[npcId].conversations[ci].nodes[nodeId].choices[chi];
+  if (choice.condition) choice.condition[key] = val;
+}
+function addChoice(npcId, ci, nodeId) {
+  DB.dialogues[npcId].conversations[ci].nodes[nodeId].choices.push({id:'c_new',text:'',condition:null,next:null});
+  renderForm();
+}
+function removeChoice(npcId, ci, nodeId, chi) {
+  DB.dialogues[npcId].conversations[ci].nodes[nodeId].choices.splice(chi,1);
+  renderForm();
+}
+function addNode(npcId, ci, type) {
+  ensureDialogue(npcId);
+  const nodes = DB.dialogues[npcId].conversations[ci].nodes;
+  const nodeId = 'node_' + (Object.keys(nodes).length+1).toString().padStart(3,'0');
+  nodes[nodeId] = type === 'npc_line'
+    ? {type:'npc_line',speaker:'',text:'',next:null}
+    : {type:'player_choice',choices:[]};
+  renderForm();
+}
+function removeNode(npcId, ci, nodeId) {
+  delete DB.dialogues[npcId].conversations[ci].nodes[nodeId];
+  renderForm();
+}
+function addConversation(npcId) {
+  ensureDialogue(npcId);
+  const id = 'convo_' + Date.now();
+  DB.dialogues[npcId].conversations.push({
+    id, trigger_conditions:{flags_required:[],flags_excluded:[]},
+    entry_node:'', nodes:{}, on_complete:{flags_set:[],relationship_change:0,faction_rep_change:{}}
+  });
+  renderForm();
+}
+function removeConversation(npcId, ci) {
+  DB.dialogues[npcId].conversations.splice(ci,1);
+  renderForm();
+}
+function ensureDialogue(npcId) {
+  if (!DB.dialogues[npcId]) DB.dialogues[npcId] = {conversations:[]};
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  ADD / DELETE
+// ═══════════════════════════════════════════════════════════════
+function addItem() {
+  const id = prompt('Enter a unique ID (lowercase, underscores):');
+  if (!id || !id.trim()) return;
+  const cleanId = id.trim().replace(/\s+/g,'_').toLowerCase();
+  switch (currentTab) {
+    case 'factions':
+      DB.factions[cleanId] = {id:cleanId,name:'New Faction',description:'',rep_starting:0,rep_thresholds:{hostile:-50,unfriendly:-20,neutral:0,friendly:30,trusted:60},rep_labels:{'-50':'Hostile','0':'Neutral','30':'Friendly'},color:'#888'};
+      break;
+    case 'items':
+      const cat = prompt('Category: weapons / armor / consumables / misc') || 'misc';
+      const validCat = ['weapons','armor','consumables','misc'].includes(cat) ? cat : 'misc';
+      DB.items[validCat].push({id:cleanId,name:'New Item',type:validCat==='weapons'?'weapon':validCat==='armor'?'armor':validCat==='consumables'?'consumable':'misc',subtype:'',description:'',weight:1,value:10,effects:[]});
+      break;
+    case 'locations':
+      DB.locations[cleanId] = {id:cleanId,name:'New Location',type:'settlement',description:'',overworld_position:{x:400,y:300},connections:[],travel_time_hours:{},npcs_present:[],interactables:[],combat_arena:null};
+      break;
+    case 'npcs':
+      DB.npcs[cleanId] = {id:cleanId,name:'New NPC',faction:'',role:'',location_default:'',stats:{grit:5,reflex:5,mind:5,body:5,nerve:5,presence:5},skills_override:{},combat_profile:null,relationship:0};
+      DB.dialogues[cleanId] = {conversations:[]};
+      break;
+    case 'quests':
+      DB.quests[cleanId] = {id:cleanId,title:'New Quest',summary:'',stages:[]};
+      break;
+    case 'dialogue':
+      alert('Use the NPCs tab to create NPCs first. Dialogue is managed per-NPC.'); return;
+  }
+  selectedId = cleanId;
+  renderList();
+  renderForm();
+}
+
+function deleteItem(id) {
+  if (!confirm('Delete this item? This cannot be undone.')) return;
+  switch (currentTab) {
+    case 'factions': delete DB.factions[id]; break;
+    case 'items':
+      for (const cat of ['weapons','armor','consumables','misc']) {
+        const i = DB.items[cat].findIndex(x => x.id === id);
+        if (i >= 0) { DB.items[cat].splice(i,1); break; }
+      }
+      break;
+    case 'locations': delete DB.locations[id]; break;
+    case 'npcs': delete DB.npcs[id]; delete DB.dialogues[id]; break;
+    case 'quests': delete DB.quests[id]; break;
+  }
+  selectedId = null;
+  renderList();
+  document.getElementById('form-panel').innerHTML = '<div class="placeholder">Item deleted.</div>';
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  IMPORT / EXPORT
+// ═══════════════════════════════════════════════════════════════
+function importJSON() { document.getElementById('file-input').click(); }
+
+function handleImport(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      // Auto-detect schema by top-level keys
+      if (data.conversations) {
+        // Dialogue file — need to know NPC id from filename
+        const npcId = file.name.replace('.json','');
+        DB.dialogues[npcId] = data;
+      } else if (data.rep_thresholds) { DB.factions[data.id] = data; }
+      else if (data.type === 'settlement' || data.type === 'hostile_zone' || data.type === 'dungeon') { DB.locations[data.id] = data; }
+      else if (data.stats?.grit !== undefined) { DB.npcs[data.id] = data; }
+      else if (data.stages) { DB.quests[data.id] = data; }
+      else if (data.weapons) { data.weapons.forEach(i => DB.items.weapons.push(i)); }
+      else if (data.armor) { data.armor.forEach(i => DB.items.armor.push(i)); }
+      else if (data.consumables) { data.consumables.forEach(i => DB.items.consumables.push(i)); }
+      else if (data.misc) { data.misc.forEach(i => DB.items.misc.push(i)); }
+      renderList();
+      alert('Imported: ' + file.name);
+    } catch(err) { alert('Failed to parse JSON: ' + err.message); }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function exportAll() {
+  // Build export structure
+  const files = {};
+
+  Object.values(DB.factions).forEach(f => { files[`data/factions/${f.id}.json`] = JSON.stringify(f, null, '\t'); });
+  Object.values(DB.locations).forEach(l => { files[`data/locations/${l.id}.json`] = JSON.stringify(l, null, '\t'); });
+  Object.values(DB.npcs).forEach(n => { files[`data/npcs/${n.id}.json`] = JSON.stringify(n, null, '\t'); });
+  Object.keys(DB.dialogues).forEach(npcId => { files[`data/npcs/dialogues/${npcId}.json`] = JSON.stringify(DB.dialogues[npcId], null, '\t'); });
+  Object.values(DB.quests).forEach(q => { files[`data/quests/${q.id}.json`] = JSON.stringify(q, null, '\t'); });
+  if (DB.items.weapons.length) files['data/items/weapons.json'] = JSON.stringify({weapons: DB.items.weapons}, null, '\t');
+  if (DB.items.armor.length) files['data/items/armor.json'] = JSON.stringify({armor: DB.items.armor}, null, '\t');
+  if (DB.items.consumables.length) files['data/items/consumables.json'] = JSON.stringify({consumables: DB.items.consumables}, null, '\t');
+  if (DB.items.misc.length) files['data/items/misc.json'] = JSON.stringify({misc: DB.items.misc}, null, '\t');
+
+  // Simple zip-less approach: if only one file, download directly.
+  // For multiple files, offer a download of each as a combined JSON package.
+  const bundle = {_export_info: 'End Times Tactical data export. Drop each file into its correct data/ subfolder.', files};
+  const blob = new Blob([JSON.stringify(bundle, null, '\t')], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'ett_export_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  alert('Exported! The downloaded file contains all data as a bundle.\n\nTo use: open the file, copy each section under "files" to its path in your Godot data/ folder.');
+}
+
+function saveToLocal() {
+  const snapshot = JSON.stringify({factions:DB.factions,items:DB.items,locations:DB.locations,npcs:DB.npcs,dialogues:DB.dialogues,quests:DB.quests});
+  localStorage.setItem('ett_editor_data', snapshot);
+  alert('Saved to browser storage. Your work will persist if you reopen this file in the same browser.');
+}
+
+function loadFromLocal() {
+  const saved = localStorage.getItem('ett_editor_data');
+  if (!saved) { alert('No saved data found.'); return; }
+  try {
+    const data = JSON.parse(saved);
+    Object.assign(DB, data);
+    renderList();
+    document.getElementById('form-panel').innerHTML = '<div class="placeholder">Data loaded from local storage.</div>';
+    alert('Loaded successfully.');
+  } catch(e) { alert('Failed to load: ' + e.message); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  INITIAL LOAD — populate from game's data files if available
+// ═══════════════════════════════════════════════════════════════
+// (In browser, we can't access the filesystem directly. Users import files manually.)
+// Show starter message on load.
+window.addEventListener('load', () => {
+  const saved = localStorage.getItem('ett_editor_data');
+  if (saved) {
+    try { const data = JSON.parse(saved); Object.assign(DB, data); renderList(); }
+    catch(e) {}
+  }
+});
+</script>
+</body>
+</html>

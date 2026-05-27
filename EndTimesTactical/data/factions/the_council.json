@@ -1,0 +1,23 @@
+{
+	"id": "the_council",
+	"name": "The Council of Haven Ridge",
+	"description": "The governing body of Haven Ridge. Pragmatic, rule-bound, distrustful of outsiders. They keep order — at a cost.",
+	"rep_starting": 0,
+	"rep_thresholds": {
+		"hostile":    -50,
+		"unfriendly": -20,
+		"neutral":    0,
+		"friendly":   30,
+		"trusted":    60,
+		"exalted":    90
+	},
+	"rep_labels": {
+		"-50": "Exiled",
+		"-20": "Suspect",
+		"0":   "Outsider",
+		"30":  "Provisional",
+		"60":  "Ally",
+		"90":  "Voice"
+	},
+	"color": "#4a7fbf"
+}

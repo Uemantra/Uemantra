@@ -1,0 +1,54 @@
+{
+	"consumables": [
+		{
+			"id": "stimpak",
+			"name": "Stimpak",
+			"type": "consumable",
+			"subtype": "medicine",
+			"description": "A syringe of accelerated-healing compound. Scratchy but effective.",
+			"weight": 0.2,
+			"value": 35,
+			"effects": [{ "type": "heal_hp", "value": 20 }]
+		},
+		{
+			"id": "field_dressing",
+			"name": "Field Dressing",
+			"type": "consumable",
+			"subtype": "medicine",
+			"description": "Bandages and antiseptic. Slow but cheap.",
+			"weight": 0.3,
+			"value": 12,
+			"effects": [{ "type": "heal_hp", "value": 8 }, { "type": "remove_status", "status": "bleeding" }]
+		},
+		{
+			"id": "rad_tabs",
+			"name": "Rad Tabs",
+			"type": "consumable",
+			"subtype": "medicine",
+			"description": "Anti-radiation medication. Bitter. Works.",
+			"weight": 0.1,
+			"value": 20,
+			"effects": [{ "type": "remove_status", "status": "poisoned" }]
+		},
+		{
+			"id": "cram_tin",
+			"name": "CRAM Tin",
+			"type": "consumable",
+			"subtype": "food",
+			"description": "Mystery meat in a can, pre-war vintage. Still edible, somehow.",
+			"weight": 0.5,
+			"value": 8,
+			"effects": [{ "type": "heal_hp", "value": 5 }]
+		},
+		{
+			"id": "stim_shot_adrenaline",
+			"name": "Adrenaline Shot",
+			"type": "consumable",
+			"subtype": "stim",
+			"description": "Jittery and short-lived. Grants bonus AP for one turn.",
+			"weight": 0.1,
+			"value": 45,
+			"effects": [{ "type": "boost_ap_temp", "value": 2, "duration": 1 }]
+		}
+	]
+}

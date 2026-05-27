@@ -1,0 +1,157 @@
+{
+	"conversations": [
+		{
+			"id": "falk_first_meeting",
+			"trigger_conditions": {
+				"flags_required": [],
+				"flags_excluded": ["met_falk"],
+				"faction_rep": {}
+			},
+			"entry_node": "falk_fm_001",
+			"nodes": {
+				"falk_fm_001": {
+					"type": "npc_line",
+					"speaker": "councilman_falk",
+					"text": "Another wanderer. Haven Ridge is not a charity. If you want to stay, you work. If you want to trade, you pay the tariff. If you cause problems — you leave. With or without help.",
+					"next": "falk_fm_choice_001"
+				},
+				"falk_fm_choice_001": {
+					"type": "player_choice",
+					"choices": [
+						{
+							"id": "c_accept",
+							"text": "Understood. I'm looking for work.",
+							"condition": null,
+							"next": "falk_fm_002a"
+						},
+						{
+							"id": "c_barter",
+							"text": "[Barter 45] I have goods worth trading. What's the tariff?",
+							"condition": { "type": "skill_check", "skill": "barter", "difficulty": 45, "on_fail": "falk_fm_002b_fail" },
+							"next": "falk_fm_002b_pass"
+						},
+						{
+							"id": "c_signal",
+							"text": "I heard about a signal. A broadcast. What does the Council know about it?",
+							"condition": { "type": "flag_required", "flag": "heard_about_signal" },
+							"next": "falk_fm_002c"
+						}
+					]
+				},
+				"falk_fm_002a": {
+					"type": "npc_line",
+					"speaker": "councilman_falk",
+					"text": "See the work board on the east wall. First three jobs are mandatory for new arrivals — it's how we assess who's worth keeping. Do them, don't complain, and we'll talk about longer arrangements.",
+					"next": null
+				},
+				"falk_fm_002b_pass": {
+					"type": "npc_line",
+					"speaker": "councilman_falk",
+					"text": "Ten percent on all transactions inside the ridge. Five percent if you're registered labour. The difference is earned, not given. Show me what you've got.",
+					"next": null
+				},
+				"falk_fm_002b_fail": {
+					"type": "npc_line",
+					"speaker": "councilman_falk",
+					"text": "Standard rate. Fifteen percent. Non-negotiable. Welcome to Haven Ridge.",
+					"next": null
+				},
+				"falk_fm_002c": {
+					"type": "npc_line",
+					"speaker": "councilman_falk",
+					"text": "The Council is aware of the signal. We've assessed it as non-threatening — old automated equipment, most likely. I'd ask you not to stir up speculation among the residents. We don't need panic over a radio ghost.",
+					"flags_set": ["talked_falk_signal"],
+					"next": "falk_fm_003"
+				},
+				"falk_fm_003": {
+					"type": "npc_line",
+					"speaker": "councilman_falk",
+					"text": "Is there anything else you need, or are we done here?",
+					"next": null
+				}
+			},
+			"on_complete": {
+				"flags_set": ["met_falk"],
+				"relationship_change": 1,
+				"faction_rep_change": { "the_council": 1 }
+			}
+		},
+		{
+			"id": "falk_signal_suspicious",
+			"trigger_conditions": {
+				"flags_required": ["met_falk", "talked_falk_signal"],
+				"flags_excluded": ["falk_signal_pressed"],
+				"faction_rep": {}
+			},
+			"entry_node": "falk_sus_001",
+			"nodes": {
+				"falk_sus_001": {
+					"type": "npc_line",
+					"speaker": "councilman_falk",
+					"text": "You again. I hope this is about something productive.",
+					"next": "falk_sus_choice_001"
+				},
+				"falk_sus_choice_001": {
+					"type": "player_choice",
+					"choices": [
+						{
+							"id": "c_signal_again",
+							"text": "I want to know more about the signal. Your answer felt incomplete.",
+							"condition": null,
+							"next": "falk_sus_002"
+						},
+						{
+							"id": "c_intimidate",
+							"text": "[Intimidate 55] You're hiding something about that signal.",
+							"condition": { "type": "skill_check", "skill": "intimidate", "difficulty": 55, "on_fail": "falk_sus_002b_fail" },
+							"next": "falk_sus_002b_pass"
+						},
+						{
+							"id": "c_nothing",
+							"text": "Nothing. Forget it.",
+							"condition": null,
+							"next": "falk_sus_003_dismissal"
+						}
+					]
+				},
+				"falk_sus_002": {
+					"type": "npc_line",
+					"speaker": "councilman_falk",
+					"text": "My answer was complete. The Council has investigated. It's old equipment, probably pre-war agricultural automation. If you want to waste your time chasing radio static, that's your business — but don't involve my people.",
+					"next": null
+				},
+				"falk_sus_002b_pass": {
+					"type": "npc_line",
+					"speaker": "councilman_falk",
+					"text": "...*long pause* ...You're more perceptive than you look. The signal concerns me. There are elements in this region that would use it as a rallying point. I need it investigated quietly. Can you be quiet?",
+					"flags_set": ["falk_admitted_concern"],
+					"next": "falk_sus_002b_quest"
+				},
+				"falk_sus_002b_fail": {
+					"type": "npc_line",
+					"speaker": "councilman_falk",
+					"text": "Hiding something? I am a public servant. Everything I do is in the interest of this settlement. Watch your tone.",
+					"next": null
+				},
+				"falk_sus_002b_quest": {
+					"type": "npc_line",
+					"speaker": "councilman_falk",
+					"text": "The signal appears to originate from the old Silo Complex, east-northeast of the Scrapfield. I want to know what's broadcasting and who, if anyone, knows about it. Report back to me. Discretion.",
+					"flags_set": ["falk_gave_silo_lead", "discovered_silo"],
+					"next": null
+				},
+				"falk_sus_003_dismissal": {
+					"type": "npc_line",
+					"speaker": "councilman_falk",
+					"text": "Good.",
+					"next": null
+				}
+			},
+			"on_complete": {
+				"flags_set": ["falk_signal_pressed"],
+				"relationship_change": 0,
+				"faction_rep_change": {}
+			}
+		}
+	]
+}

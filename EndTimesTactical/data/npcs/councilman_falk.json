@@ -1,0 +1,19 @@
+{
+	"id": "councilman_falk",
+	"name": "Councilman Falk",
+	"portrait": "res://art/portraits/councilman_falk.png",
+	"faction": "the_council",
+	"role": "Head of the Haven Ridge Council. Wary, calculating.",
+	"location_default": "haven_ridge",
+	"stats": {
+		"grit":     3,
+		"reflex":   3,
+		"mind":     6,
+		"body":     2,
+		"nerve":    5,
+		"presence": 7
+	},
+	"skills_override": { "speech": 8, "barter": 6 },
+	"combat_profile": null,
+	"relationship": 0
+}

@@ -1,0 +1,50 @@
+{
+	"nodes": [
+		{
+			"id": "haven_ridge",
+			"display_name": "Haven Ridge",
+			"position": { "x": 320, "y": 260 },
+			"type": "settlement",
+			"unlocked_by_default": true,
+			"unlock_flag": null,
+			"connections": [
+				{ "to": "scrapfield",    "distance_km": 12, "travel_hours": 4 },
+				{ "to": "transit_depot", "distance_km": 28, "travel_hours": 8 }
+			]
+		},
+		{
+			"id": "scrapfield",
+			"display_name": "The Scrapfield",
+			"position": { "x": 520, "y": 200 },
+			"type": "hostile_zone",
+			"unlocked_by_default": true,
+			"unlock_flag": null,
+			"connections": [
+				{ "to": "haven_ridge",  "distance_km": 12, "travel_hours": 4 },
+				{ "to": "silo_complex", "distance_km": 18, "travel_hours": 6 }
+			]
+		},
+		{
+			"id": "silo_complex",
+			"display_name": "Silo Complex",
+			"position": { "x": 700, "y": 160 },
+			"type": "dungeon",
+			"unlocked_by_default": false,
+			"unlock_flag": "discovered_silo",
+			"connections": [
+				{ "to": "scrapfield", "distance_km": 18, "travel_hours": 6 }
+			]
+		},
+		{
+			"id": "transit_depot",
+			"display_name": "Transit Depot",
+			"position": { "x": 260, "y": 400 },
+			"type": "hostile_zone",
+			"unlocked_by_default": false,
+			"unlock_flag": "heard_about_depot",
+			"connections": [
+				{ "to": "haven_ridge", "distance_km": 28, "travel_hours": 8 }
+			]
+		}
+	]
+}

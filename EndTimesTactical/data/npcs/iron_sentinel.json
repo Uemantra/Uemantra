@@ -1,0 +1,24 @@
+{
+	"id": "iron_sentinel",
+	"name": "Iron Covenant Sentinel",
+	"portrait": null,
+	"faction": "iron_covenant",
+	"role": "Elite guard. Heavier armour, slower but hits hard.",
+	"location_default": "silo_complex",
+	"stats": {
+		"grit":     6,
+		"reflex":   3,
+		"mind":     2,
+		"body":     7,
+		"nerve":    5,
+		"presence": 1
+	},
+	"skills_override": { "melee": 8 },
+	"combat_profile": {
+		"max_hp": 38,
+		"ap_per_turn": 4,
+		"weapon_id": "pipe_sledge",
+		"armor_id": "iron_covenant_plate"
+	},
+	"relationship": -30
+}

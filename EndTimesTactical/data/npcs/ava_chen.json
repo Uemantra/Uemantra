@@ -1,0 +1,19 @@
+{
+	"id": "ava_chen",
+	"name": "Ava Chen",
+	"portrait": "res://art/portraits/ava_chen.png",
+	"faction": "the_council",
+	"role": "Settlement medic and Council liaison",
+	"location_default": "haven_ridge",
+	"stats": {
+		"grit":     4,
+		"reflex":   4,
+		"mind":     6,
+		"body":     3,
+		"nerve":    4,
+		"presence": 5
+	},
+	"skills_override": { "medicine": 10 },
+	"combat_profile": null,
+	"relationship": 0
+}

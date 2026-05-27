@@ -1,0 +1,49 @@
+{
+	"misc": [
+		{
+			"id": "ammo_9mm",
+			"name": "9mm Rounds (x20)",
+			"type": "misc",
+			"subtype": "ammo",
+			"description": "Standard pistol ammunition.",
+			"weight": 0.2,
+			"value": 10
+		},
+		{
+			"id": "ammo_308",
+			"name": ".308 Rounds (x10)",
+			"type": "misc",
+			"subtype": "ammo",
+			"description": "Rifle cartridges. Harder to find.",
+			"weight": 0.3,
+			"value": 18
+		},
+		{
+			"id": "scrap_metal",
+			"name": "Scrap Metal",
+			"type": "misc",
+			"subtype": "material",
+			"description": "Bent, rusted, versatile. The post-apoc currency of repair.",
+			"weight": 1.0,
+			"value": 5
+		},
+		{
+			"id": "council_pass",
+			"name": "Council Transit Pass",
+			"type": "misc",
+			"subtype": "document",
+			"description": "Authorises passage through Haven Ridge's outer checkpoints. Hand-stamped, not printable.",
+			"weight": 0.0,
+			"value": 0
+		},
+		{
+			"id": "signal_fragment",
+			"name": "Signal Fragment",
+			"type": "misc",
+			"subtype": "quest_item",
+			"description": "A recording of the broadcast, transcribed to paper by hand. The words don't quite make sense.",
+			"weight": 0.0,
+			"value": 0
+		}
+	]
+}

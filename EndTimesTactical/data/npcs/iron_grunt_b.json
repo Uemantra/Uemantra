@@ -1,0 +1,24 @@
+{
+	"id": "iron_grunt_b",
+	"name": "Iron Covenant Grunt",
+	"portrait": null,
+	"faction": "iron_covenant",
+	"role": "Foot soldier. A second one.",
+	"location_default": "scrapfield",
+	"stats": {
+		"grit":     3,
+		"reflex":   5,
+		"mind":     2,
+		"body":     4,
+		"nerve":    4,
+		"presence": 2
+	},
+	"skills_override": {},
+	"combat_profile": {
+		"max_hp": 18,
+		"ap_per_turn": 6,
+		"weapon_id": "combat_knife",
+		"armor_id": "worn_clothes"
+	},
+	"relationship": -20
+}

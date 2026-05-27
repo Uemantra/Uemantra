@@ -1,0 +1,21 @@
+{
+	"id": "iron_covenant",
+	"name": "The Iron Covenant",
+	"description": "A militant faction that controls the outer territories. They believe order requires force. They are expanding, and Haven Ridge is on their map.",
+	"rep_starting": -10,
+	"rep_thresholds": {
+		"hostile":    -60,
+		"unfriendly": -20,
+		"neutral":    10,
+		"friendly":   40,
+		"trusted":    70
+	},
+	"rep_labels": {
+		"-60": "Execute on Sight",
+		"-20": "Enemy",
+		"10":  "Neutral",
+		"40":  "Contractor",
+		"70":  "Sworn"
+	},
+	"color": "#8b1a1a"
+}

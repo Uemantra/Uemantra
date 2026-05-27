@@ -1,0 +1,24 @@
+{
+	"id": "sgt_vale",
+	"name": "Sergeant Vale",
+	"portrait": "res://art/portraits/sgt_vale.png",
+	"faction": "iron_covenant",
+	"role": "Covenant enforcer. Guarding the silo. Does not negotiate.",
+	"location_default": "silo_complex",
+	"stats": {
+		"grit":     6,
+		"reflex":   5,
+		"mind":     4,
+		"body":     6,
+		"nerve":    6,
+		"presence": 3
+	},
+	"skills_override": { "guns": 10, "intimidate": 8 },
+	"combat_profile": {
+		"max_hp": 45,
+		"ap_per_turn": 6,
+		"weapon_id": "pipe_rifle",
+		"armor_id": "iron_covenant_plate"
+	},
+	"relationship": -30
+}

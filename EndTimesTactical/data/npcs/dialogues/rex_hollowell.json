@@ -1,0 +1,81 @@
+{
+	"conversations": [
+		{
+			"id": "rex_first_meeting",
+			"trigger_conditions": {
+				"flags_required": [],
+				"flags_excluded": ["met_rex"],
+				"faction_rep": {}
+			},
+			"entry_node": "rex_fm_001",
+			"nodes": {
+				"rex_fm_001": {
+					"type": "npc_line",
+					"speaker": "rex_hollowell",
+					"text": "Don't touch the merchandise until you've paid. Basic rule. You look like you've survived a few things — what do you need?",
+					"next": "rex_fm_choice_001"
+				},
+				"rex_fm_choice_001": {
+					"type": "player_choice",
+					"choices": [
+						{
+							"id": "c_trade",
+							"text": "I'm looking to trade. What do you have?",
+							"condition": null,
+							"next": "rex_fm_002a"
+						},
+						{
+							"id": "c_silo",
+							"text": "I saw the posting. The silo job. What's the rate?",
+							"condition": { "type": "flag_required", "flag": "discovered_silo" },
+							"next": "rex_fm_002b"
+						},
+						{
+							"id": "c_barter",
+							"text": "[Barter 40] I know what things are worth out here. Don't try to gouge me.",
+							"condition": { "type": "skill_check", "skill": "barter", "difficulty": 40, "on_fail": "rex_fm_002c_fail" },
+							"next": "rex_fm_002c_pass"
+						}
+					]
+				},
+				"rex_fm_002a": {
+					"type": "npc_line",
+					"speaker": "rex_hollowell",
+					"text": "Ammo, medical basics, a couple of weapons I liberated from people who no longer needed them. Caps or trade. I don't do credit.",
+					"next": null
+				},
+				"rex_fm_002b": {
+					"type": "npc_line",
+					"speaker": "rex_hollowell",
+					"text": "The Covenant has at least a squad in there. Maybe more. Rate is three hundred caps plus a ten percent cut of whatever you pull out. Non-negotiable — I've done the scouting already.",
+					"flags_set": ["rex_offered_silo_info"],
+					"next": "rex_fm_003_silo"
+				},
+				"rex_fm_003_silo": {
+					"type": "npc_line",
+					"speaker": "rex_hollowell",
+					"text": "One more thing. Whatever that signal is — somebody wants it kept quiet. I've had two people ask me not to talk about it in the last week. That tells me it's worth finding.",
+					"flags_set": ["talked_rex_signal"],
+					"next": null
+				},
+				"rex_fm_002c_pass": {
+					"type": "npc_line",
+					"speaker": "rex_hollowell",
+					"text": "*studies you* You've been around. Fair enough. Union discount — fifteen percent off posted prices. Don't tell anyone.",
+					"next": null
+				},
+				"rex_fm_002c_fail": {
+					"type": "npc_line",
+					"speaker": "rex_hollowell",
+					"text": "Posted prices are what they are. You want it, pay for it. You don't, walk on.",
+					"next": null
+				}
+			},
+			"on_complete": {
+				"flags_set": ["met_rex"],
+				"relationship_change": 2,
+				"faction_rep_change": { "scavengers_union": 2 }
+			}
+		}
+	]
+}

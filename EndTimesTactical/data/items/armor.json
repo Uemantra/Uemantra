@@ -1,0 +1,48 @@
+{
+	"armor": [
+		{
+			"id": "worn_clothes",
+			"name": "Worn Clothes",
+			"type": "armor",
+			"subtype": "light",
+			"description": "Better than nothing, barely.",
+			"weight": 1.0,
+			"value": 5,
+			"defense_bonus": 0,
+			"evasion_mod": 0
+		},
+		{
+			"id": "scav_vest",
+			"name": "Scavenger Vest",
+			"type": "armor",
+			"subtype": "light",
+			"description": "Reinforced canvas over pocketed webbing. Standard wastes gear.",
+			"weight": 2.5,
+			"value": 35,
+			"defense_bonus": 2,
+			"evasion_mod": 0
+		},
+		{
+			"id": "leather_jacket",
+			"name": "Patched Leather Jacket",
+			"type": "armor",
+			"subtype": "medium",
+			"description": "Multiple owners. Multiple repairs. Still standing.",
+			"weight": 3.5,
+			"value": 55,
+			"defense_bonus": 3,
+			"evasion_mod": -1
+		},
+		{
+			"id": "iron_covenant_plate",
+			"name": "Iron Covenant Plate",
+			"type": "armor",
+			"subtype": "heavy",
+			"description": "Stamped with the Covenant seal. Heavy, obvious, effective.",
+			"weight": 8.0,
+			"value": 120,
+			"defense_bonus": 6,
+			"evasion_mod": -3
+		}
+	]
+}

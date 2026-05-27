@@ -1,0 +1,28 @@
+{
+	"id": "haven_ridge",
+	"name": "Haven Ridge",
+	"type": "settlement",
+	"description": "A fortified ridge-top community built from pre-war industrial salvage. The water tower is the tallest thing for kilometres in any direction. Laundry hangs between prefab walls. People watch you from doorways.",
+	"overworld_position": { "x": 320, "y": 260 },
+	"connections": ["scrapfield", "transit_depot"],
+	"travel_time_hours": { "scrapfield": 4, "transit_depot": 8 },
+	"npcs_present": ["ava_chen", "councilman_falk"],
+	"interactables": [
+		{
+			"id": "bulletin_board",
+			"label": "Bulletin Board",
+			"action": "read",
+			"flags_required": [],
+			"text": "Scrawled notices on salvaged cardboard: a ration schedule for the week, a reward posting for anyone who can repair the ridge radio tower, and a warning about 'figures seen near the old silo' signed only with initials — C.F."
+		},
+		{
+			"id": "water_tower",
+			"label": "Water Tower",
+			"action": "examine",
+			"flags_required": [],
+			"text": "Rust-streaked but holding. Someone has painted a sun on the side — crude, faded, still somehow hopeful. The purifier hums beneath it."
+		}
+	],
+	"combat_arena": null,
+	"ambient_description": "The smell of cooked grain and rust. A child chasing a dog between the market stalls. Someone hammering in the distance."
+}

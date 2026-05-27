@@ -1,0 +1,99 @@
+extends Node
+
+# Authored content — loaded once at startup, never mutated at runtime.
+# All game content lives in res://data/ as JSON files.
+
+var npcs: Dictionary = {}
+var dialogues: Dictionary = {}
+var locations: Dictionary = {}
+var quests: Dictionary = {}
+var factions: Dictionary = {}
+var items: Dictionary = {}
+var world: Dictionary = {}
+
+
+func _ready() -> void:
+	_load_all()
+
+
+func _load_all() -> void:
+	world = _load_json("res://data/world.json")
+	_load_directory_into("res://data/npcs/", npcs, false)
+	_load_directory_into("res://data/npcs/dialogues/", dialogues, false)
+	_load_directory_into("res://data/locations/", locations, false)
+	_load_directory_into("res://data/factions/", factions, false)
+	_load_directory_into("res://data/quests/", quests, false)
+	_load_items()
+
+
+func _load_items() -> void:
+	for category in ["weapons", "armor", "consumables", "misc"]:
+		var data := _load_json("res://data/items/%s.json" % category)
+		if data.is_empty():
+			continue
+		var arr: Array = data.get(category, [])
+		for item in arr:
+			if item.has("id"):
+				items[item["id"]] = item
+
+
+func get_npc(id: String) -> Dictionary:
+	return npcs.get(id, {})
+
+
+func get_dialogue(npc_id: String) -> Dictionary:
+	return dialogues.get(npc_id, {})
+
+
+func get_location(id: String) -> Dictionary:
+	return locations.get(id, {})
+
+
+func get_quest(id: String) -> Dictionary:
+	return quests.get(id, {})
+
+
+func get_faction(id: String) -> Dictionary:
+	return factions.get(id, {})
+
+
+func get_item(id: String) -> Dictionary:
+	return items.get(id, {})
+
+
+func get_world() -> Dictionary:
+	return world
+
+
+func _load_json(path: String) -> Dictionary:
+	if not FileAccess.file_exists(path):
+		return {}
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		push_error("DataManager: could not open %s" % path)
+		return {}
+	var text := file.get_as_text()
+	file.close()
+	var parsed = JSON.parse_string(text)
+	if parsed == null:
+		push_error("DataManager: invalid JSON at %s" % path)
+		return {}
+	return parsed
+
+
+func _load_directory_into(dir_path: String, target: Dictionary, use_filename_as_key: bool) -> void:
+	var dir := DirAccess.open(dir_path)
+	if dir == null:
+		return
+	dir.list_dir_begin()
+	var filename := dir.get_next()
+	while filename != "":
+		if not dir.current_is_dir() and filename.ends_with(".json"):
+			var data := _load_json(dir_path + filename)
+			if use_filename_as_key:
+				var key := filename.get_basename()
+				target[key] = data
+			elif data.has("id"):
+				target[data["id"]] = data
+		filename = dir.get_next()
+	dir.list_dir_end()

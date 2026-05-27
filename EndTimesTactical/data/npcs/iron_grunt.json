@@ -1,0 +1,24 @@
+{
+	"id": "iron_grunt",
+	"name": "Iron Covenant Grunt",
+	"portrait": null,
+	"faction": "iron_covenant",
+	"role": "Foot soldier. Follows orders, asks nothing.",
+	"location_default": "scrapfield",
+	"stats": {
+		"grit":     4,
+		"reflex":   4,
+		"mind":     2,
+		"body":     5,
+		"nerve":    4,
+		"presence": 2
+	},
+	"skills_override": {},
+	"combat_profile": {
+		"max_hp": 22,
+		"ap_per_turn": 5,
+		"weapon_id": "pipe_rifle",
+		"armor_id": "scav_vest"
+	},
+	"relationship": -20
+}

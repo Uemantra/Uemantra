@@ -16,7 +16,7 @@ body { font-family: 'Courier New', monospace; background: #111; color: #ccc; hei
 #toolbar h1 { color: #c8a84b; font-size: 14px; letter-spacing: 2px; margin-right: auto; }
 #toolbar button { background: #2a2a2a; color: #aaa; border: 1px solid #444; padding: 6px 12px; cursor: pointer; font-family: inherit; font-size: 12px; }
 #toolbar button:hover { background: #333; color: #ddd; }
-#file-input { display: none; }
+#file-input, #folder-input { display: none; }
 
 /* ─── Tab Bar ─────────────────────────────────────────────── */
 #tabs {
@@ -99,6 +99,28 @@ body { font-family: 'Courier New', monospace; background: #111; color: #ccc; hei
 .add-node-btn:hover { background: #1e3040; }
 .on-complete-section { background: #1a1a1e; border: 1px solid #2a2a3a; padding: 12px; margin-top: 12px; }
 
+/* ─── Map Painter ─────────────────────────────────────────── */
+.map-toolbar { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.brush {
+  padding: 5px 9px; cursor: pointer; font-size: 12px; border: 1px solid #333;
+  background: #1c1c1c; color: #aaa; display: flex; align-items: center; gap: 6px;
+}
+.brush:hover { background: #252525; }
+.brush.active { border-color: #c8a84b; color: #c8a84b; background: #1e1e16; }
+.brush .swatch { width: 14px; height: 14px; border: 1px solid #000; display: inline-block; }
+.map-grid { display: grid; gap: 0; margin: 8px 0 16px; width: max-content; user-select: none; border: 1px solid #333; }
+.map-cell {
+  width: 22px; height: 22px; font-size: 11px; line-height: 22px; text-align: center;
+  cursor: pointer; position: relative; color: #888; outline: 1px solid #00000040;
+}
+.map-cell:hover { outline: 1px solid #c8a84b; z-index: 2; }
+.map-cell .ent { position: absolute; inset: 0; font-size: 12px; font-weight: bold; color: #fff; text-shadow: 0 0 2px #000, 0 0 2px #000; }
+.ent-list { margin-top: 8px; }
+.ent-row { background: #161616; border: 1px solid #252525; padding: 8px 10px; margin-bottom: 6px; }
+.ent-row .ent-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.ent-row .ent-head strong { color: #b9a14a; font-size: 12px; }
+.loot-row { display: flex; gap: 6px; margin-bottom: 4px; align-items: flex-end; }
+
 /* ─── Help Panel ─────────────────────────────────────────── */
 #help-panel {
   background: #141414; border-top: 1px solid #2a2a2a;
@@ -112,21 +134,32 @@ body { font-family: 'Courier New', monospace; background: #111; color: #ccc; hei
 <body>
 
 <div id="toolbar">
-  <h1>END TIMES TACTICAL &mdash; WORLD EDITOR</h1>
-  <button onclick="importJSON()">&#x1F4C2; Import JSON</button>
-  <input type="file" id="file-input" accept=".json" onchange="handleImport(event)">
-  <button onclick="exportAll()">&#x1F4BE; Export All (zip)</button>
+  <h1>ETT &mdash; CAMPAIGN EDITOR</h1>
+  <label style="color:#777;font-size:12px">Campaign&nbsp;id:
+    <input type="text" id="campaign-id" value="my_game" oninput="campaignId=this.value.trim()||'my_game'"
+      style="background:#1c1c1c;border:1px solid #333;color:#c8a84b;padding:4px 8px;font-family:inherit;font-size:12px;width:160px">
+  </label>
+  <button onclick="importFolder()">&#x1F4C1; Import Campaign Folder</button>
+  <input type="file" id="folder-input" webkitdirectory directory multiple onchange="handleFolderImport(event)">
+  <button onclick="importJSON()">&#x1F4C2; Import File(s)</button>
+  <input type="file" id="file-input" accept=".json" multiple onchange="handleImport(event)">
+  <button onclick="exportAll()">&#x1F4BE; Export Campaign</button>
   <button onclick="saveToLocal()">&#x1F4BB; Save to LocalStorage</button>
   <button onclick="loadFromLocal()">&#x21BA; Load Saved</button>
 </div>
 
 <div id="tabs">
+  <div class="tab" onclick="switchTab('campaign')">Campaign</div>
+  <div class="tab" onclick="switchTab('world')">World</div>
   <div class="tab active" onclick="switchTab('factions')">Factions</div>
   <div class="tab" onclick="switchTab('items')">Items</div>
   <div class="tab" onclick="switchTab('locations')">Locations</div>
+  <div class="tab" onclick="switchTab('maps')">Maps</div>
   <div class="tab" onclick="switchTab('npcs')">NPCs</div>
   <div class="tab" onclick="switchTab('quests')">Quests</div>
   <div class="tab" onclick="switchTab('dialogue')">Dialogue</div>
+  <div class="tab" onclick="switchTab('perks')">Perks</div>
+  <div class="tab" onclick="switchTab('traits')">Traits</div>
 </div>
 
 <div id="main">
@@ -147,23 +180,66 @@ body { font-family: 'Courier New', monospace; background: #111; color: #ccc; hei
 //  DATA STORE
 // ═══════════════════════════════════════════════════════════════
 const DB = {
+  manifest: {
+    id: 'my_game', name: 'New Campaign', version: '0.1.0', author: 'Your Name', description: '',
+    player_start: {
+      name: 'Wanderer', location: '',
+      stats: { grit:5, reflex:5, mind:5, body:5, nerve:5, presence:5 },
+      inventory: [], caps: 25, time_hours: 8,
+    },
+    default_unarmed_weapon: '',
+  },
   factions: {},
   items: { weapons: [], armor: [], consumables: [], misc: [] },
   locations: {},
+  maps: {},          // local_maps, keyed by id
   npcs: {},
   dialogues: {},
   quests: {},
+  perks: {},         // keyed by id
+  traits: {},        // keyed by id
   world: { nodes: [] },
 };
+
+// Ordered tab ids — index-aligned with the .tab elements in the DOM.
+const TABS = ['campaign','world','factions','items','locations','maps','npcs','quests','dialogue','perks','traits'];
 
 let currentTab = 'factions';
 let selectedId = null;
 let dialogueNpcId = null;
+let campaignId = 'my_game';
+
+// Terrain palette — mirrors scripts/systems/TerrainDB.gd. char is what gets written
+// into a map's terrain rows; color is editor-only styling.
+const TERRAIN_PALETTE = [
+  { id:'floor',         char:'.', color:'#6b5d44', name:'Floor' },
+  { id:'road',          char:'r', color:'#4a4a4a', name:'Road' },
+  { id:'grass',         char:'g', color:'#46562e', name:'Grass' },
+  { id:'interior',      char:'_', color:'#5a4a38', name:'Interior' },
+  { id:'cover_partial', char:'o', color:'#7a6a3a', name:'Cover — partial' },
+  { id:'cover_full',    char:'O', color:'#8a5a2a', name:'Cover — full' },
+  { id:'rubble',        char:'+', color:'#6a5a4a', name:'Rubble' },
+  { id:'obstacle',      char:'#', color:'#333333', name:'Obstacle (blocks move+LOS)' },
+  { id:'wall',          char:'W', color:'#222222', name:'Wall (blocks move+LOS)' },
+  { id:'water',         char:'~', color:'#264a6a', name:'Water (blocks move)' },
+  { id:'void',          char:' ', color:'#0a0a0a', name:'Void (no hex)' },
+];
+const PROP_KINDS = ['shack','house','building','hut','wreck','car','vehicle','tent','fence','barricade','wall_low','campfire','fire','generator','machine','terminal','console','tree','dead_tree','cactus','barrel','crate','sign','chest'];
+function charColor(ch) { const t = TERRAIN_PALETTE.find(t => t.char === ch); return t ? t.color : '#6b5d44'; }
+
+// Current map-painter brush.
+let mapBrush = { kind: 'terrain', value: 'floor' };
 
 // ═══════════════════════════════════════════════════════════════
 //  HELP SYSTEM
 // ═══════════════════════════════════════════════════════════════
 const HELP = {
+  // Manifest
+  'manifest-id': ['Campaign ID', 'Folder name for this campaign (lowercase, underscores). The game loads it when this id is the single line in campaigns/active.txt. Changing it here also sets the export target.'],
+  'manifest-start_name': ['Character Name', 'The player character\'s default name at the start of a new game.'],
+  'manifest-start_location': ['Start Location', 'Which location the player wakes up in. Must be a Location you have defined.'],
+  'manifest-start_time': ['Start Time', 'The hour (0–23) on Day 1 when the game begins. 8 = 08:00.'],
+  'manifest-default_weapon': ['Default Unarmed Weapon', 'The weapon used in combat when the player has nothing equipped. Usually a fists/pistol fallback.'],
   // Factions
   'faction-id': ['ID', 'Unique machine-readable identifier, e.g. "the_council". Use lowercase, underscores only. Cannot be changed after creation.'],
   'faction-name': ['Name', 'The display name players see in dialogue and the faction rep strip.'],
@@ -228,8 +304,20 @@ function showHelp(key) {
   document.getElementById('help-body').textContent = h[1];
 }
 
-function attachHelp(el, key) {
-  el.addEventListener('focus', () => showHelp(key));
+// Help is wired once via event delegation on the form panel (see initHelp), so it keeps
+// working no matter how often the form re-renders. focusin bubbles (focus does not), and
+// mouseover gives discoverable hover help too.
+let _helpInited = false;
+function initHelp() {
+  if (_helpInited) return;
+  _helpInited = true;
+  const panel = document.getElementById('form-panel');
+  const handler = e => {
+    const el = e.target.closest ? e.target.closest('[data-help]') : null;
+    if (el) showHelp(el.dataset.help);
+  };
+  panel.addEventListener('focusin', handler);
+  panel.addEventListener('mouseover', handler);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -239,9 +327,11 @@ function switchTab(tab) {
   currentTab = tab;
   selectedId = null;
   document.querySelectorAll('.tab').forEach((t,i) => {
-    t.classList.toggle('active', ['factions','items','locations','npcs','quests','dialogue'][i] === tab);
+    t.classList.toggle('active', TABS[i] === tab);
   });
   renderList();
+  // The manifest is a singleton — open it straight away rather than make the user click.
+  if (tab === 'campaign') { selectItem('__manifest__'); return; }
   document.getElementById('form-panel').innerHTML = '<div class="placeholder">Select an item from the left, or click &ldquo;+ Add New&rdquo;</div>';
 }
 
@@ -263,6 +353,16 @@ function renderList() {
 
 function getListItems() {
   switch (currentTab) {
+    case 'campaign':
+      return [{ id: '__manifest__', label: DB.manifest.name || 'Campaign Manifest', sub: DB.manifest.id }];
+    case 'world':
+      return (DB.world.nodes||[]).map(n => ({ id: n.id, label: n.display_name || n.id, sub: n.type }));
+    case 'maps':
+      return Object.values(DB.maps).map(m => ({ id: m.id, label: m.display_name || m.id, sub: `${m.width}×${m.height}` }));
+    case 'perks':
+      return Object.values(DB.perks).map(p => ({ id: p.id, label: p.name || p.id, sub: (p.effects||[]).length + ' effect(s)' }));
+    case 'traits':
+      return Object.values(DB.traits).map(t => ({ id: t.id, label: t.name || t.id, sub: (t.effects||[]).length + ' effect(s)' }));
     case 'factions':
       return Object.values(DB.factions).map(f => ({ id: f.id, label: f.name || f.id, sub: f.description?.slice(0,50) }));
     case 'items':
@@ -293,6 +393,11 @@ function selectItem(id) {
 function renderForm() {
   const panel = document.getElementById('form-panel');
   switch (currentTab) {
+    case 'campaign': panel.innerHTML = renderManifestForm(); break;
+    case 'world': panel.innerHTML = renderWorldNodeForm(findWorldNode(selectedId)); break;
+    case 'maps': panel.innerHTML = renderMapForm(DB.maps[selectedId]); break;
+    case 'perks': panel.innerHTML = renderEffectCarrierForm('perks', DB.perks[selectedId]); break;
+    case 'traits': panel.innerHTML = renderEffectCarrierForm('traits', DB.traits[selectedId]); break;
     case 'factions': panel.innerHTML = renderFactionForm(DB.factions[selectedId]); break;
     case 'items': panel.innerHTML = renderItemForm(findItem(selectedId)); break;
     case 'locations': panel.innerHTML = renderLocationForm(DB.locations[selectedId]); break;
@@ -303,11 +408,7 @@ function renderForm() {
   attachHelpListeners();
 }
 
-function attachHelpListeners() {
-  document.querySelectorAll('[data-help]').forEach(el => {
-    el.addEventListener('focus', () => showHelp(el.dataset.help));
-  });
-}
+function attachHelpListeners() { initHelp(); }
 
 function esc(str) {
   return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -978,13 +1079,516 @@ function ensureDialogue(npcId) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+//  SHARED HELPERS (datalists)
+// ═══════════════════════════════════════════════════════════════
+function allItemIds() {
+  return [...DB.items.weapons, ...DB.items.armor, ...DB.items.consumables, ...DB.items.misc].map(i => i.id);
+}
+function weaponIds() { return DB.items.weapons.map(w => w.id); }
+function itemDatalist(id) {
+  return `<datalist id="${id}">${allItemIds().map(i => `<option value="${esc(i)}">`).join('')}</datalist>`;
+}
+function npcDatalist(id) {
+  return `<datalist id="${id}">${Object.keys(DB.npcs).map(n => `<option value="${esc(n)}">`).join('')}</datalist>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  CAMPAIGN MANIFEST (campaign.json)
+// ═══════════════════════════════════════════════════════════════
+function renderManifestForm() {
+  const m = DB.manifest;
+  const ps = m.player_start || (m.player_start = {});
+  const stats = ps.stats || (ps.stats = {grit:5,reflex:5,mind:5,body:5,nerve:5,presence:5});
+  const inv = ps.inventory || (ps.inventory = []);
+  const locOpts = ['<option value="">— none —</option>', ...Object.keys(DB.locations).map(l =>
+    `<option value="${esc(l)}" ${ps.location===l?'selected':''}>${esc(DB.locations[l].name||l)}</option>`)].join('');
+  const wpnOpts = ['<option value="">— none —</option>', ...weaponIds().map(w =>
+    `<option value="${esc(w)}" ${m.default_unarmed_weapon===w?'selected':''}>${esc(w)}</option>`)].join('');
+  return `
+  <h2>CAMPAIGN MANIFEST</h2>
+  <p style="color:#666;font-size:12px;margin-bottom:16px">This becomes <code>campaigns/&lt;id&gt;/campaign.json</code>. It defines your game's identity and the player's starting state — everything the engine used to hardcode.</p>
+  <div class="form-row">
+    <div class="form-group"><label>Campaign ID</label>
+      <input type="text" value="${esc(m.id||'')}" onchange="updateManifest('id',this.value)" data-help="manifest-id">
+    </div>
+    <div class="form-group" style="flex:2"><label>Name</label>
+      <input type="text" value="${esc(m.name||'')}" onchange="updateManifest('name',this.value)">
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Version</label>
+      <input type="text" value="${esc(m.version||'0.1.0')}" onchange="updateManifest('version',this.value)">
+    </div>
+    <div class="form-group" style="flex:2"><label>Author</label>
+      <input type="text" value="${esc(m.author||'')}" onchange="updateManifest('author',this.value)">
+    </div>
+  </div>
+  <div class="form-group"><label>Description</label>
+    <textarea onchange="updateManifest('description',this.value)">${esc(m.description||'')}</textarea>
+  </div>
+  <div class="form-section-header">Player Start</div>
+  <div class="form-row">
+    <div class="form-group"><label>Character Name</label>
+      <input type="text" value="${esc(ps.name||'')}" onchange="updateManifestStart('name',this.value)" data-help="manifest-start_name">
+    </div>
+    <div class="form-group"><label>Start Location</label>
+      <select onchange="updateManifestStart('location',this.value)" data-help="manifest-start_location">${locOpts}</select>
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Starting Caps</label>
+      <input type="number" value="${ps.caps??25}" onchange="updateManifestStart('caps',+this.value)">
+    </div>
+    <div class="form-group"><label>Start Time (hour, 0-23)</label>
+      <input type="number" value="${ps.time_hours??8}" onchange="updateManifestStart('time_hours',+this.value)" data-help="manifest-start_time">
+    </div>
+    <div class="form-group"><label>Default Unarmed Weapon</label>
+      <select onchange="updateManifest('default_unarmed_weapon',this.value)" data-help="manifest-default_weapon">${wpnOpts}</select>
+    </div>
+  </div>
+  <div class="form-section-header" style="margin-top:8px">Starting Stats</div>
+  <div class="stat-row">
+    ${['grit','reflex','mind','body','nerve','presence'].map(s => `
+    <div class="stat-item"><label>${s}</label>
+      <input type="number" min="1" max="10" value="${stats[s]||5}" onchange="updateManifestStat('${s}',+this.value)" data-help="npc-stats-${s}">
+    </div>`).join('')}
+  </div>
+  <div class="form-section-header" style="margin-top:8px">Starting Inventory</div>
+  ${itemDatalist('dl-items-manifest')}
+  ${inv.map((e,i) => `
+  <div class="loot-row">
+    <div class="form-group" style="flex:2"><label>Item ID</label>
+      <input list="dl-items-manifest" value="${esc(e.item_id||'')}" onchange="updateManifestInv(${i},'item_id',this.value)">
+    </div>
+    <div class="form-group"><label>Qty</label>
+      <input type="number" value="${e.quantity||1}" onchange="updateManifestInv(${i},'quantity',+this.value)">
+    </div>
+    <div class="form-group" style="flex:0"><label>Equipped</label>
+      <input type="checkbox" ${e.equipped?'checked':''} onchange="updateManifestInv(${i},'equipped',this.checked)">
+    </div>
+    <div class="form-group" style="flex:0"><label>&nbsp;</label>
+      <button class="btn-danger btn-small" onclick="removeManifestInv(${i})">✕</button>
+    </div>
+  </div>`).join('')}
+  <button class="btn-primary btn-small" onclick="addManifestInv()">+ Add Item</button>`;
+}
+function updateManifest(key, val) {
+  DB.manifest[key] = val;
+  if (key === 'id') { campaignId = val.trim() || 'my_game'; document.getElementById('campaign-id').value = campaignId; renderList(); }
+}
+function updateManifestStart(key, val) { DB.manifest.player_start[key] = val; }
+function updateManifestStat(stat, val) { DB.manifest.player_start.stats[stat] = val; }
+function updateManifestInv(i, key, val) { DB.manifest.player_start.inventory[i][key] = val; }
+function addManifestInv() { DB.manifest.player_start.inventory.push({item_id:'',quantity:1,equipped:false}); renderForm(); }
+function removeManifestInv(i) { DB.manifest.player_start.inventory.splice(i,1); renderForm(); }
+
+// ═══════════════════════════════════════════════════════════════
+//  WORLD MAP NODES (world.json)
+// ═══════════════════════════════════════════════════════════════
+function findWorldNode(id) { return (DB.world.nodes||[]).find(n => n.id === id); }
+function renderWorldNodeForm(node) {
+  if (!node) return '<div class="placeholder">Select a world node, or click “+ Add New”</div>';
+  const targetOpts = Object.keys(DB.locations);
+  const conns = node.connections || (node.connections = []);
+  return `
+  <h2>WORLD NODE</h2>
+  <p style="color:#666;font-size:12px;margin-bottom:12px">A stop on the wasteland map. Its <b>id</b> should match a Location id so travelling there loads that location's map.</p>
+  <div class="form-row">
+    <div class="form-group"><label>ID</label>
+      <input type="text" value="${esc(node.id)}" onchange="updateWorldNodeId('${node.id}',this.value)">
+    </div>
+    <div class="form-group" style="flex:2"><label>Display Name</label>
+      <input type="text" value="${esc(node.display_name||'')}" onchange="updateWorldNode('${node.id}','display_name',this.value)">
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Type</label>
+      <select onchange="updateWorldNode('${node.id}','type',this.value)">
+        ${['settlement','hostile_zone','dungeon'].map(t=>`<option ${node.type===t?'selected':''}>${t}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group"><label>Map X</label>
+      <input type="number" value="${(node.position||{}).x||0}" onchange="updateWorldNodePos('${node.id}','x',+this.value)">
+    </div>
+    <div class="form-group"><label>Map Y</label>
+      <input type="number" value="${(node.position||{}).y||0}" onchange="updateWorldNodePos('${node.id}','y',+this.value)">
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group" style="flex:0"><label>Unlocked by default</label>
+      <input type="checkbox" ${node.unlocked_by_default?'checked':''} onchange="updateWorldNode('${node.id}','unlocked_by_default',this.checked)">
+    </div>
+    <div class="form-group"><label>Unlock Flag (if not default)</label>
+      <input type="text" value="${esc(node.unlock_flag||'')}" onchange="updateWorldNode('${node.id}','unlock_flag',this.value||null)">
+    </div>
+  </div>
+  <div class="form-section-header">Connections (roads to other nodes)</div>
+  ${conns.map((c,i) => `
+  <div class="form-row">
+    <div class="form-group"><label>To</label>
+      <select onchange="updateWorldConn('${node.id}',${i},'to',this.value)">
+        ${targetOpts.map(t=>`<option value="${esc(t)}" ${c.to===t?'selected':''}>${esc(t)}</option>`).join('')}
+        ${targetOpts.includes(c.to)?'':`<option value="${esc(c.to||'')}" selected>${esc(c.to||'(pick)')}</option>`}
+      </select>
+    </div>
+    <div class="form-group"><label>Distance (km)</label>
+      <input type="number" value="${c.distance_km||0}" onchange="updateWorldConn('${node.id}',${i},'distance_km',+this.value)">
+    </div>
+    <div class="form-group"><label>Travel (hours)</label>
+      <input type="number" value="${c.travel_hours||0}" onchange="updateWorldConn('${node.id}',${i},'travel_hours',+this.value)">
+    </div>
+    <div class="form-group" style="flex:0"><label>&nbsp;</label>
+      <button class="btn-danger btn-small" onclick="removeWorldConn('${node.id}',${i})">✕</button>
+    </div>
+  </div>`).join('')}
+  <button class="btn-primary btn-small" onclick="addWorldConn('${node.id}')">+ Add Connection</button>
+  <div style="margin-top:20px"><button class="btn-danger" onclick="deleteItem('${node.id}')">Delete Node</button></div>`;
+}
+function updateWorldNode(id, key, val) { const n = findWorldNode(id); if (n) n[key] = val; }
+function updateWorldNodeId(oldId, newId) { const n = findWorldNode(oldId); if (n) { n.id = newId; selectedId = newId; renderList(); } }
+function updateWorldNodePos(id, axis, val) { const n = findWorldNode(id); if (n) { if (!n.position) n.position = {x:0,y:0}; n.position[axis] = val; } }
+function updateWorldConn(id, i, key, val) { const n = findWorldNode(id); if (n) n.connections[i][key] = val; }
+function addWorldConn(id) { const n = findWorldNode(id); if (n) { (n.connections||(n.connections=[])).push({to:'',distance_km:10,travel_hours:3}); renderForm(); } }
+function removeWorldConn(id, i) { const n = findWorldNode(id); if (n) { n.connections.splice(i,1); renderForm(); } }
+
+// ═══════════════════════════════════════════════════════════════
+//  LOCAL MAP PAINTER (local_maps/*.json)
+// ═══════════════════════════════════════════════════════════════
+function ensureMapShape(map) {
+  if (!Array.isArray(map.terrain)) map.terrain = [];
+  const w = map.width, h = map.height;
+  const rows = [];
+  for (let r = 0; r < h; r++) {
+    let row = map.terrain[r] || '';
+    if (row.length < w) row = row + '.'.repeat(w - row.length);
+    else if (row.length > w) row = row.slice(0, w);
+    rows.push(row);
+  }
+  map.terrain = rows;
+}
+function setBrush(kind, value) { mapBrush = { kind, value }; renderForm(); }
+function entitiesAt(map) {
+  // "q,r" -> badge letter, for quick grid overlay lookup.
+  const at = {};
+  if (map.player_start) at[`${map.player_start.q},${map.player_start.r}`] = 'P';
+  (map.actors||[]).forEach(a => at[`${a.q},${a.r}`] = a.type === 'enemy' ? 'E' : 'N');
+  (map.containers||[]).forEach(c => at[`${c.q},${c.r}`] = 'C');
+  (map.examine_spots||[]).forEach(e => at[`${e.q},${e.r}`] = '?');
+  (map.exit_zones||[]).forEach(x => at[`${x.q},${x.r}`] = 'X');
+  (map.props||[]).forEach(p => { const k=`${p.q},${p.r}`; if (!at[k]) at[k] = '•'; });
+  return at;
+}
+function renderMapGrid(map) {
+  ensureMapShape(map);
+  const at = entitiesAt(map);
+  let html = `<div class="map-grid" style="grid-template-columns:repeat(${map.width},22px)">`;
+  for (let r = 0; r < map.height; r++) {
+    for (let q = 0; q < map.width; q++) {
+      const ch = map.terrain[r].charAt(q);
+      const badge = at[`${q},${r}`];
+      html += `<div class="map-cell" id="cell-${q}-${r}" style="background:${charColor(ch)}"
+        onclick="paintCell(${q},${r})" title="(${q},${r})">${ch===' '?'':esc(ch)}${badge?`<span class="ent">${badge}</span>`:''}</div>`;
+    }
+  }
+  return html + '</div>';
+}
+function renderBrushBar() {
+  const terr = TERRAIN_PALETTE.map(t =>
+    `<div class="brush ${mapBrush.kind==='terrain'&&mapBrush.value===t.id?'active':''}" onclick="setBrush('terrain','${t.id}')" title="${esc(t.name)}">
+      <span class="swatch" style="background:${t.color}"></span>${t.char===' '?'∅':t.char}</div>`).join('');
+  const ents = [
+    ['player','◉ Player start'],['npc','N NPC'],['enemy','E Enemy'],['container','C Container'],
+    ['examine','? Examine'],['exit','X Exit'],['prop','• Prop'],['erase','⌫ Erase entity'],
+  ].map(([k,label]) =>
+    `<div class="brush ${mapBrush.kind==='entity'&&mapBrush.value===k?'active':''}" onclick="setBrush('entity','${k}')">${esc(label)}</div>`).join('');
+  return `<div class="map-toolbar">${terr}</div><div class="map-toolbar">${ents}</div>`;
+}
+function renderMapForm(map) {
+  if (!map) return '<div class="placeholder">Select a map, or click “+ Add New”</div>';
+  return `
+  <h2>LOCAL MAP — ${esc(map.display_name||map.id)}</h2>
+  <p style="color:#666;font-size:12px;margin-bottom:12px">Pick a brush, then click cells to paint. Keep the player start, exits, and any NPC/container connected by walkable hexes (floor/road/grass/interior/cover/rubble) — walls <b>W</b>, obstacles <b>#</b> and water <b>~</b> block movement.</p>
+  <div class="form-row">
+    <div class="form-group"><label>ID</label>
+      <input type="text" value="${esc(map.id)}" onchange="updateMapId('${map.id}',this.value)">
+    </div>
+    <div class="form-group" style="flex:2"><label>Display Name</label>
+      <input type="text" value="${esc(map.display_name||'')}" onchange="updateMap('${map.id}','display_name',this.value)">
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Width</label>
+      <input type="number" min="4" max="60" value="${map.width}" onchange="resizeMap('${map.id}','width',+this.value)">
+    </div>
+    <div class="form-group"><label>Height</label>
+      <input type="number" min="4" max="40" value="${map.height}" onchange="resizeMap('${map.id}','height',+this.value)">
+    </div>
+    <div class="form-group"><label>Vision Radius</label>
+      <input type="number" value="${map.vision_radius||7}" onchange="updateMap('${map.id}','vision_radius',+this.value)">
+    </div>
+    <div class="form-group"><label>Player Start</label>
+      <input type="text" readonly value="(${(map.player_start||{}).q??'?'}, ${(map.player_start||{}).r??'?'})" style="color:#888">
+    </div>
+  </div>
+  <div class="form-section-header">Paint</div>
+  ${renderBrushBar()}
+  ${renderMapGrid(map)}
+  ${renderMapEntities(map)}
+  <div style="margin-top:20px"><button class="btn-danger" onclick="deleteItem('${map.id}')">Delete Map</button></div>`;
+}
+function renderMapEntities(map) {
+  const npcDl = npcDatalist('dl-npcs-map');
+  const itemDl = itemDatalist('dl-items-map');
+  const sec = (title, body) => `<div class="form-section-header">${title}</div>${body||'<p style="color:#555;font-size:12px">None placed.</p>'}`;
+  const actors = (map.actors||[]).map((a,i) => `
+    <div class="ent-row">
+      <div class="ent-head"><strong>${a.type==='enemy'?'Enemy':'NPC'} — ${esc(a.id)}</strong>
+        <button class="btn-danger btn-small" onclick="removeMapEntity('${map.id}','actors',${i})">✕</button></div>
+      <div class="form-row">
+        <div class="form-group"><label>Entity ID</label><input value="${esc(a.id)}" onchange="updateMapEntity('${map.id}','actors',${i},'id',this.value)"></div>
+        <div class="form-group"><label>Type</label>
+          <select onchange="updateMapEntity('${map.id}','actors',${i},'type',this.value)">
+            ${['npc','enemy'].map(t=>`<option ${a.type===t?'selected':''}>${t}</option>`).join('')}</select></div>
+        <div class="form-group"><label>NPC ID</label><input list="dl-npcs-map" value="${esc(a.npc_id||'')}" onchange="updateMapEntity('${map.id}','actors',${i},'npc_id',this.value)"></div>
+        <div class="form-group" style="flex:0"><label>q</label><input type="number" value="${a.q}" onchange="updateMapEntity('${map.id}','actors',${i},'q',+this.value)"></div>
+        <div class="form-group" style="flex:0"><label>r</label><input type="number" value="${a.r}" onchange="updateMapEntity('${map.id}','actors',${i},'r',+this.value)"></div>
+      </div>
+      ${a.type==='enemy'?`<div class="form-group"><label>Dead Flag (set when killed)</label><input value="${esc(a.dead_flag||'')}" onchange="updateMapEntity('${map.id}','actors',${i},'dead_flag',this.value)"></div>`:''}
+    </div>`).join('');
+  const containers = (map.containers||[]).map((c,i) => `
+    <div class="ent-row">
+      <div class="ent-head"><strong>Container — ${esc(c.id)}</strong>
+        <button class="btn-danger btn-small" onclick="removeMapEntity('${map.id}','containers',${i})">✕</button></div>
+      <div class="form-row">
+        <div class="form-group"><label>ID</label><input value="${esc(c.id)}" onchange="updateMapEntity('${map.id}','containers',${i},'id',this.value)"></div>
+        <div class="form-group"><label>Opened Flag</label><input value="${esc(c.opened_flag||'')}" onchange="updateMapEntity('${map.id}','containers',${i},'opened_flag',this.value)"></div>
+        <div class="form-group" style="flex:0"><label>Locked</label><input type="checkbox" ${c.locked?'checked':''} onchange="updateMapEntity('${map.id}','containers',${i},'locked',this.checked)"></div>
+        <div class="form-group" style="flex:0"><label>q</label><input type="number" value="${c.q}" onchange="updateMapEntity('${map.id}','containers',${i},'q',+this.value)"></div>
+        <div class="form-group" style="flex:0"><label>r</label><input type="number" value="${c.r}" onchange="updateMapEntity('${map.id}','containers',${i},'r',+this.value)"></div>
+      </div>
+      <label style="color:#888;font-size:11px;text-transform:uppercase">Loot</label>
+      ${(c.loot_table||[]).map((lt,li)=>`
+      <div class="loot-row">
+        <div class="form-group" style="flex:2"><input list="dl-items-map" value="${esc(lt.item_id||'')}" onchange="updateLoot('${map.id}',${i},${li},'item_id',this.value)" placeholder="item id"></div>
+        <div class="form-group" style="flex:0"><input type="number" value="${lt.quantity||1}" onchange="updateLoot('${map.id}',${i},${li},'quantity',+this.value)" title="qty"></div>
+        <div class="form-group" style="flex:0"><input type="number" step="0.1" min="0" max="1" value="${lt.chance??1}" onchange="updateLoot('${map.id}',${i},${li},'chance',+this.value)" title="chance 0-1"></div>
+        <div class="form-group" style="flex:0"><button class="btn-danger btn-small" onclick="removeLoot('${map.id}',${i},${li})">✕</button></div>
+      </div>`).join('')}
+      <button class="btn-primary btn-small" onclick="addLoot('${map.id}',${i})">+ Loot</button>
+    </div>`).join('');
+  const examines = (map.examine_spots||[]).map((e,i) => `
+    <div class="ent-row">
+      <div class="ent-head"><strong>Examine — ${esc(e.id)}</strong>
+        <button class="btn-danger btn-small" onclick="removeMapEntity('${map.id}','examine_spots',${i})">✕</button></div>
+      <div class="form-row">
+        <div class="form-group"><label>ID</label><input value="${esc(e.id)}" onchange="updateMapEntity('${map.id}','examine_spots',${i},'id',this.value)"></div>
+        <div class="form-group" style="flex:2"><label>Title</label><input value="${esc(e.title||'')}" onchange="updateMapEntity('${map.id}','examine_spots',${i},'title',this.value)"></div>
+        <div class="form-group" style="flex:0"><label>q</label><input type="number" value="${e.q}" onchange="updateMapEntity('${map.id}','examine_spots',${i},'q',+this.value)"></div>
+        <div class="form-group" style="flex:0"><label>r</label><input type="number" value="${e.r}" onchange="updateMapEntity('${map.id}','examine_spots',${i},'r',+this.value)"></div>
+      </div>
+      <div class="form-group"><label>Text</label><textarea onchange="updateMapEntity('${map.id}','examine_spots',${i},'text',this.value)">${esc(e.text||'')}</textarea></div>
+    </div>`).join('');
+  const exits = (map.exit_zones||[]).map((x,i) => `
+    <div class="ent-row">
+      <div class="ent-head"><strong>Exit — ${esc(x.id)}</strong>
+        <button class="btn-danger btn-small" onclick="removeMapEntity('${map.id}','exit_zones',${i})">✕</button></div>
+      <div class="form-row">
+        <div class="form-group"><label>ID</label><input value="${esc(x.id)}" onchange="updateMapEntity('${map.id}','exit_zones',${i},'id',this.value)"></div>
+        <div class="form-group"><label>Target</label><input value="${esc(x.target||'world')}" onchange="updateMapEntity('${map.id}','exit_zones',${i},'target',this.value)"></div>
+        <div class="form-group" style="flex:0"><label>q</label><input type="number" value="${x.q}" onchange="updateMapEntity('${map.id}','exit_zones',${i},'q',+this.value)"></div>
+        <div class="form-group" style="flex:0"><label>r</label><input type="number" value="${x.r}" onchange="updateMapEntity('${map.id}','exit_zones',${i},'r',+this.value)"></div>
+        <div class="form-group" style="flex:0"><label>w</label><input type="number" value="${x.w||1}" onchange="updateMapEntity('${map.id}','exit_zones',${i},'w',+this.value)"></div>
+        <div class="form-group" style="flex:0"><label>h</label><input type="number" value="${x.h||1}" onchange="updateMapEntity('${map.id}','exit_zones',${i},'h',+this.value)"></div>
+      </div>
+    </div>`).join('');
+  const props = (map.props||[]).map((p,i) => `
+    <div class="loot-row">
+      <div class="form-group" style="flex:2"><label>Prop</label>
+        <select onchange="updateMapEntity('${map.id}','props',${i},'prop',this.value)">
+          ${PROP_KINDS.map(k=>`<option ${p.prop===k?'selected':''}>${k}</option>`).join('')}</select></div>
+      <div class="form-group" style="flex:0"><label>q</label><input type="number" value="${p.q}" onchange="updateMapEntity('${map.id}','props',${i},'q',+this.value)"></div>
+      <div class="form-group" style="flex:0"><label>r</label><input type="number" value="${p.r}" onchange="updateMapEntity('${map.id}','props',${i},'r',+this.value)"></div>
+      <div class="form-group" style="flex:0"><label>&nbsp;</label><button class="btn-danger btn-small" onclick="removeMapEntity('${map.id}','props',${i})">✕</button></div>
+    </div>`).join('');
+  return npcDl + itemDl
+    + sec('NPCs &amp; Enemies', actors)
+    + sec('Containers', containers)
+    + sec('Examine Spots', examines)
+    + sec('Exit Zones', exits)
+    + sec('Props (cosmetic)', props);
+}
+function paintCell(q, r) {
+  const map = DB.maps[selectedId];
+  if (!map) return;
+  if (mapBrush.kind === 'terrain') {
+    const t = TERRAIN_PALETTE.find(t => t.id === mapBrush.value);
+    const row = map.terrain[r];
+    map.terrain[r] = row.substring(0,q) + t.char + row.substring(q+1);
+    const cell = document.getElementById(`cell-${q}-${r}`);   // update in place — no full re-render
+    if (cell) {
+      cell.style.background = t.color;
+      cell.firstChild ? null : null;
+      cell.childNodes[0].nodeValue = t.char === ' ' ? '' : t.char;
+    }
+    return;
+  }
+  // Entity brushes mutate a list, then re-render the form.
+  const v = mapBrush.value;
+  if (v === 'player') { map.player_start = {q, r}; }
+  else if (v === 'erase') { removeEntitiesAt(map, q, r); }
+  else if (v === 'npc' || v === 'enemy') {
+    map.actors = map.actors || [];
+    const n = map.actors.length + 1;
+    map.actors.push(v === 'enemy'
+      ? {id:`enemy_${n}`, type:'enemy', npc_id:'', q, r, glyph:'E', color:'#cc3322', dead_flag:`enemy_${n}_dead`}
+      : {id:`npc_${n}`,   type:'npc',   npc_id:'', q, r, glyph:'N', color:'#88bbee'});
+  }
+  else if (v === 'container') {
+    map.containers = map.containers || [];
+    const n = map.containers.length + 1;
+    map.containers.push({id:`container_${n}`, q, r, glyph:'▫', color:'#aaaa44', opened_flag:`container_${n}_opened`, locked:false, loot_table:[]});
+  }
+  else if (v === 'examine') {
+    map.examine_spots = map.examine_spots || [];
+    const n = map.examine_spots.length + 1;
+    map.examine_spots.push({id:`examine_${n}`, q, r, glyph:'?', color:'#aaaaaa', title:'', text:''});
+  }
+  else if (v === 'exit') {
+    map.exit_zones = map.exit_zones || [];
+    const n = map.exit_zones.length + 1;
+    map.exit_zones.push({id:`exit_${n}`, q, r, w:1, h:1, target:'world'});
+  }
+  else if (v === 'prop') {
+    map.props = map.props || [];
+    map.props.push({prop:'crate', q, r});
+  }
+  renderForm();
+}
+function removeEntitiesAt(map, q, r) {
+  ['actors','containers','examine_spots','exit_zones','props'].forEach(list => {
+    if (map[list]) map[list] = map[list].filter(e => !(e.q === q && e.r === r));
+  });
+  if (map.player_start && map.player_start.q === q && map.player_start.r === r) delete map.player_start;
+}
+function updateMap(id, key, val) { if (DB.maps[id]) DB.maps[id][key] = val; }
+function updateMapId(oldId, newId) { DB.maps[newId] = DB.maps[oldId]; DB.maps[newId].id = newId; delete DB.maps[oldId]; selectedId = newId; renderList(); }
+function resizeMap(id, key, val) {
+  const map = DB.maps[id];
+  if (!map) return;
+  map[key] = Math.max(4, val);
+  ensureMapShape(map);
+  renderForm();
+}
+function updateMapEntity(id, list, i, key, val) { DB.maps[id][list][i][key] = val; if (key==='q'||key==='r'||key==='type') renderForm(); }
+function removeMapEntity(id, list, i) { DB.maps[id][list].splice(i,1); renderForm(); }
+function addLoot(id, ci) { const c = DB.maps[id].containers[ci]; (c.loot_table||(c.loot_table=[])).push({item_id:'',quantity:1,chance:1.0}); renderForm(); }
+function updateLoot(id, ci, li, key, val) { DB.maps[id].containers[ci].loot_table[li][key] = val; }
+function removeLoot(id, ci, li) { DB.maps[id].containers[ci].loot_table.splice(li,1); renderForm(); }
+
+// ═══════════════════════════════════════════════════════════════
+//  PERKS & TRAITS (perks/perks.json, traits/traits.json)
+// ═══════════════════════════════════════════════════════════════
+const EFFECT_TYPES = ['skill_bonus','skill_bonus_all','stat_bonus','max_hp_bonus','max_ap_bonus','carry_bonus','hit_bonus','crit_chance_bonus','crit_damage_bonus','damage_flat_bonus','dr_bonus','ranged_ap_reduction','no_aimed','bonus_heal_pct'];
+const SKILL_IDS = ['guns','melee','speech','intimidate','barter','medicine','lockpick','tech','stealth'];
+const STAT_IDS = ['grit','reflex','mind','body','nerve','presence'];
+function renderEffectCarrierForm(kind, obj) {
+  if (!obj) return `<div class="placeholder">Select a ${kind==='perks'?'perk':'trait'}, or click “+ Add New”</div>`;
+  const isPerk = kind === 'perks';
+  const req = obj.requirements || {};
+  const effects = obj.effects || (obj.effects = []);
+  return `
+  <h2>${isPerk?'PERK':'TRAIT'}</h2>
+  <div class="form-row">
+    <div class="form-group"><label>ID</label>
+      <input type="text" value="${esc(obj.id)}" onchange="updateCarrierId('${kind}','${obj.id}',this.value)"></div>
+    <div class="form-group" style="flex:2"><label>Name</label>
+      <input type="text" value="${esc(obj.name||'')}" onchange="updateCarrier('${kind}','${obj.id}','name',this.value)"></div>
+  </div>
+  <div class="form-group"><label>Description</label>
+    <textarea onchange="updateCarrier('${kind}','${obj.id}','description',this.value)">${esc(obj.description||'')}</textarea></div>
+  ${isPerk ? `
+  <div class="form-section-header">Requirements</div>
+  <div class="form-row">
+    <div class="form-group"><label>Min Level</label>
+      <input type="number" value="${req.level||1}" onchange="updateCarrierReq('${obj.id}','level',+this.value)"></div>
+    <div class="form-group" style="flex:2"><label>Stat reqs (e.g. reflex:6, body:7)</label>
+      <input type="text" value="${esc(mapToCsv(req.stats))}" onchange="updateCarrierReqMap('${obj.id}','stats',this.value)"></div>
+    <div class="form-group" style="flex:2"><label>Skill reqs (e.g. guns:50)</label>
+      <input type="text" value="${esc(mapToCsv(req.skills))}" onchange="updateCarrierReqMap('${obj.id}','skills',this.value)"></div>
+  </div>` : `<p style="color:#666;font-size:12px;margin-top:8px">Traits are chosen at character creation (0–2). Give them a pro and a con via effects.</p>`}
+  <div class="form-section-header">Effects</div>
+  ${effects.map((e,i) => renderEffectRow(kind, obj.id, e, i)).join('')}
+  <button class="btn-primary btn-small" onclick="addEffect('${kind}','${obj.id}')">+ Add Effect</button>
+  <div style="margin-top:20px"><button class="btn-danger" onclick="deleteItem('${obj.id}')">Delete ${isPerk?'Perk':'Trait'}</button></div>`;
+}
+function renderEffectRow(kind, id, e, i) {
+  const needsSubtype = e.type === 'hit_bonus' || e.type === 'damage_flat_bonus';
+  const needsSkill = e.type === 'skill_bonus';
+  const needsStat = e.type === 'stat_bonus';
+  const needsValue = e.type !== 'no_aimed';
+  return `
+  <div class="form-row" style="align-items:flex-end">
+    <div class="form-group"><label>Type</label>
+      <select onchange="updateEffect('${kind}','${id}',${i},'type',this.value)">
+        ${EFFECT_TYPES.map(t=>`<option ${e.type===t?'selected':''}>${t}</option>`).join('')}</select></div>
+    ${needsSubtype?`<div class="form-group"><label>Subtype</label>
+      <select onchange="updateEffect('${kind}','${id}',${i},'subtype',this.value)">
+        ${['all','guns','melee'].map(s=>`<option ${e.subtype===s?'selected':''}>${s}</option>`).join('')}</select></div>`:''}
+    ${needsSkill?`<div class="form-group"><label>Skill</label>
+      <select onchange="updateEffect('${kind}','${id}',${i},'skill',this.value)">
+        ${SKILL_IDS.map(s=>`<option ${e.skill===s?'selected':''}>${s}</option>`).join('')}</select></div>`:''}
+    ${needsStat?`<div class="form-group"><label>Stat</label>
+      <select onchange="updateEffect('${kind}','${id}',${i},'stat',this.value)">
+        ${STAT_IDS.map(s=>`<option ${e.stat===s?'selected':''}>${s}</option>`).join('')}</select></div>`:''}
+    ${needsValue?`<div class="form-group" style="flex:0"><label>Value</label>
+      <input type="number" value="${e.value||0}" onchange="updateEffect('${kind}','${id}',${i},'value',+this.value)"></div>`:''}
+    <div class="form-group" style="flex:0"><label>&nbsp;</label>
+      <button class="btn-danger btn-small" onclick="removeEffect('${kind}','${id}',${i})">✕</button></div>
+  </div>`;
+}
+function carrierStore(kind) { return kind === 'perks' ? DB.perks : DB.traits; }
+function mapToCsv(obj) { return Object.entries(obj||{}).map(([k,v]) => `${k}:${v}`).join(', '); }
+function csvToMap(str) {
+  const out = {};
+  (str||'').split(',').map(s=>s.trim()).filter(Boolean).forEach(pair => {
+    const [k,v] = pair.split(':').map(s=>s.trim());
+    if (k) out[k] = +v || 0;
+  });
+  return out;
+}
+function updateCarrier(kind, id, key, val) { carrierStore(kind)[id][key] = val; }
+function updateCarrierId(kind, oldId, newId) { const s = carrierStore(kind); s[newId] = s[oldId]; s[newId].id = newId; delete s[oldId]; selectedId = newId; renderList(); }
+function updateCarrierReq(id, key, val) { const p = DB.perks[id]; if (!p.requirements) p.requirements = {}; p.requirements[key] = val; }
+function updateCarrierReqMap(id, key, csv) { const p = DB.perks[id]; if (!p.requirements) p.requirements = {}; p.requirements[key] = csvToMap(csv); }
+function addEffect(kind, id) { const o = carrierStore(kind)[id]; (o.effects||(o.effects=[])).push({type:'skill_bonus',skill:'guns',value:5}); renderForm(); }
+function updateEffect(kind, id, i, key, val) { carrierStore(kind)[id].effects[i][key] = val; if (key==='type') renderForm(); }
+function removeEffect(kind, id, i) { carrierStore(kind)[id].effects.splice(i,1); renderForm(); }
+
+// ═══════════════════════════════════════════════════════════════
 //  ADD / DELETE
 // ═══════════════════════════════════════════════════════════════
 function addItem() {
+  if (currentTab === 'campaign') { alert('The campaign manifest is a single file — edit it directly.'); return; }
   const id = prompt('Enter a unique ID (lowercase, underscores):');
   if (!id || !id.trim()) return;
   const cleanId = id.trim().replace(/\s+/g,'_').toLowerCase();
   switch (currentTab) {
+    case 'world':
+      DB.world.nodes.push({id:cleanId,display_name:'New Node',position:{x:400,y:300},type:'settlement',unlocked_by_default:true,unlock_flag:null,connections:[]});
+      break;
+    case 'maps': {
+      const w = 16, h = 12;
+      const terrain = [];
+      for (let r=0;r<h;r++) terrain.push('.'.repeat(w));
+      DB.maps[cleanId] = {id:cleanId,display_name:'New Map',width:w,height:h,vision_radius:7,player_start:{q:2,r:Math.floor(h/2)},actors:[],containers:[],examine_spots:[],exit_zones:[],props:[],terrain};
+      break;
+    }
+    case 'perks':
+      DB.perks[cleanId] = {id:cleanId,name:'New Perk',description:'',requirements:{level:1,stats:{},skills:{}},effects:[]};
+      break;
+    case 'traits':
+      DB.traits[cleanId] = {id:cleanId,name:'New Trait',description:'',effects:[]};
+      break;
     case 'factions':
       DB.factions[cleanId] = {id:cleanId,name:'New Faction',description:'',rep_starting:0,rep_thresholds:{hostile:-50,unfriendly:-20,neutral:0,friendly:30,trusted:60},rep_labels:{'-50':'Hostile','0':'Neutral','30':'Friendly'},color:'#888'};
       break;
@@ -1014,6 +1618,10 @@ function addItem() {
 function deleteItem(id) {
   if (!confirm('Delete this item? This cannot be undone.')) return;
   switch (currentTab) {
+    case 'world': { const i = DB.world.nodes.findIndex(n=>n.id===id); if (i>=0) DB.world.nodes.splice(i,1); break; }
+    case 'maps': delete DB.maps[id]; break;
+    case 'perks': delete DB.perks[id]; break;
+    case 'traits': delete DB.traits[id]; break;
     case 'factions': delete DB.factions[id]; break;
     case 'items':
       for (const cat of ['weapons','armor','consumables','misc']) {
@@ -1036,62 +1644,116 @@ function deleteItem(id) {
 function importJSON() { document.getElementById('file-input').click(); }
 
 function handleImport(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    try {
-      const data = JSON.parse(e.target.result);
-      // Auto-detect schema by top-level keys
-      if (data.conversations) {
-        // Dialogue file — need to know NPC id from filename
-        const npcId = file.name.replace('.json','');
-        DB.dialogues[npcId] = data;
-      } else if (data.rep_thresholds) { DB.factions[data.id] = data; }
-      else if (data.type === 'settlement' || data.type === 'hostile_zone' || data.type === 'dungeon') { DB.locations[data.id] = data; }
-      else if (data.stats?.grit !== undefined) { DB.npcs[data.id] = data; }
-      else if (data.stages) { DB.quests[data.id] = data; }
-      else if (data.weapons) { data.weapons.forEach(i => DB.items.weapons.push(i)); }
-      else if (data.armor) { data.armor.forEach(i => DB.items.armor.push(i)); }
-      else if (data.consumables) { data.consumables.forEach(i => DB.items.consumables.push(i)); }
-      else if (data.misc) { data.misc.forEach(i => DB.items.misc.push(i)); }
-      renderList();
-      alert('Imported: ' + file.name);
-    } catch(err) { alert('Failed to parse JSON: ' + err.message); }
-  };
-  reader.readAsText(file);
+  const files = Array.from(event.target.files || []);
+  if (!files.length) return;
+  let done = 0, names = [];
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try { importOne(JSON.parse(e.target.result), file.name); names.push(file.name); }
+      catch(err) { names.push(file.name + ' (FAILED: ' + err.message + ')'); }
+      if (++done === files.length) { renderList(); alert('Imported ' + files.length + ' file(s):\n' + names.join('\n')); }
+    };
+    reader.readAsText(file);
+  });
   event.target.value = '';
 }
 
+// Auto-detect a content file by its shape and merge it into DB.
+function importOne(data, filename) {
+  // Order matters: a local_map also has a player_start ({q,r}), so detect maps/world
+  // before the manifest (whose player_start carries stats/location/inventory).
+  if (Array.isArray(data.terrain)) { DB.maps[data.id] = data; }      // local_map
+  else if (Array.isArray(data.nodes)) { DB.world = data; }           // world.json
+  else if (data.player_start) {                  // campaign.json manifest
+    DB.manifest = data;
+    campaignId = (data.id || 'my_game').trim();
+    document.getElementById('campaign-id').value = campaignId;
+  }
+  else if (Array.isArray(data.perks)) { data.perks.forEach(p => DB.perks[p.id] = p); }
+  else if (Array.isArray(data.traits)) { data.traits.forEach(t => DB.traits[t.id] = t); }
+  else if (data.conversations) { DB.dialogues[filename.replace('.json','')] = data; }
+  else if (data.rep_thresholds) { DB.factions[data.id] = data; }
+  else if (data.type === 'settlement' || data.type === 'hostile_zone' || data.type === 'dungeon') { DB.locations[data.id] = data; }
+  else if (data.stats?.grit !== undefined) { DB.npcs[data.id] = data; }
+  else if (data.stages) { DB.quests[data.id] = data; }
+  else if (data.weapons) { data.weapons.forEach(i => DB.items.weapons.push(i)); }
+  else if (data.armor) { data.armor.forEach(i => DB.items.armor.push(i)); }
+  else if (data.consumables) { data.consumables.forEach(i => DB.items.consumables.push(i)); }
+  else if (data.misc) { data.misc.forEach(i => DB.items.misc.push(i)); }
+  else throw new Error('unrecognized file shape');
+}
+
+// Reset every collection to empty — used before importing a whole campaign folder so the
+// new campaign replaces (rather than merges into) whatever was loaded.
+function resetDB() {
+  DB.manifest = { id:'my_game', name:'New Campaign', version:'0.1.0', author:'Your Name', description:'',
+    player_start:{ name:'Wanderer', location:'', stats:{grit:5,reflex:5,mind:5,body:5,nerve:5,presence:5}, inventory:[], caps:25, time_hours:8 },
+    default_unarmed_weapon:'' };
+  DB.factions = {}; DB.items = { weapons:[], armor:[], consumables:[], misc:[] };
+  DB.locations = {}; DB.maps = {}; DB.npcs = {}; DB.dialogues = {}; DB.quests = {};
+  DB.perks = {}; DB.traits = {}; DB.world = { nodes: [] };
+}
+
+// Import an entire campaign folder at once (Chromium/Edge/Firefox support webkitdirectory).
+function importFolder() { document.getElementById('folder-input').click(); }
+function handleFolderImport(event) {
+  const files = Array.from(event.target.files || []).filter(f => f.name.endsWith('.json'));
+  event.target.value = '';
+  if (!files.length) { alert('No .json files found in that folder. Pick a campaign folder (the one containing campaign.json).'); return; }
+  if (!confirm(`Import ${files.length} JSON file(s) as a campaign?\nThis REPLACES the editor's current contents.`)) return;
+  Promise.all(files.map(f => f.text().then(txt => ({ name: f.name, path: f.webkitRelativePath || f.name, txt }))))
+    .then(entries => {
+      resetDB();
+      const problems = [];
+      for (const e of entries) {
+        try { importOne(JSON.parse(e.txt), e.name); }
+        catch (err) { problems.push(`${e.path} — ${err.message}`); }
+      }
+      if (DB.manifest && DB.manifest.id) {
+        campaignId = DB.manifest.id;
+        document.getElementById('campaign-id').value = campaignId;
+      }
+      renderList();
+      switchTab('campaign');
+      alert(`Imported campaign "${campaignId}" — ${entries.length - problems.length}/${entries.length} files loaded.`
+        + (problems.length ? `\n\nSkipped:\n${problems.join('\n')}` : ''));
+    });
+}
+
 function exportAll() {
-  // Build export structure
+  const root = `campaigns/${campaignId}`;
   const files = {};
+  const J = o => JSON.stringify(o, null, '\t');
 
-  Object.values(DB.factions).forEach(f => { files[`data/factions/${f.id}.json`] = JSON.stringify(f, null, '\t'); });
-  Object.values(DB.locations).forEach(l => { files[`data/locations/${l.id}.json`] = JSON.stringify(l, null, '\t'); });
-  Object.values(DB.npcs).forEach(n => { files[`data/npcs/${n.id}.json`] = JSON.stringify(n, null, '\t'); });
-  Object.keys(DB.dialogues).forEach(npcId => { files[`data/npcs/dialogues/${npcId}.json`] = JSON.stringify(DB.dialogues[npcId], null, '\t'); });
-  Object.values(DB.quests).forEach(q => { files[`data/quests/${q.id}.json`] = JSON.stringify(q, null, '\t'); });
-  if (DB.items.weapons.length) files['data/items/weapons.json'] = JSON.stringify({weapons: DB.items.weapons}, null, '\t');
-  if (DB.items.armor.length) files['data/items/armor.json'] = JSON.stringify({armor: DB.items.armor}, null, '\t');
-  if (DB.items.consumables.length) files['data/items/consumables.json'] = JSON.stringify({consumables: DB.items.consumables}, null, '\t');
-  if (DB.items.misc.length) files['data/items/misc.json'] = JSON.stringify({misc: DB.items.misc}, null, '\t');
+  files[`${root}/campaign.json`] = J(DB.manifest);
+  if ((DB.world.nodes||[]).length) files[`${root}/world.json`] = J(DB.world);
+  Object.values(DB.factions).forEach(f => { files[`${root}/factions/${f.id}.json`] = J(f); });
+  Object.values(DB.locations).forEach(l => { files[`${root}/locations/${l.id}.json`] = J(l); });
+  Object.values(DB.maps).forEach(m => { ensureMapShape(m); files[`${root}/local_maps/${m.id}.json`] = J(m); });
+  Object.values(DB.npcs).forEach(n => { files[`${root}/npcs/${n.id}.json`] = J(n); });
+  Object.keys(DB.dialogues).forEach(npcId => { files[`${root}/npcs/dialogues/${npcId}.json`] = J(DB.dialogues[npcId]); });
+  Object.values(DB.quests).forEach(q => { files[`${root}/quests/${q.id}.json`] = J(q); });
+  files[`${root}/items/weapons.json`] = J({weapons: DB.items.weapons});
+  files[`${root}/items/armor.json`] = J({armor: DB.items.armor});
+  files[`${root}/items/consumables.json`] = J({consumables: DB.items.consumables});
+  files[`${root}/items/misc.json`] = J({misc: DB.items.misc});
+  files[`${root}/perks/perks.json`] = J({perks: Object.values(DB.perks)});
+  files[`${root}/traits/traits.json`] = J({traits: Object.values(DB.traits)});
 
-  // Simple zip-less approach: if only one file, download directly.
-  // For multiple files, offer a download of each as a combined JSON package.
-  const bundle = {_export_info: 'End Times Tactical data export. Drop each file into its correct data/ subfolder.', files};
+  const bundle = {_export_info: `ETT campaign export for "${campaignId}". Each key under "files" is a path; write its string value to that path in your project, then put "${campaignId}" in campaigns/active.txt.`, files};
   const blob = new Blob([JSON.stringify(bundle, null, '\t')], {type: 'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'ett_export_' + new Date().toISOString().slice(0,10) + '.json';
+  a.download = `${campaignId}_export_` + new Date().toISOString().slice(0,10) + '.json';
   a.click();
   URL.revokeObjectURL(url);
-  alert('Exported! The downloaded file contains all data as a bundle.\n\nTo use: open the file, copy each section under "files" to its path in your Godot data/ folder.');
+  alert(`Exported campaign "${campaignId}" — ${Object.keys(files).length} files in the bundle.\n\nTo use: open the downloaded file and write each entry under "files" to its path in your project, then set campaigns/active.txt to "${campaignId}".`);
 }
 
 function saveToLocal() {
-  const snapshot = JSON.stringify({factions:DB.factions,items:DB.items,locations:DB.locations,npcs:DB.npcs,dialogues:DB.dialogues,quests:DB.quests});
+  const snapshot = JSON.stringify({campaignId, manifest:DB.manifest, world:DB.world, factions:DB.factions, items:DB.items, locations:DB.locations, maps:DB.maps, npcs:DB.npcs, dialogues:DB.dialogues, quests:DB.quests, perks:DB.perks, traits:DB.traits});
   localStorage.setItem('ett_editor_data', snapshot);
   alert('Saved to browser storage. Your work will persist if you reopen this file in the same browser.');
 }
@@ -1100,12 +1762,20 @@ function loadFromLocal() {
   const saved = localStorage.getItem('ett_editor_data');
   if (!saved) { alert('No saved data found.'); return; }
   try {
-    const data = JSON.parse(saved);
-    Object.assign(DB, data);
+    restoreSnapshot(JSON.parse(saved));
     renderList();
     document.getElementById('form-panel').innerHTML = '<div class="placeholder">Data loaded from local storage.</div>';
     alert('Loaded successfully.');
   } catch(e) { alert('Failed to load: ' + e.message); }
+}
+
+// Merge a saved snapshot into DB, pulling campaignId out of the payload so it doesn't
+// pollute DB, and tolerating older snapshots that lack the newer collections.
+function restoreSnapshot(data) {
+  if (data.campaignId) { campaignId = data.campaignId; const el = document.getElementById('campaign-id'); if (el) el.value = campaignId; }
+  ['manifest','world','factions','items','locations','maps','npcs','dialogues','quests','perks','traits'].forEach(k => {
+    if (data[k] !== undefined) DB[k] = data[k];
+  });
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1116,7 +1786,7 @@ function loadFromLocal() {
 window.addEventListener('load', () => {
   const saved = localStorage.getItem('ett_editor_data');
   if (saved) {
-    try { const data = JSON.parse(saved); Object.assign(DB, data); renderList(); }
+    try { restoreSnapshot(JSON.parse(saved)); renderList(); }
     catch(e) {}
   }
 });

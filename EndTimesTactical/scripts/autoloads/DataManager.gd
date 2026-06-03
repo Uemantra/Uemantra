@@ -1,7 +1,17 @@
 extends Node
 
 # Authored content — loaded once at startup, never mutated at runtime.
-# All game content lives in res://data/ as JSON files.
+# All game content lives in a *campaign* folder under res://campaigns/<id>/ as JSON
+# files. Which campaign loads is named in res://campaigns/active.txt (one line). This
+# keeps the engine content-agnostic: drop in a new campaign folder, point active.txt at
+# it, and the same engine runs an entirely different game. See docs/AUTHORING.md.
+
+const CAMPAIGNS_ROOT: String = "res://campaigns/"
+const ACTIVE_FILE: String    = "res://campaigns/active.txt"
+const DEFAULT_CAMPAIGN: String = "end_times_tactical"
+
+var active_campaign: String = DEFAULT_CAMPAIGN
+var manifest: Dictionary = {}
 
 var npcs: Dictionary = {}
 var dialogues: Dictionary = {}
@@ -13,22 +23,48 @@ var world: Dictionary = {}
 var local_maps: Dictionary = {}
 var perks: Dictionary = {}
 var traits: Dictionary = {}
+var endings: Dictionary = {}
 
 
 func _ready() -> void:
+	active_campaign = _resolve_active_campaign()
 	_load_all()
 
 
+# Read the active campaign id from active.txt, falling back to the default if the file
+# is missing/blank or names a campaign folder that doesn't exist.
+func _resolve_active_campaign() -> String:
+	var id := DEFAULT_CAMPAIGN
+	if FileAccess.file_exists(ACTIVE_FILE):
+		var f := FileAccess.open(ACTIVE_FILE, FileAccess.READ)
+		if f != null:
+			var txt := f.get_as_text().strip_edges()
+			f.close()
+			if txt != "":
+				id = txt
+	if not DirAccess.dir_exists_absolute(CAMPAIGNS_ROOT + id):
+		push_error("DataManager: campaign '%s' not found; using '%s'" % [id, DEFAULT_CAMPAIGN])
+		id = DEFAULT_CAMPAIGN
+	return id
+
+
+# Resolve a path inside the active campaign folder (e.g. _campaign_path("npcs/")).
+func _campaign_path(sub: String) -> String:
+	return CAMPAIGNS_ROOT + active_campaign + "/" + sub
+
+
 func _load_all() -> void:
-	world = _load_json("res://data/world.json")
-	_load_directory_into("res://data/npcs/", npcs, false)
-	_load_directory_into("res://data/npcs/dialogues/", dialogues, true)
-	_load_directory_into("res://data/locations/", locations, false)
-	_load_directory_into("res://data/factions/", factions, false)
-	_load_directory_into("res://data/quests/", quests, false)
-	_load_directory_into("res://data/local_maps/", local_maps, false)
-	_load_list_file("res://data/perks/perks.json", "perks", perks)
-	_load_list_file("res://data/traits/traits.json", "traits", traits)
+	manifest = _load_json(_campaign_path("campaign.json"))
+	world = _load_json(_campaign_path("world.json"))
+	_load_directory_into(_campaign_path("npcs/"), npcs, false)
+	_load_directory_into(_campaign_path("npcs/dialogues/"), dialogues, true)
+	_load_directory_into(_campaign_path("locations/"), locations, false)
+	_load_directory_into(_campaign_path("factions/"), factions, false)
+	_load_directory_into(_campaign_path("quests/"), quests, false)
+	_load_directory_into(_campaign_path("local_maps/"), local_maps, false)
+	_load_list_file(_campaign_path("perks/perks.json"), "perks", perks)
+	_load_list_file(_campaign_path("traits/traits.json"), "traits", traits)
+	endings = _load_json(_campaign_path("endings/endings.json"))   # optional; {} if absent
 	_load_items()
 
 
@@ -45,13 +81,21 @@ func _load_list_file(path: String, list_key: String, target: Dictionary) -> void
 
 func _load_items() -> void:
 	for category in ["weapons", "armor", "consumables", "misc"]:
-		var data := _load_json("res://data/items/%s.json" % category)
+		var data := _load_json(_campaign_path("items/%s.json" % category))
 		if data.is_empty():
 			continue
 		var arr: Array = data.get(category, [])
 		for item in arr:
 			if item.has("id"):
 				items[item["id"]] = item
+
+
+func get_manifest() -> Dictionary:
+	return manifest
+
+
+func get_endings() -> Dictionary:
+	return endings
 
 
 func get_npc(id: String) -> Dictionary:

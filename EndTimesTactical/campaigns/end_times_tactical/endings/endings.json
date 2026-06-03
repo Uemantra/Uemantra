@@ -1,0 +1,46 @@
+{
+	"slides": [
+		{
+			"id": "intro",
+			"always": true,
+			"title": "The Signal Falls Silent",
+			"text": "When the broadcast finally died, the wasteland did not cheer. It simply went on — as it always had, as it always would. But the people who had listened to that endless repeating voice remembered who had walked out to the silo, and who had walked back."
+		},
+		{
+			"id": "council_ally",
+			"conditions": { "faction_rep": { "the_council": 30 } },
+			"title": "Haven Ridge",
+			"text": "The Council of Haven Ridge spoke your name with something close to warmth. Under their cautious stewardship the ridge held through the next hard winter, its gates open a little wider to strangers than they had been before you came."
+		},
+		{
+			"id": "council_enemy",
+			"conditions": { "faction_rep_max": { "the_council": -20 } },
+			"title": "Haven Ridge",
+			"text": "Haven Ridge barred its gates against you and any who traveled in your shadow. The Council called you a destabilizing element; some of the younger residents called you something braver. The argument outlasted the winter."
+		},
+		{
+			"id": "silo_cleared",
+			"conditions": { "flags_all": ["silo_cleared"] },
+			"title": "The Iron Covenant",
+			"text": "The Covenant detachment that had held the silo never reported back. Their order would send others, in time, asking what had become of their antenna and their soldiers. For now, the road east was quieter than it had been in years."
+		},
+		{
+			"id": "karma_good",
+			"conditions": { "karma_min": 30 },
+			"title": "What They Remember",
+			"text": "In the settlements you passed through, your name became a small good rumor — the drifter who could have taken and instead had given. It is a thin sort of legacy in a hungry world. It was, perhaps, enough."
+		},
+		{
+			"id": "karma_bad",
+			"conditions": { "karma_max": -30 },
+			"title": "What They Remember",
+			"text": "They bolted their doors a little faster when travelers mentioned your name. You had learned the wasteland's oldest lesson and taught it back to everyone you met: that mercy is a luxury, and you could not afford it."
+		},
+		{
+			"id": "outro",
+			"always": true,
+			"title": "The Road Goes On",
+			"text": "You shouldered your pack and turned toward the horizon. Whatever the signal had been calling for, it had stopped calling. Somewhere ahead, something else was surely already going wrong. That, too, was the wasteland."
+		}
+	]
+}

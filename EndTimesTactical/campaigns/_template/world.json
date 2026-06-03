@@ -1,0 +1,13 @@
+{
+	"nodes": [
+		{
+			"id": "town_square",
+			"display_name": "Town Square",
+			"position": { "x": 400, "y": 300 },
+			"type": "settlement",
+			"unlocked_by_default": true,
+			"unlock_flag": null,
+			"connections": []
+		}
+	]
+}

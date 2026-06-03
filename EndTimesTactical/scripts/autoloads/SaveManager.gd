@@ -4,19 +4,30 @@ signal save_completed
 signal load_completed
 signal load_failed(reason: String)
 
-const SAVE_PATH: String = "user://save.json"
-const SAVE_VERSION: int = 2
+# Saves are namespaced per campaign so two campaigns never clobber each other:
+# user://saves/<campaign_id>.json. (Pre-frame builds used a single user://save.json;
+# those orphaned saves are ignored — start a new game to migrate.)
+const SAVE_DIR: String   = "user://saves/"
+const SAVE_VERSION: int  = 3
+
+
+# Path to the active campaign's save file.
+func _save_path() -> String:
+	return SAVE_DIR + DataManager.active_campaign + ".json"
 
 
 func save() -> void:
+	DirAccess.make_dir_recursive_absolute(SAVE_DIR)
 	var data: Dictionary = {
-		"version":    SAVE_VERSION,
-		"timestamp":  Time.get_datetime_string_from_system(),
-		"game_state": GameState.serialize(),
+		"version":     SAVE_VERSION,
+		"campaign_id": DataManager.active_campaign,
+		"timestamp":   Time.get_datetime_string_from_system(),
+		"game_state":  GameState.serialize(),
 	}
-	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	var path := _save_path()
+	var file := FileAccess.open(path, FileAccess.WRITE)
 	if file == null:
-		push_error("SaveManager: could not open save file — %s" % SAVE_PATH)
+		push_error("SaveManager: could not open save file — %s" % path)
 		return
 	file.store_string(JSON.stringify(data, "\t"))
 	file.close()
@@ -24,10 +35,11 @@ func save() -> void:
 
 
 func load_save() -> bool:
-	if not FileAccess.file_exists(SAVE_PATH):
+	var path := _save_path()
+	if not FileAccess.file_exists(path):
 		load_failed.emit("No save file found.")
 		return false
-	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
+	var file := FileAccess.open(path, FileAccess.READ)
 	if file == null:
 		load_failed.emit("Could not open save file.")
 		return false
@@ -41,15 +53,20 @@ func load_save() -> bool:
 	if saved_version != SAVE_VERSION:
 		load_failed.emit("Save version mismatch: expected %d, got %d." % [SAVE_VERSION, saved_version])
 		return false
+	var saved_campaign: String = data.get("campaign_id", "")
+	if saved_campaign != DataManager.active_campaign:
+		load_failed.emit("Save belongs to a different campaign (%s)." % saved_campaign)
+		return false
 	GameState.deserialize(data.get("game_state", {}))
 	load_completed.emit()
 	return true
 
 
 func has_save() -> bool:
-	return FileAccess.file_exists(SAVE_PATH)
+	return FileAccess.file_exists(_save_path())
 
 
 func delete_save() -> void:
-	if FileAccess.file_exists(SAVE_PATH):
-		DirAccess.remove_absolute(SAVE_PATH)
+	var path := _save_path()
+	if FileAccess.file_exists(path):
+		DirAccess.remove_absolute(path)

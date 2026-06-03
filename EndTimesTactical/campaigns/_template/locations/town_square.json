@@ -1,0 +1,22 @@
+{
+	"id": "town_square",
+	"name": "Town Square",
+	"type": "settlement",
+	"description": "A handful of salvaged shelters around a dry fountain. It isn't much, but it's a start — yours to build out.",
+	"overworld_position": { "x": 400, "y": 300 },
+	"connections": [],
+	"travel_time_hours": {},
+	"npcs_present": ["greeter"],
+	"interactables": [
+		{
+			"id": "notice_board",
+			"label": "Notice Board",
+			"action": "read",
+			"flags_required": [],
+			"text": "An empty cork board waiting for your story. (This is an example interactable — edit it in locations/town_square.json.)"
+		}
+	],
+	"combat_arena": null,
+	"exploration_map": "town_square_map",
+	"ambient_description": "Wind, dust, and the creak of a loose sheet-metal roof."
+}

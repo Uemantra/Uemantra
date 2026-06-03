@@ -55,6 +55,15 @@
 			"r": 5,
 			"glyph": "M",
 			"color": "#66bbdd"
+		},
+		{
+			"id": "dusty_spot",
+			"type": "npc",
+			"npc_id": "dusty_vane",
+			"q": 9,
+			"r": 10,
+			"glyph": "D",
+			"color": "#66cc88"
 		}
 	],
 	"containers": [
@@ -62,7 +71,7 @@
 			"id": "footlocker_1",
 			"q": 9,
 			"r": 14,
-			"glyph": "\u00e2\u2013\u00ab",
+			"glyph": "â–«",
 			"color": "#aaaa44",
 			"opened_flag": "haven_ridge_box1_opened",
 			"locked": false,
@@ -83,7 +92,7 @@
 			"id": "locked_chest_1",
 			"q": 24,
 			"r": 14,
-			"glyph": "\u00e2\u2013\u00ab",
+			"glyph": "â–«",
 			"color": "#aa6622",
 			"opened_flag": "haven_ridge_chest1_opened",
 			"locked": true,
@@ -110,7 +119,7 @@
 			"glyph": "?",
 			"color": "#aaaaaa",
 			"title": "Bulletin Board",
-			"text": "Scrawled notices on salvaged cardboard: a ration schedule, a reward for repairing the ridge radio tower, and a warning about 'figures seen near the old silo' signed only with initials \u00e2\u20ac\u201d C.F."
+			"text": "Scrawled notices on salvaged cardboard: a ration schedule, a reward for repairing the ridge radio tower, and a warning about 'figures seen near the old silo' signed only with initials â€” C.F."
 		},
 		{
 			"id": "water_tower",
@@ -119,7 +128,25 @@
 			"glyph": "T",
 			"color": "#6688aa",
 			"title": "Water Tower",
-			"text": "Rust-streaked but holding. Someone has painted a sun on the side \u00e2\u20ac\u201d crude, faded, still somehow hopeful. The purifier hums beneath it."
+			"text": "Rust-streaked but holding. Someone has painted a sun on the side â€” crude, faded, still somehow hopeful. The purifier hums beneath it.",
+			"skill_use": {
+				"skill": "tech",
+				"difficulty": 50,
+				"prompt": "Tune the purifier",
+				"done_flag": "purifier_tuned",
+				"success": {
+					"text": "You coax another ten percent out of the old purifier. Haven Ridge will drink a little easier tonight.",
+					"flags_set": [
+						"purifier_tuned"
+					],
+					"xp_reward": 60,
+					"caps_reward": 25,
+					"karma_change": 3
+				},
+				"fail": {
+					"text": "A gasket blows the moment you touch the regulator. Best leave it for someone who knows the model."
+				}
+			}
 		}
 	],
 	"exit_zones": [

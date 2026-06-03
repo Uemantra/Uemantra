@@ -2,6 +2,7 @@
 	"id": "main_quest_the_signal",
 	"title": "The Signal",
 	"summary": "A repeating broadcast from somewhere in the wastes. Someone is transmitting — or something automated is. Either way, people are noticing, and at least one powerful person wants it investigated quietly.",
+	"ends_game": true,
 	"stages": [
 		{
 			"id": "stage_1_investigate",

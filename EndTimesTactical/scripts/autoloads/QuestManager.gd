@@ -108,6 +108,9 @@ func _advance_stage(quest_id: String, quest: Dictionary, current_index: int) -> 
 		GameState.quest_states[quest_id]["state"] = "complete"
 		_grant_rewards(quest)  # quest-level rewards on full completion
 		quest_completed.emit(quest_id)
+		# A quest can end the game (e.g. the main quest): "ends_game": true.
+		if quest.get("ends_game", false) or on_complete.get("end_game", false):
+			GameState.request_ending(str(quest.get("ending_id", "default")))
 	else:
 		GameState.quest_states[quest_id]["active_stage_index"] = next_index
 		quest_updated.emit(quest_id, stages[next_index].get("id", ""))
@@ -123,6 +126,8 @@ func _grant_rewards(block: Dictionary) -> void:
 		GameState.caps += int(block["caps_reward"])
 	if block.has("xp_reward"):
 		GameState.add_xp(int(block["xp_reward"]))
+	if block.has("karma_reward"):
+		GameState.add_karma(int(block["karma_reward"]))
 
 
 func _on_state_changed() -> void:

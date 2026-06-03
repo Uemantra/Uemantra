@@ -12,6 +12,9 @@ const MELEE_AP_COST       := 3
 const RELOAD_AP_COST      := 2
 const USE_ITEM_AP_COST    := 2
 const BLEED_DAMAGE        := 2    # HP lost per bleed tick
+const BURST_AP_EXTRA      := 3    # default burst AP cost over the weapon's normal cost
+const BURST_HIT_PEN       := 20   # per-round hit penalty when spraying a burst
+const FUMBLE_CHANCE       := 5    # % chance a missed single shot becomes a critical failure
 
 
 # ─── Dice ─────────────────────────────────────────────────────────────────────
@@ -70,6 +73,11 @@ static func roll_hit(chance: int) -> bool:
 
 static func is_critical(crit_chance: int) -> bool:
 	return randi_range(1, 100) <= crit_chance
+
+
+# A missed single shot has a small chance to fumble (drop concentration / jam / stumble).
+static func is_fumble() -> bool:
+	return randi_range(1, 100) <= FUMBLE_CHANCE
 
 
 static func roll_effect(chance: float) -> bool:

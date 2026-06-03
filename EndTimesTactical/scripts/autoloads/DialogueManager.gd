@@ -93,17 +93,8 @@ func _get_available_conversations(npc_id: String) -> Array:
 
 
 func _check_trigger_conditions(conditions: Dictionary, _npc_id: String) -> bool:
-	for flag_id in conditions.get("flags_required", []):
-		if not GameState.get_flag(flag_id):
-			return false
-	for flag_id in conditions.get("flags_excluded", []):
-		if GameState.get_flag(flag_id):
-			return false
-	for faction_id in conditions.get("faction_rep", {}):
-		var min_rep: int = conditions["faction_rep"][faction_id]
-		if GameState.get_rep(faction_id) < min_rep:
-			return false
-	return true
+	# Supports flags_required/any/excluded, faction_rep, and karma_min/karma_max.
+	return ConditionChecker.check_conditions(conditions)
 
 
 func _resolve_node(node_id: String) -> void:
@@ -149,6 +140,12 @@ func _filter_visible_choices(choices: Array) -> Array:
 				var min_rep: int = condition.get("value", 0)
 				if GameState.get_rep(faction) >= min_rep:
 					visible.append(choice)
+			"karma_min":
+				if GameState.get_karma() >= int(condition.get("value", 0)):
+					visible.append(choice)
+			"karma_max":
+				if GameState.get_karma() <= int(condition.get("value", 0)):
+					visible.append(choice)
 			"skill_check":
 				visible.append(choice)
 			_:
@@ -169,6 +166,8 @@ func _resolve_skill_check(condition: Dictionary) -> bool:
 func _apply_node_effects(node: Dictionary) -> void:
 	for flag_id in node.get("flags_set", []):
 		GameState.set_flag(flag_id)
+	for flag_id in node.get("flags_cleared", []):
+		GameState.set_flag(flag_id, false)
 	var rel_change: int = node.get("relationship_change", 0)
 	if rel_change != 0 and _active_npc != "":
 		GameState.change_npc_relationship(_active_npc, rel_change)
@@ -179,6 +178,8 @@ func _apply_completion_effects(convo: Dictionary) -> void:
 	var on_complete: Dictionary = convo.get("on_complete", {})
 	for flag_id in on_complete.get("flags_set", []):
 		GameState.set_flag(flag_id)
+	for flag_id in on_complete.get("flags_cleared", []):
+		GameState.set_flag(flag_id, false)
 	var rel_change: int = on_complete.get("relationship_change", 0)
 	if rel_change != 0 and _active_npc != "":
 		GameState.change_npc_relationship(_active_npc, rel_change)
@@ -198,3 +199,13 @@ func _apply_rewards(block: Dictionary) -> void:
 		GameState.state_changed.emit()
 	if block.has("xp_reward"):
 		GameState.add_xp(int(block["xp_reward"]))
+	if block.has("karma_change"):
+		GameState.add_karma(int(block["karma_change"]))
+	if block.has("recruit_companion"):
+		GameState.recruit_companion(str(block["recruit_companion"]))
+	if block.has("dismiss_companion"):
+		GameState.dismiss_companion(str(block["dismiss_companion"]))
+	# A story beat can roll the ending: "end_game": true, or an ending_id string.
+	if block.has("end_game") and block["end_game"]:
+		var eid = block["end_game"]
+		GameState.request_ending(str(eid) if eid is String else "default")

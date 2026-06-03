@@ -16,7 +16,8 @@
 			"subtype": "ammo",
 			"description": "Rifle cartridges. Harder to find.",
 			"weight": 0.3,
-			"value": 18
+			"value": 18,
+			"dr_mod": -2
 		},
 		{
 			"id": "ammo_shotgun",
@@ -25,7 +26,9 @@
 			"subtype": "ammo",
 			"description": "12-gauge shells. Short range, memorable impact.",
 			"weight": 0.25,
-			"value": 12
+			"value": 12,
+			"dmg_mult": 1.2,
+			"dr_mod": 3
 		},
 		{
 			"id": "ammo_10mm",

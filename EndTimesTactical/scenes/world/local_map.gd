@@ -13,7 +13,7 @@ extends Node2D
 
 # ─── Modes ──────────────────────────────────────────────────────────────────────
 enum Mode { EXPLORE, COMBAT }
-enum Aim  { NONE, MOVE, QUICK, AIMED, MELEE }
+enum Aim  { NONE, MOVE, QUICK, AIMED, BURST, MELEE }
 
 var _mode: Mode = Mode.EXPLORE
 var _aim:  Aim  = Aim.NONE
@@ -116,6 +116,9 @@ var _time_label:   Label
 var _examine_panel: PanelContainer
 var _examine_title: Label
 var _examine_text:  RichTextLabel
+var _examine_skill_btn: Button
+var _examine_skill_ctx: Dictionary = {}   # { skill_use: Dictionary } for the open object
+var _daynight: CanvasModulate             # tints the world by time of day
 var _explore_bar:   Control
 
 # Combat HUD
@@ -130,6 +133,7 @@ var _mode_lbl:     Label
 var _move_btn:     Button
 var _quick_btn:    Button
 var _aimed_btn:    Button
+var _burst_btn:    Button
 var _reload_btn:   Button
 var _item_btn:     Button
 var _melee_btn:    Button
@@ -157,6 +161,7 @@ func _ready() -> void:
 		GameState.leveled_up.connect(_on_leveled_up)
 	_recompute_fog()
 	_refresh_explore_hud()
+	_apply_daynight()
 
 	# Combat is in-place now; keep any legacy pending state clean.
 	GameState.pending_combat = {}
@@ -578,6 +583,9 @@ func _spawn_actors() -> void:
 		var aid: String = d.get("id", "")
 		if aid == "" or aid in dead:
 			continue
+		# NPC schedules: an actor with active_hours is only present during those hours.
+		if not _actor_active_now(d):
+			continue
 		var atype: String = entry["atype"]
 		var rec := d.duplicate()
 		rec["_atype"] = atype
@@ -887,7 +895,7 @@ func _interact(aid: String) -> void:
 		"npc":       _talk(d)
 		"enemy":     _enter_combat()       # player initiates the fight
 		"container": _open_container(aid, d)
-		"examine":   _show_examine(d.get("title", "?"), d.get("text", ""))
+		"examine":   _show_examine(d.get("title", "?"), d.get("text", ""), d.get("skill_use", {}))
 
 
 func _talk(d: Dictionary) -> void:
@@ -1041,6 +1049,7 @@ func _enter_combat() -> void:
 	_explore_bar.visible = false
 	_combat_hud.visible  = true
 	CombatManager.start_combat_in_place(_terrain, _player_hex, enemies)
+	_spawn_companion_nodes()
 	_attach_hp_bars()
 	_sync_combat_after_start()
 	# Keep the existing line-of-sight fog (no full reveal); recompute now that the
@@ -1069,6 +1078,30 @@ func _unit_node(uid: String) -> Node2D:
 	if uid == "player":
 		return _player
 	return _actor_nodes.get(uid)
+
+
+# Companions are combat units that aren't on the explore map, so give each a visual node
+# (allied green footprint) when a fight starts. Removed again when combat ends.
+func _spawn_companion_nodes() -> void:
+	for uid: String in CombatManager.units:
+		var u: Dictionary = CombatManager.units[uid]
+		if uid == "player" or u.get("team", "") != "player" or _actor_nodes.has(uid):
+			continue
+		var d := {"npc_id": u.get("npc_id", ""), "color": "#55cc66", "id": uid}
+		var node := _make_actor_node(d, "npc")
+		node.position = HexGrid.hex_to_pixel(u["hex"])
+		_actors_layer.add_child(node)
+		_actor_nodes[uid] = node
+		_actor_hex[u["hex"]] = uid
+
+
+func _despawn_companion_nodes() -> void:
+	for uid: String in _actor_nodes.keys():
+		if uid.begins_with("comp_"):
+			var node: Node2D = _actor_nodes[uid]
+			if is_instance_valid(node):
+				node.queue_free()
+			_actor_nodes.erase(uid)
 
 
 func _attach_hp_bars() -> void:
@@ -1128,6 +1161,11 @@ func _combat_click(hex: Vector2i) -> void:
 			var tid := _unit_at(hex)
 			if tid in _targetable:
 				_show_called_shot_menu(tid)
+		Aim.BURST:
+			var tid := _unit_at(hex)
+			if tid in _targetable:
+				CombatManager.try_attack("player", tid, CombatManager.ShotMode.BURST)
+				_exit_aim()
 		Aim.MELEE:
 			var tid := _unit_at(hex)
 			if tid in _targetable:
@@ -1323,6 +1361,12 @@ func _on_unit_died(uid: String) -> void:
 		var dflag: String = _actor_data.get(uid, {}).get("dead_flag", "")
 		if dflag != "":
 			GameState.set_flag(dflag, true)
+		# Killing certain NPCs shifts karma (e.g. murdering townsfolk = bad karma).
+		var nid: String = _actor_data.get(uid, {}).get("npc_id", "")
+		if nid != "":
+			var k: int = int(DataManager.get_npc(nid).get("karma_on_kill", 0))
+			if k != 0:
+				GameState.add_karma(k)
 	_hp_bars.erase(uid)
 	if _mode == Mode.COMBAT:
 		_log("[color=#555555]%s is down.[/color]" % CombatManager.units.get(uid, {}).get("display_name", uid))
@@ -1374,9 +1418,12 @@ func _on_status_applied(uid: String, status_name: String) -> void:
 		"stun":          _float(px, "STUN!", Color(0.5, 0.5, 0.95))
 		"stun_skip":     _float(px, "STUNNED", Color(0.5, 0.5, 0.95))
 		"crit":          _float(px, "CRIT!", Color(1.0, 0.85, 0.2))
+		"fumble":        _float(px, "FUMBLE!", Color(0.95, 0.4, 0.2))
 		"cripple_legs":  _float(px, "LEG HIT!", Color(0.95, 0.6, 0.2))
 		"cripple_arms":  _float(px, "ARM HIT!", Color(0.95, 0.6, 0.2))
-	if status_name in ["bleed", "poison", "radiation", "stun"]:
+	if status_name == "fumble":
+		_log("[color=#cc6644]%s fumbles — the shot goes wide and the turn is lost.[/color]" % nm)
+	elif status_name in ["bleed", "poison", "radiation", "stun"]:
 		_log("%s is afflicted: %s." % [nm, status_name])
 	elif status_name == "cripple_legs":
 		_log("%s's leg is crippled — slowed." % nm)
@@ -1404,6 +1451,7 @@ func _on_status_tick(uid: String, status_name: String, dmg: int) -> void:
 
 func _on_combat_ended(player_won: bool) -> void:
 	_combat_won = player_won
+	_despawn_companion_nodes()
 	if player_won:
 		GameState.hp = CombatManager.units.get("player", {}).get("hp", GameState.hp)
 		GameState.add_xp(CombatManager.xp_earned)
@@ -1526,6 +1574,7 @@ func _build_combat_hud() -> void:
 	_move_btn   = _mk_btn("Move",   bar, _on_move)
 	_quick_btn  = _mk_btn("Quick",  bar, _on_quick)
 	_aimed_btn  = _mk_btn("Aimed",  bar, _on_aimed)
+	_burst_btn  = _mk_btn("Burst",  bar, _on_burst)
 	_melee_btn  = _mk_btn("Melee",  bar, _on_melee)
 	_reload_btn = _mk_btn("Reload", bar, _on_reload)
 	_item_btn   = _mk_btn("Stim",   bar, _on_stim)
@@ -1568,6 +1617,12 @@ func _on_quick() -> void:
 func _on_aimed() -> void:
 	_aim = Aim.AIMED
 	_targetable = CombatManager.get_valid_targets("player", CombatManager.ShotMode.AIMED)
+	_apply_highlights(); _update_mode_label()
+
+
+func _on_burst() -> void:
+	_aim = Aim.BURST
+	_targetable = CombatManager.get_valid_targets("player", CombatManager.ShotMode.BURST)
 	_apply_highlights(); _update_mode_label()
 
 
@@ -1620,6 +1675,7 @@ func _update_mode_label() -> void:
 		Aim.MOVE:  _mode_lbl.text = "[ MOVE — click a highlighted hex ]"; _mode_lbl.visible = true
 		Aim.QUICK: _mode_lbl.text = "[ QUICK SHOT — click an enemy ]"; _mode_lbl.visible = true
 		Aim.AIMED: _mode_lbl.text = "[ AIMED SHOT — click an enemy ]"; _mode_lbl.visible = true
+		Aim.BURST: _mode_lbl.text = "[ BURST — click an enemy ]"; _mode_lbl.visible = true
 		Aim.MELEE: _mode_lbl.text = "[ MELEE — click an adjacent enemy ]"; _mode_lbl.visible = true
 
 
@@ -1636,8 +1692,10 @@ func _refresh_combat_hud() -> void:
 	var ap: int      = CombatManager.get_ap("player")
 	var has_ammo: bool = not needs or loaded > 0
 	var no_aimed: bool = bool(pu.get("mods", {}).get("no_aimed", false))
+	var has_burst: bool = int(weapon.get("burst", 0)) > 0
 	_quick_btn.disabled = not active or not has_ammo
 	_aimed_btn.disabled = not active or not has_ammo or no_aimed
+	_burst_btn.disabled = not active or not has_ammo or not has_burst
 	_reload_btn.disabled = not (active and clip > 0 and loaded < clip \
 		and (reserve > 0 or reserve == 999) and ap >= CombatCalc.RELOAD_AP_COST)
 	_item_btn.disabled = not (active and GameState.has_item("stimpak") and ap >= CombatCalc.USE_ITEM_AP_COST)
@@ -1771,6 +1829,11 @@ func _build_explore_hud() -> void:
 	_examine_text.fit_content = true
 	_examine_text.custom_minimum_size = Vector2(360, 120)
 	vb.add_child(_examine_text)
+	# Optional skill-use action (Repair/Science/Medicine/etc. on a world object).
+	_examine_skill_btn = Button.new()
+	_examine_skill_btn.visible = false
+	_examine_skill_btn.pressed.connect(_on_examine_skill)
+	vb.add_child(_examine_skill_btn)
 	var close := Button.new()
 	close.text = "Close"
 	close.pressed.connect(func() -> void: _examine_panel.visible = false)
@@ -1796,12 +1859,120 @@ func _instantiate_overlays() -> void:
 	# A dialogue choice/node flagged open_shop ends the conversation and asks us to
 	# open the vendor's trade screen.
 	DialogueManager.shop_requested.connect(_open_shop)
+	# Story content (final dialogue or main-quest completion) can roll the ending.
+	if not GameState.ending_requested.is_connected(_on_ending_requested):
+		GameState.ending_requested.connect(_on_ending_requested)
 
 
-func _show_examine(title: String, text: String) -> void:
+# Switch to the ending screen on the next idle frame (so any in-flight dialogue teardown
+# finishes first). Deferred to avoid changing scenes mid-signal.
+func _on_ending_requested(_ending_id: String) -> void:
+	call_deferred("_go_to_ending")
+
+
+func _go_to_ending() -> void:
+	get_tree().change_scene_to_file("res://scenes/ending/ending_screen.tscn")
+
+
+# True if an actor is present at the current world hour. An actor with no `active_hours`
+# is always present; `active_hours: [start, end]` may wrap past midnight (e.g. [20, 6]).
+func _actor_active_now(d: Dictionary) -> bool:
+	var hours: Variant = d.get("active_hours", [])
+	if not (hours is Array) or (hours as Array).size() != 2:
+		return true
+	var hour: int  = GameState.world_time_hours % 24
+	var start: int = int(hours[0])
+	var end: int   = int(hours[1])
+	if start == end:
+		return true
+	if start < end:
+		return hour >= start and hour < end
+	return hour >= start or hour < end   # wraps midnight
+
+
+# Tint the whole world canvas by time of day (UI lives on a separate CanvasLayer, so it
+# stays at full brightness). Recomputed each time the map loads.
+func _apply_daynight() -> void:
+	if _daynight == null:
+		_daynight = CanvasModulate.new()
+		add_child(_daynight)
+	_daynight.color = _time_tint(GameState.world_time_hours % 24)
+
+
+func _time_tint(hour: int) -> Color:
+	var day   := Color(1.0, 1.0, 1.0)
+	var night := Color(0.42, 0.47, 0.66)
+	if hour >= 9 and hour < 17:
+		return day
+	if hour >= 6 and hour < 9:               # dawn: night -> day, warmed
+		var t := float(hour - 6) / 3.0
+		return night.lerp(day, t).lerp(Color(0.98, 0.82, 0.66), 0.25 * (1.0 - absf(t - 0.5) * 2.0))
+	if hour >= 17 and hour < 21:             # dusk: day -> night, warmed
+		var t := float(hour - 17) / 4.0
+		return day.lerp(night, t).lerp(Color(0.90, 0.60, 0.50), 0.25 * (1.0 - absf(t - 0.5) * 2.0))
+	return night
+
+
+func _show_examine(title: String, text: String, skill_use: Dictionary = {}) -> void:
 	_examine_title.text = title
 	_examine_text.text  = text
+	_configure_skill_button(skill_use)
 	_examine_panel.visible = true
+
+
+# Show or hide the "[Use <skill> <dc>]" action on the examine card based on the object's
+# optional skill_use block. Hidden once the object's done_flag (if any) is set.
+func _configure_skill_button(skill_use: Dictionary) -> void:
+	_examine_skill_ctx = {}
+	if _examine_skill_btn == null:
+		return
+	var done_flag: String = skill_use.get("done_flag", "")
+	if skill_use.is_empty() or (done_flag != "" and GameState.get_flag(done_flag)):
+		_examine_skill_btn.visible = false
+		return
+	var skill: String = skill_use.get("skill", "tech")
+	var dc: int       = int(skill_use.get("difficulty", 50))
+	var prompt: String = skill_use.get("prompt", "Attempt")
+	_examine_skill_btn.text = "[%s %d] %s" % [skill.capitalize(), dc, prompt]
+	_examine_skill_btn.visible = true
+	_examine_skill_ctx = {"skill_use": skill_use}
+
+
+# Roll the world-object skill check and apply its success/fail outcome.
+func _on_examine_skill() -> void:
+	var skill_use: Dictionary = _examine_skill_ctx.get("skill_use", {})
+	if skill_use.is_empty():
+		return
+	var skill: String = skill_use.get("skill", "tech")
+	var dc: int       = int(skill_use.get("difficulty", 50))
+	var res := SkillCheck.resolve(skill, dc)
+	var passed: bool  = res.get("passed", false)
+	var block: Dictionary = skill_use.get("success", {}) if passed else skill_use.get("fail", {})
+	_apply_skill_outcome(block)
+	if passed and skill_use.get("done_flag", "") != "":
+		GameState.set_flag(skill_use["done_flag"], true)
+	var skill_val: int = GameState.skills.get(skill, 0)
+	var result_text: String = block.get("text", "Success." if passed else "It doesn't work.")
+	_examine_text.text = "%s\n\n[%s %d vs DC %d — %s]" % [
+		result_text, skill.capitalize(), skill_val, dc, "PASS" if passed else "FAIL"]
+	AudioManager.play_sfx("confirm" if passed else "error")
+	# Re-evaluate: a passed check with a done_flag hides the button; a fail can be retried.
+	_configure_skill_button(skill_use)
+
+
+# Apply the rewards/flags of a skill-use outcome block (reused success or fail shape).
+func _apply_skill_outcome(block: Dictionary) -> void:
+	for flag_id in block.get("flags_set", []):
+		GameState.set_flag(flag_id, true)
+	for reward: Dictionary in block.get("item_rewards", []):
+		GameState.add_item(reward.get("item_id", ""), int(reward.get("quantity", 1)))
+	if block.has("caps_reward"):
+		GameState.caps += int(block["caps_reward"])
+		GameState.state_changed.emit()
+	if block.has("xp_reward"):
+		GameState.add_xp(int(block["xp_reward"]))
+	if block.has("karma_change"):
+		GameState.add_karma(int(block["karma_change"]))
 
 
 func _any_panel_open() -> bool:

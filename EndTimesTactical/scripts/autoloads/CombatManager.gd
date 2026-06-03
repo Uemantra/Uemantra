@@ -21,7 +21,7 @@ const ARENA_ROWS    := 10
 const ARENA_MID_ROW := 5
 
 # ─── Shot modes & called shots ─────────────────────────────────────────────────
-enum ShotMode { NORMAL, QUICK, AIMED }
+enum ShotMode { NORMAL, QUICK, AIMED, BURST }
 enum BodyPart { TORSO, HEAD, ARMS, LEGS }
 
 # Damage-over-time statuses: per-tick damage and default duration when applied.
@@ -66,6 +66,7 @@ func start_combat(enemy_unit_ids: Array, arena_id: String = "") -> void:
 
 	_build_arena()
 	_build_player_unit()
+	_build_companion_units(units["player"]["hex"])
 	_build_enemy_units(enemy_unit_ids)
 	_roll_initiative()
 	combat_started.emit()
@@ -89,6 +90,7 @@ func start_combat_in_place(grid: Dictionary, player_hex: Vector2i, enemy_list: A
 	phase = Phase.INACTIVE
 
 	_build_player_unit(player_hex)
+	_build_companion_units(player_hex)
 	_build_enemy_units_at(enemy_list)
 	_roll_initiative()
 	combat_started.emit()
@@ -129,12 +131,16 @@ func try_attack(attacker_id: String, target_id: String,
 	# Fast Shot and similar traits forbid aimed/called shots.
 	if shot_mode == ShotMode.AIMED and bool(amods.get("no_aimed", false)):
 		return false
+	# Burst is only available on weapons that declare a burst size.
+	if shot_mode == ShotMode.BURST and int(weapon.get("burst", 0)) <= 0:
+		return false
 
 	# Determine AP cost (ranged attacks get any AP reduction from perks/traits).
 	var ap_cost: int
 	match shot_mode:
 		ShotMode.QUICK: ap_cost = CombatCalc.QUICK_SHOT_AP_COST
 		ShotMode.AIMED: ap_cost = CombatCalc.AIMED_SHOT_AP_COST
+		ShotMode.BURST: ap_cost = int(weapon.get("burst_ap_cost", CombatCalc.weapon_ap_cost(weapon) + CombatCalc.BURST_AP_EXTRA))
 		_:              ap_cost = CombatCalc.weapon_ap_cost(weapon)
 	if is_ranged:
 		ap_cost = max(1, ap_cost - int(amods.get("ranged_ap_reduction", 0)))
@@ -149,19 +155,30 @@ func try_attack(attacker_id: String, target_id: String,
 	if not LineOfSight.has_los(attacker["hex"], target["hex"], _opaque_hexes()):
 		return false
 
-	# Ammo check
+	# Ammo: how many rounds actually fire (a burst sprays several; ammo can cap it).
+	var rounds := 1
+	if shot_mode == ShotMode.BURST:
+		rounds = max(1, int(weapon.get("burst", 3)))
 	if CombatCalc.weapon_needs_ammo(weapon):
-		if attacker.get("ammo_loaded", 0) <= 0:
+		var loaded: int = attacker.get("ammo_loaded", 999)
+		if loaded <= 0:
 			return false
-		if attacker.get("ammo_loaded", 999) != 999:
-			attacker["ammo_loaded"] -= 1
+		if loaded != 999:
+			rounds = min(rounds, loaded)
+			attacker["ammo_loaded"] = loaded - rounds
 
-	# ── Hit calculation ──
+	# Ammo type can modify armor penetration (AP rounds) and damage (JHP rounds).
+	var am: Dictionary       = _ammo_mods(weapon)
+	var ammo_dr_mod: int     = am["dr_mod"]
+	var ammo_dmg_mult: float = am["dmg_mult"]
+
+	# ── Hit chance (shared by every round of the shot) ──
 	var wsub: String     = weapon.get("subtype", CombatCalc.weapon_skill_id(weapon))
 	var hit_adjust: int  = _attacker_hit_bonus(amods, wsub) - int(attacker.get("accuracy_debuff", 0))
 	match shot_mode:
 		ShotMode.QUICK: hit_adjust -= CombatCalc.QUICK_SHOT_PEN
 		ShotMode.AIMED: hit_adjust += int(_body_part_mods(body_part).get("hit", 0))
+		ShotMode.BURST: hit_adjust -= CombatCalc.BURST_HIT_PEN
 		_:              pass
 	var cover_pen: int   = _cover_to_penalty(
 		LineOfSight.get_cover(attacker["hex"], target["hex"], _cover_map()))
@@ -169,43 +186,86 @@ func try_attack(attacker_id: String, target_id: String,
 	var skill_val: int   = attacker["skills"].get(skill_id, 20)
 	var chance: int      = CombatCalc.hit_chance(
 		skill_val, dist, w_range, -hit_adjust, cover_pen)
-	var hit: bool        = CombatCalc.roll_hit(chance)
-	var damage: int      = 0
 
-	if hit:
-		# Critical hits.
-		var crit_chance: int = _base_crit(attacker) + int(amods.get("crit_chance", 0))
-		if shot_mode == ShotMode.AIMED:
-			crit_chance += int(_body_part_mods(body_part).get("crit", 0))
-		var crit: bool = CombatCalc.is_critical(crit_chance)
-
-		var raw: int = CombatCalc.roll_damage(weapon, attacker["stats"].get("body", 5))
-		raw += amods.get("dmg_all", 0) + amods.get("dmg_" + wsub, 0)
-		raw = max(1, raw)
-		var dr: int = target.get("dr", 0)
-		if crit:
-			var mult: float = 2.0 + float(amods.get("crit_damage_pct", 0)) / 100.0
-			@warning_ignore("integer_division")
-			var half_dr: int = dr / 2
-			raw = int(round(raw * mult))
-			dr = half_dr
-		damage = CombatCalc.apply_dr(raw, dr)
-		target["hp"] = max(0, target["hp"] - damage)
-		if crit:
-			status_applied.emit(target_id, "crit")
-
+	# ── Fire rounds ──
+	var total_damage := 0
+	var any_hit := false
+	for _i in rounds:
+		if target.get("hp", 0) <= 0:
+			break
+		if CombatCalc.roll_hit(chance):
+			any_hit = true
+			total_damage += _deal_one_hit(
+				attacker, target, target_id, weapon, amods, wsub,
+				shot_mode, body_part, ammo_dr_mod, ammo_dmg_mult)
+	if any_hit:
 		_apply_weapon_effects(weapon, target_id, target)
 		if shot_mode == ShotMode.AIMED:
 			_apply_called_shot(body_part, target_id, target)
 
 	_spend_ap(attacker_id, ap_cost)
+
+	# Critical failure: a fully-missed single shot can jam / waste the rest of the turn.
+	if not any_hit and shot_mode != ShotMode.BURST and CombatCalc.is_fumble():
+		_apply_fumble(attacker_id, attacker, is_ranged)
+
 	var wname: String = weapon.get("name", "weapon") if not weapon.is_empty() else "Bare Hands"
-	unit_attacked.emit(attacker_id, target_id, hit, damage, wname)
+	unit_attacked.emit(attacker_id, target_id, any_hit, total_damage, wname)
 
 	if target["hp"] <= 0:
 		_kill_unit(target_id)
 
 	return true
+
+
+# Resolve a single round of fire against a target: crit + damage roll + ammo/DR + crit DR
+# halving. Applies the damage and returns how much was dealt. Weapon status effects and
+# called-shot consequences are applied once by the caller after all rounds resolve.
+func _deal_one_hit(attacker: Dictionary, target: Dictionary, target_id: String,
+		weapon: Dictionary, amods: Dictionary, wsub: String,
+		shot_mode: ShotMode, body_part: BodyPart,
+		ammo_dr_mod: int, ammo_dmg_mult: float) -> int:
+	var crit_chance: int = _base_crit(attacker) + int(amods.get("crit_chance", 0))
+	if shot_mode == ShotMode.AIMED:
+		crit_chance += int(_body_part_mods(body_part).get("crit", 0))
+	var crit: bool = CombatCalc.is_critical(crit_chance)
+
+	var raw: int = CombatCalc.roll_damage(weapon, attacker["stats"].get("body", 5))
+	raw += int(amods.get("dmg_all", 0)) + int(amods.get("dmg_" + wsub, 0))
+	raw = int(round(raw * ammo_dmg_mult))
+	raw = max(1, raw)
+	var dr: int = max(0, int(target.get("dr", 0)) + ammo_dr_mod)
+	if crit:
+		var mult: float = 2.0 + float(amods.get("crit_damage_pct", 0)) / 100.0
+		@warning_ignore("integer_division")
+		var half_dr: int = dr / 2
+		raw = int(round(raw * mult))
+		dr = half_dr
+	var damage: int = CombatCalc.apply_dr(raw, dr)
+	target["hp"] = max(0, int(target["hp"]) - damage)
+	if crit:
+		status_applied.emit(target_id, "crit")
+	return damage
+
+
+# Damage/armor modifiers contributed by the loaded ammunition type (looked up from the
+# weapon's ammo_type item). dr_mod < 0 = armor-piercing; dmg_mult > 1 = hollow-point.
+func _ammo_mods(weapon: Dictionary) -> Dictionary:
+	var at_raw: Variant = weapon.get("ammo_type", "")
+	if not (at_raw is String) or at_raw == "":
+		return {"dr_mod": 0, "dmg_mult": 1.0}
+	var ammo: Dictionary = DataManager.get_item(at_raw)
+	return {"dr_mod": int(ammo.get("dr_mod", 0)), "dmg_mult": float(ammo.get("dmg_mult", 1.0))}
+
+
+# A critical failure ends the rest of the unit's turn; a ranged fumble also dumps the
+# magazine (a jam the unit must reload to clear).
+func _apply_fumble(unit_id: String, unit: Dictionary, is_ranged: bool) -> void:
+	unit["ap"] = 0
+	ap_changed.emit(unit_id, 0)
+	if is_ranged and unit.get("ammo_loaded", 999) != 999:
+		unit["ammo_loaded"] = 0
+	status_applied.emit(unit_id, "fumble")
 
 
 func try_melee_attack(attacker_id: String, target_id: String) -> bool:
@@ -248,6 +308,8 @@ func try_melee_attack(attacker_id: String, target_id: String) -> bool:
 			status_applied.emit(target_id, "crit")
 
 	_spend_ap(attacker_id, CombatCalc.MELEE_AP_COST)
+	if not hit and CombatCalc.is_fumble():
+		_apply_fumble(attacker_id, attacker, false)
 	unit_attacked.emit(attacker_id, target_id, hit, damage, "Bare Hands")
 
 	if target["hp"] <= 0:
@@ -371,6 +433,7 @@ func get_valid_targets(attacker_id: String, shot_mode: ShotMode = ShotMode.NORMA
 	match shot_mode:
 		ShotMode.QUICK: ap_cost = CombatCalc.QUICK_SHOT_AP_COST
 		ShotMode.AIMED: ap_cost = CombatCalc.AIMED_SHOT_AP_COST
+		ShotMode.BURST: ap_cost = int(weapon.get("burst_ap_cost", CombatCalc.weapon_ap_cost(weapon) + CombatCalc.BURST_AP_EXTRA))
 		_:              ap_cost = CombatCalc.weapon_ap_cost(weapon)
 	var opaque               := _opaque_hexes()
 	var targets: Array       = []
@@ -500,6 +563,48 @@ func _build_enemy_units(enemy_ids: Array) -> void:
 		}
 		_occupied[hex] = npc_id
 		start_r += 2
+
+
+# Build a unit for each companion in GameState.party, on the player's team, placed near
+# the player. Keyed "comp_<npc_id>" so a companion never collides with an enemy unit that
+# happens to share the npc_id. AI-controlled (see _run_ai). A recruitable NPC must have a
+# combat_profile; one without is skipped.
+func _build_companion_units(near_hex: Vector2i) -> void:
+	for npc_id: String in GameState.get_party():
+		var npc: Dictionary = DataManager.get_npc(npc_id)
+		var profile: Dictionary = npc.get("combat_profile", {})
+		if npc.is_empty() or profile.is_empty():
+			continue
+		var npc_stats: Dictionary = npc.get("stats",
+			{"grit":5,"reflex":5,"mind":4,"body":5,"nerve":5,"presence":4})
+		var weapon_id: String = profile.get("weapon_id", "bare_hands")
+		var armor: Dictionary = DataManager.get_item(profile.get("armor_id", ""))
+		var hp_max: int       = profile.get("max_hp", 25)
+		var uid: String       = "comp_" + npc_id
+		var hex: Vector2i     = _nearest_free_hex(near_hex)
+		units[uid] = {
+			"id":                 uid,
+			"npc_id":             npc_id,
+			"display_name":       npc.get("name", npc_id),
+			"team":               "player",
+			"hex":                hex,
+			"hp":                 hp_max,
+			"hp_max":             hp_max,
+			"ap":                 0,
+			"ap_max":             profile.get("ap_per_turn", 6),
+			"sequence":           CombatCalc.roll_initiative(npc_stats),
+			"stats":              npc_stats,
+			"skills":             _calc_skills(npc_stats, npc.get("skills_override", {})),
+			"equipped_weapon_id": weapon_id,
+			"dr":                 armor.get("defense_bonus", 0),
+			"dead":               false,
+			"ammo_loaded":        999,   # companions don't track ammo
+			"ammo_reserve":       999,
+			"statuses":           _new_statuses(),
+			"mods":               {},
+			"accuracy_debuff":    0,
+		}
+		_occupied[hex] = uid
 
 
 # Build enemy units at explicit hexes for in-place combat. Each entry:
@@ -699,7 +804,9 @@ func _begin_turn(unit_id: String) -> void:
 		return
 
 	unit["ap"] = unit["ap_max"]
-	if unit["team"] == "player":
+	# Only the human "player" unit waits for input; everyone else (enemies AND allied
+	# companions) is AI-driven.
+	if unit_id == "player":
 		phase = Phase.PLAYER_TURN
 		turn_started.emit(unit_id, unit["ap"])
 	else:
@@ -723,54 +830,73 @@ func _end_turn() -> void:
 # ─── Enemy AI ─────────────────────────────────────────────────────────────────
 
 func _run_ai(unit_id: String) -> void:
-	var unit: Dictionary   = units[unit_id]
-	var player: Dictionary = units.get("player", {})
-	if player.is_empty() or player.get("dead", false):
+	var unit: Dictionary = units[unit_id]
+	# Companions (player team) hunt enemies; enemies hunt the player + companions.
+	var target_id: String = _nearest_enemy_of(unit_id)
+	if target_id == "":
 		call_deferred("_ai_done")
 		return
+	var target: Dictionary = units[target_id]
 
 	var weapon: Dictionary = DataManager.get_item(unit.get("equipped_weapon_id", ""))
 	var w_range: int       = CombatCalc.weapon_range(weapon)
 	var ap_atk: int        = CombatCalc.weapon_ap_cost(weapon)
 	var is_ranged: bool    = w_range > 1
-	var dist: int          = HexGrid.distance(unit["hex"], player["hex"])
+	var dist: int          = HexGrid.distance(unit["hex"], target["hex"])
 	var hp_ratio: float    = float(unit["hp"]) / max(1.0, float(unit.get("hp_max", 1)))
 	var low_hp: bool       = hp_ratio < 0.3
 
 	if low_hp and unit["ap"] >= CombatCalc.AP_MOVE:
 		# Badly hurt: fall back toward cover and distance.
-		var retreat := _best_tactical_hex(unit_id, player["hex"])
+		var retreat := _best_tactical_hex(unit_id, target["hex"])
 		if retreat != unit["hex"]:
 			try_move(unit_id, retreat)
 	elif is_ranged:
-		# Back away (seeking cover) if the player is too close.
+		# Back away (seeking cover) if the target is too close.
 		if dist < 3 and unit["ap"] >= CombatCalc.AP_MOVE:
-			var reposition := _best_tactical_hex(unit_id, player["hex"])
+			var reposition := _best_tactical_hex(unit_id, target["hex"])
 			if reposition != unit["hex"]:
 				try_move(unit_id, reposition)
 		# Close to attack range if too far.
 		elif dist > w_range and unit["ap"] >= CombatCalc.AP_MOVE:
-			_ai_close_on_player(unit_id, player["hex"])
+			_ai_close_on(unit_id, target["hex"])
 	else:
-		# Melee: close in, stopping adjacent to player.
+		# Melee: close in, stopping adjacent to the target.
 		if dist > w_range and unit["ap"] >= CombatCalc.AP_MOVE:
-			_ai_close_on_player(unit_id, player["hex"])
+			_ai_close_on(unit_id, target["hex"])
 
 	# Attack if in range with LOS.
-	dist = HexGrid.distance(unit["hex"], player["hex"])
+	dist = HexGrid.distance(unit["hex"], target["hex"])
 	if dist <= w_range and unit["ap"] >= ap_atk and phase != Phase.ENDED:
-		if LineOfSight.has_los(unit["hex"], player["hex"], _opaque_hexes()):
-			try_attack(unit_id, "player")
+		if LineOfSight.has_los(unit["hex"], target["hex"], _opaque_hexes()):
+			try_attack(unit_id, target_id)
 
 	call_deferred("_ai_done")
 
 
-# Move toward the player along the best path the unit can afford this turn.
-func _ai_close_on_player(unit_id: String, player_hex: Vector2i) -> void:
+# Nearest living unit on the opposing team to the given unit ("" if none remain).
+func _nearest_enemy_of(unit_id: String) -> String:
 	var unit: Dictionary = units[unit_id]
-	var blocked_no_player := _blocked_for(unit_id)
-	blocked_no_player.erase(player_hex)
-	var path := HexGrid.find_path(unit["hex"], player_hex, blocked_no_player)
+	var my_team: String  = unit["team"]
+	var best: String     = ""
+	var best_dist: int   = 1 << 30
+	for uid in units:
+		var u: Dictionary = units[uid]
+		if u.get("dead", false) or u["team"] == my_team:
+			continue
+		var d: int = HexGrid.distance(unit["hex"], u["hex"])
+		if d < best_dist:
+			best_dist = d
+			best = uid
+	return best
+
+
+# Move toward a target hex along the best path the unit can afford this turn.
+func _ai_close_on(unit_id: String, target_hex: Vector2i) -> void:
+	var unit: Dictionary = units[unit_id]
+	var blocked_no_target := _blocked_for(unit_id)
+	blocked_no_target.erase(target_hex)
+	var path := HexGrid.find_path(unit["hex"], target_hex, blocked_no_target)
 	if path.size() > 1:
 		@warning_ignore("integer_division")
 		var ap_steps: int  = unit["ap"] / CombatCalc.AP_MOVE
@@ -817,6 +943,9 @@ func _kill_unit(unit_id: String) -> void:
 		var npc_id: String = unit.get("npc_id", unit_id)
 		xp_earned += CombatCalc.kill_xp(DataManager.get_npc(npc_id))
 		_roll_loot(npc_id)
+	elif unit_id != "player":
+		# A fallen companion leaves the party permanently.
+		GameState.dismiss_companion(unit.get("npc_id", ""))
 
 	_check_end()
 
@@ -931,7 +1060,8 @@ func _player_weapon_id() -> String:
 			var item := DataManager.get_item(entry["item_id"])
 			if item.get("type") == "weapon":
 				return entry["item_id"]
-	return "pistol_9mm"  # default to pistol if nothing equipped
+	# Nothing equipped: fall back to the campaign's default weapon (manifest-defined).
+	return DataManager.get_manifest().get("default_unarmed_weapon", "pistol_9mm")
 
 
 func _player_dr() -> int:

@@ -42,6 +42,17 @@ func _ready() -> void:
 	_reveal_near_marker()
 	queue_redraw()
 	_refresh_info()
+	# A quest completing during travel can roll the ending.
+	if not GameState.ending_requested.is_connected(_on_ending_requested):
+		GameState.ending_requested.connect(_on_ending_requested)
+
+
+func _on_ending_requested(_ending_id: String) -> void:
+	call_deferred("_go_to_ending")
+
+
+func _go_to_ending() -> void:
+	get_tree().change_scene_to_file("res://scenes/ending/ending_screen.tscn")
 
 
 func _build_nodes() -> void:

@@ -13,20 +13,46 @@
 			"title": "Open the supply crate",
 			"description": "Find the supply crate in the town square and open it.",
 			"objectives": [
-				{ "id": "obj_open_crate", "text": "Open the supply crate", "flag_complete": "template_crate_opened", "optional": false }
+				{
+					"id": "obj_open_crate",
+					"text": "Open the supply crate",
+					"flag_complete": "template_crate_opened",
+					"optional": false
+				}
 			],
-			"completion_condition": { "flags_all": ["template_crate_opened"] },
-			"on_complete": { "flags_set": [], "next_stage": "stage_return" }
+			"completion_condition": {
+				"flags_all": [
+					"template_crate_opened"
+				]
+			},
+			"on_complete": {
+				"flags_set": [],
+				"next_stage": "stage_return"
+			}
 		},
 		{
 			"id": "stage_return",
 			"title": "Report back to Mara",
 			"description": "Bring what you found back to Mara.",
 			"objectives": [
-				{ "id": "obj_return", "text": "Tell Mara you opened the crate", "flag_complete": "first_steps_turned_in", "optional": false }
+				{
+					"id": "obj_return",
+					"text": "Tell Mara you opened the crate",
+					"flag_complete": "first_steps_turned_in",
+					"optional": false
+				}
 			],
-			"completion_condition": { "flags_all": ["first_steps_turned_in"] },
-			"on_complete": { "flags_set": ["first_steps_complete"], "next_stage": null }
+			"completion_condition": {
+				"flags_all": [
+					"first_steps_turned_in"
+				]
+			},
+			"on_complete": {
+				"flags_set": [
+					"first_steps_complete"
+				],
+				"next_stage": null
+			}
 		}
 	]
 }

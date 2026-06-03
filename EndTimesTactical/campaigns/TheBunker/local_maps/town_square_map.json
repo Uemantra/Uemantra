@@ -4,7 +4,10 @@
 	"width": 14,
 	"height": 10,
 	"vision_radius": 7,
-	"player_start": { "q": 2, "r": 4 },
+	"player_start": {
+		"q": 2,
+		"r": 4
+	},
 	"actors": [
 		{
 			"id": "greeter_spot",
@@ -14,7 +17,10 @@
 			"r": 4,
 			"glyph": "G",
 			"color": "#88bbee",
-			"active_hours": [6, 22]
+			"active_hours": [
+				6,
+				22
+			]
 		}
 	],
 	"containers": [
@@ -27,7 +33,11 @@
 			"opened_flag": "template_crate_opened",
 			"locked": false,
 			"loot_table": [
-				{ "item_id": "scrap_bandage", "quantity": 1, "chance": 1.0 }
+				{
+					"item_id": "scrap_bandage",
+					"quantity": 1,
+					"chance": 1
+				}
 			]
 		}
 	],
@@ -47,7 +57,9 @@
 				"done_flag": "fountain_repaired",
 				"success": {
 					"text": "You re-seat the valve and clear the line. Water sputters, then runs clear. The square has a fountain again.",
-					"flags_set": ["fountain_repaired"],
+					"flags_set": [
+						"fountain_repaired"
+					],
 					"xp_reward": 40,
 					"karma_change": 2
 				},
@@ -58,12 +70,31 @@
 		}
 	],
 	"exit_zones": [
-		{ "id": "exit_west", "q": 0, "r": 4, "w": 1, "h": 1, "target": "world" }
+		{
+			"id": "exit_west",
+			"q": 0,
+			"r": 4,
+			"w": 1,
+			"h": 1,
+			"target": "world"
+		}
 	],
 	"props": [
-		{ "prop": "campfire", "q": 5, "r": 6 },
-		{ "prop": "crate", "q": 10, "r": 6 },
-		{ "prop": "sign", "q": 7, "r": 2 }
+		{
+			"prop": "campfire",
+			"q": 5,
+			"r": 6
+		},
+		{
+			"prop": "crate",
+			"q": 10,
+			"r": 6
+		},
+		{
+			"prop": "sign",
+			"q": 7,
+			"r": 2
+		}
 	],
 	"terrain": [
 		"WWWWWWWWWWWWWW",

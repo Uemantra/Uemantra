@@ -1,16 +1,31 @@
 {
 	"id": "_template",
-	"name": "New Campaign",
+	"name": "TheBunker",
 	"version": "0.1.0",
-	"author": "Your Name Here",
-	"description": "A blank starter campaign. Copy this folder, rename it, point campaigns/active.txt at it, and build your own wasteland. See docs/AUTHORING.md.",
+	"author": "Ian Hill",
+	"description": "You were born and have lived your whole life in the bunker.",
 	"player_start": {
-		"name": "Wanderer",
-		"location": "town_square",
-		"stats": { "grit": 5, "reflex": 5, "mind": 5, "body": 5, "nerve": 5, "presence": 5 },
+		"name": "Bunkster",
+		"location": "bunker_dorms",
+		"stats": {
+			"grit": 5,
+			"reflex": 5,
+			"mind": 5,
+			"body": 5,
+			"nerve": 5,
+			"presence": 5
+		},
 		"inventory": [
-			{ "item_id": "rusty_pistol", "quantity": 1, "equipped": true },
-			{ "item_id": "scrap_bandage", "quantity": 2, "equipped": false }
+			{
+				"item_id": "rusty_pistol",
+				"quantity": 1,
+				"equipped": true
+			},
+			{
+				"item_id": "scrap_bandage",
+				"quantity": 2,
+				"equipped": false
+			}
 		],
 		"caps": 25,
 		"time_hours": 8

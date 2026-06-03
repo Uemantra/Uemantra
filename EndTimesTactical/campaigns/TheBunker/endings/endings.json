@@ -8,7 +8,9 @@
 		},
 		{
 			"id": "kind",
-			"conditions": { "karma_min": 1 },
+			"conditions": {
+				"karma_min": 1
+			},
 			"title": "Well Met",
 			"text": "You helped where you could, and the square remembered it. (This slide only shows when karma is positive — try the Speech option with Mara, which nudges karma up.)"
 		},

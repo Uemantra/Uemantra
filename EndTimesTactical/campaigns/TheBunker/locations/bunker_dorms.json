@@ -1,0 +1,17 @@
+{
+	"id": "bunker_dorms",
+	"name": "Bunker Dorms",
+	"type": "settlement",
+	"description": "",
+	"overworld_position": {
+		"x": 400,
+		"y": 300
+	},
+	"connections": [],
+	"travel_time_hours": {},
+	"npcs_present": [
+		"greeter"
+	],
+	"interactables": [],
+	"combat_arena": null
+}

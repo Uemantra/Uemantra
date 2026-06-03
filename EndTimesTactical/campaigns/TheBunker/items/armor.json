@@ -6,7 +6,7 @@
 			"type": "armor",
 			"subtype": "light",
 			"description": "The clothes on your back. Better than nothing, barely.",
-			"weight": 1.0,
+			"weight": 1,
 			"value": 5,
 			"defense_bonus": 0,
 			"evasion_mod": 0

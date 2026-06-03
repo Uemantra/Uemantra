@@ -1,0 +1,40 @@
+{
+	"weapons": [
+		{
+			"id": "bare_hands",
+			"name": "Bare Hands",
+			"type": "weapon",
+			"subtype": "melee",
+			"description": "Not ideal. Better than nothing.",
+			"weight": 0,
+			"value": 0,
+			"ap_cost": 3,
+			"damage_dice": "1d3",
+			"damage_bonus": 0,
+			"range_tiles": 1,
+			"skill_used": "melee",
+			"ammo_type": null,
+			"ammo_per_shot": 0,
+			"clip_size": 0,
+			"effects": []
+		},
+		{
+			"id": "rusty_pistol",
+			"name": "Rusty Pistol",
+			"type": "weapon",
+			"subtype": "guns",
+			"description": "Pitted and unreliable, but it fires. Your first gun. Replace it with one of your own.",
+			"weight": 1.5,
+			"value": 20,
+			"ap_cost": 2,
+			"damage_dice": "1d6",
+			"damage_bonus": 0,
+			"range_tiles": 6,
+			"skill_used": "guns",
+			"ammo_type": null,
+			"ammo_per_shot": 0,
+			"clip_size": 0,
+			"effects": []
+		}
+	]
+}

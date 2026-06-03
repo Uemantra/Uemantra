@@ -1,0 +1,80 @@
+{
+	"id": "town_square_map",
+	"display_name": "Town Square",
+	"width": 14,
+	"height": 10,
+	"vision_radius": 7,
+	"player_start": { "q": 2, "r": 4 },
+	"actors": [
+		{
+			"id": "greeter_spot",
+			"type": "npc",
+			"npc_id": "greeter",
+			"q": 7,
+			"r": 4,
+			"glyph": "G",
+			"color": "#88bbee",
+			"active_hours": [6, 22]
+		}
+	],
+	"containers": [
+		{
+			"id": "supply_crate",
+			"q": 10,
+			"r": 6,
+			"glyph": "▫",
+			"color": "#aaaa44",
+			"opened_flag": "template_crate_opened",
+			"locked": false,
+			"loot_table": [
+				{ "item_id": "scrap_bandage", "quantity": 1, "chance": 1.0 }
+			]
+		}
+	],
+	"examine_spots": [
+		{
+			"id": "dry_fountain",
+			"q": 7,
+			"r": 2,
+			"glyph": "?",
+			"color": "#aaaaaa",
+			"title": "Dry Fountain",
+			"text": "A cracked stone fountain, long dry. Someone scratched a hopeful little sun into the basin. The valve assembly might be repairable.",
+			"skill_use": {
+				"skill": "tech",
+				"difficulty": 40,
+				"prompt": "Repair the valve",
+				"done_flag": "fountain_repaired",
+				"success": {
+					"text": "You re-seat the valve and clear the line. Water sputters, then runs clear. The square has a fountain again.",
+					"flags_set": ["fountain_repaired"],
+					"xp_reward": 40,
+					"karma_change": 2
+				},
+				"fail": {
+					"text": "The valve crumbles in your hands. Maybe with a steadier touch."
+				}
+			}
+		}
+	],
+	"exit_zones": [
+		{ "id": "exit_west", "q": 0, "r": 4, "w": 1, "h": 1, "target": "world" }
+	],
+	"props": [
+		{ "prop": "campfire", "q": 5, "r": 6 },
+		{ "prop": "crate", "q": 10, "r": 6 },
+		{ "prop": "sign", "q": 7, "r": 2 }
+	],
+	"terrain": [
+		"WWWWWWWWWWWWWW",
+		"W............W",
+		"W............W",
+		"W............W",
+		".............W",
+		"W............W",
+		"W............W",
+		"W............W",
+		"W............W",
+		"WWWWWWWWWWWWWW"
+	]
+}

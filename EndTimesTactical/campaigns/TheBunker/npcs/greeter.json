@@ -1,0 +1,13 @@
+{
+	"id": "greeter",
+	"name": "Mara",
+	"portrait": "res://art/portraits/placeholder.png",
+	"faction": "townsfolk",
+	"role": "Town greeter (example NPC)",
+	"location_default": "town_square",
+	"stats": { "grit": 4, "reflex": 4, "mind": 5, "body": 4, "nerve": 4, "presence": 6 },
+	"skills_override": {},
+	"combat_profile": null,
+	"relationship": 0,
+	"vendor": null
+}

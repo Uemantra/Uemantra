@@ -26,6 +26,7 @@ const FLEE_SAFE_RADIUS := DETECT_RADIUS  # may disengage once every enemy is far
 const CAMERA_ZOOM      := 1.3    # lower zoom: the larger hexes already read big, so show more map
 const SEE_THROUGH_RADIUS := 2    # tall scenery this close & in front of the player turns translucent
 const OCCLUDER_ALPHA   := 0.32   # how see-through a wall/structure becomes when it would hide the player
+const NO_HEX := Vector2i(-9999, -9999)  # sentinel: no free hex found for a companion
 
 # ─── Palette (shared by explore + combat so the look is continuous) ─────────────
 const COLORS := {
@@ -95,6 +96,12 @@ var _actor_data:  Dictionary = {}               # actor_id -> data dict (+ _atyp
 var _actor_nodes: Dictionary = {}               # actor_id -> Node2D
 var _actor_hex:   Dictionary = {}               # Vector2i -> actor_id
 
+# Party companions that trail the player across the explore map (a "conga line").
+# Each is registered in _actor_data/_actor_nodes/_actor_hex like a normal NPC so it
+# shares fog + the combat node-reuse path; these track the line order and live hexes.
+var _explore_companions: Array      = []        # comp_<npc_id> uids, front (nearest player) → back
+var _companion_hex:      Dictionary = {}         # comp uid -> Vector2i (live explore hex)
+
 var _player_hex:  Vector2i = Vector2i(0, 0)
 var _moving:      bool     = false
 
@@ -152,6 +159,7 @@ func _ready() -> void:
 	_spawn_props()
 	_spawn_actors()
 	_spawn_player()
+	_sync_explore_companions()
 	_setup_camera()
 	_build_explore_hud()
 	_build_combat_hud()
@@ -583,6 +591,10 @@ func _spawn_actors() -> void:
 		var aid: String = d.get("id", "")
 		if aid == "" or aid in dead:
 			continue
+		# A recruited companion travels with the player instead of standing here, so
+		# suppress its map actor — _sync_explore_companions() spawns the trailing node.
+		if d.get("npc_id", "") != "" and GameState.is_in_party(d.get("npc_id", "")):
+			continue
 		# NPC schedules: an actor with active_hours is only present during those hours.
 		if not _actor_active_now(d):
 			continue
@@ -975,6 +987,7 @@ func _step_path(path: Array) -> void:
 		_moving = false
 		return
 	_moving = true
+	var from_hex: Vector2i = _player_hex
 	var nxt: Vector2i = path.pop_front()
 	if TerrainDB.is_blocked(_terrain.get(nxt, "obstacle")) or _actor_hex.has(nxt):
 		_moving = false
@@ -984,6 +997,7 @@ func _step_path(path: Array) -> void:
 		.set_trans(Tween.TRANS_LINEAR)
 	tw.finished.connect(func() -> void:
 		_player_hex = nxt
+		_advance_companion_line(from_hex)
 		_cam.global_position = _player.global_position
 		_recompute_fog()
 		if _check_exit():
@@ -1102,6 +1116,163 @@ func _despawn_companion_nodes() -> void:
 			if is_instance_valid(node):
 				node.queue_free()
 			_actor_nodes.erase(uid)
+			_actor_data.erase(uid)
+	# Drop the explore-line bookkeeping too; the line is rebuilt fresh behind the
+	# player when combat resolves (or stays cleared if combat sent us elsewhere).
+	for hex: Vector2i in _actor_hex.keys():
+		if String(_actor_hex[hex]).begins_with("comp_"):
+			_actor_hex.erase(hex)
+	_companion_hex.clear()
+	_explore_companions.clear()
+
+
+# ════════════════════════════════════════════════════════════════════════════════
+# Companion explore-following — recruited party members trail the player as a
+# "conga line" while walking the map (they only otherwise appeared in combat).
+# ════════════════════════════════════════════════════════════════════════════════
+
+func _companion_uid(npc_id: String) -> String:
+	return "comp_" + npc_id
+
+
+# Reconcile the trailing line with the live party roster: drop anyone dismissed,
+# add anyone newly recruited (placed at the back of the line). Explore-only.
+func _sync_explore_companions() -> void:
+	if _mode != Mode.EXPLORE:
+		return
+	var party: Array = GameState.get_party()
+	var want: Dictionary = {}
+	for npc_id: String in party:
+		want[_companion_uid(npc_id)] = npc_id
+
+	# Remove companions no longer in the party.
+	for uid: String in _explore_companions.duplicate():
+		if not want.has(uid):
+			_remove_explore_companion(uid)
+
+	# Add companions in party order that aren't on the map yet.
+	for npc_id: String in party:
+		var uid := _companion_uid(npc_id)
+		if _actor_nodes.has(uid):
+			continue
+		# If this NPC is still standing on the map (just recruited), retire its actor.
+		_retire_standing_actor(npc_id)
+		# Place the newcomer just behind the current tail of the line (or the player).
+		var anchor := _player_hex
+		if not _explore_companions.is_empty():
+			anchor = _companion_hex.get(_explore_companions.back(), _player_hex)
+		var hex := _free_trailing_hex(anchor)
+		if hex == NO_HEX:
+			continue
+		_spawn_one_companion(npc_id, hex)
+
+
+func _spawn_one_companion(npc_id: String, hex: Vector2i) -> void:
+	var uid := _companion_uid(npc_id)
+	var src := _map_actor_def(npc_id)              # copy sprite hints if the map declared this NPC
+	var d := {"id": uid, "npc_id": npc_id, "color": "#55cc66"}
+	if src.has("sprite"):      d["sprite"] = src["sprite"]
+	if src.has("sprite_role"): d["sprite_role"] = src["sprite_role"]
+	var node := _make_actor_node(d, "npc")
+	node.position = HexGrid.hex_to_pixel(hex)
+	_actors_layer.add_child(node)
+	_actor_nodes[uid] = node
+	_actor_data[uid] = {"_atype": "npc", "npc_id": npc_id, "id": uid,
+		"q": hex.x, "r": hex.y, "companion": true}
+	_actor_hex[hex] = uid
+	_companion_hex[uid] = hex
+	_explore_companions.append(uid)
+
+
+func _remove_explore_companion(uid: String) -> void:
+	if _actor_nodes.has(uid):
+		var node: Node2D = _actor_nodes[uid]
+		if is_instance_valid(node):
+			node.queue_free()
+		_actor_nodes.erase(uid)
+	_actor_data.erase(uid)
+	var hex: Vector2i = _companion_hex.get(uid, NO_HEX)
+	if _actor_hex.get(hex, "") == uid:
+		_actor_hex.erase(hex)
+	_companion_hex.erase(uid)
+	_explore_companions.erase(uid)
+
+
+# The map JSON entry that declared this NPC (for sprite hints), or {} if none.
+func _map_actor_def(npc_id: String) -> Dictionary:
+	for a: Dictionary in _map_data.get("actors", []):
+		if a.get("npc_id", "") == npc_id:
+			return a
+	return {}
+
+
+# When an NPC joins the party mid-map, remove the static actor it was standing as.
+func _retire_standing_actor(npc_id: String) -> void:
+	for aid: String in _actor_data.keys():
+		if aid.begins_with("comp_"):
+			continue
+		if _actor_data[aid].get("npc_id", "") == npc_id:
+			var node: Node2D = _actor_nodes.get(aid)
+			if is_instance_valid(node):
+				node.queue_free()
+			_actor_nodes.erase(aid)
+			var hex := _actor_hex_of(aid)
+			if _actor_hex.get(hex, "") == aid:
+				_actor_hex.erase(hex)
+			_actor_data.erase(aid)
+			return
+
+
+# Nearest walkable, unoccupied hex to `anchor` (BFS) for placing a new companion.
+func _free_trailing_hex(anchor: Vector2i) -> Vector2i:
+	var seen: Dictionary = {anchor: true}
+	var frontier: Array = [anchor]
+	while not frontier.is_empty():
+		var cur: Vector2i = frontier.pop_front()
+		if cur != anchor and _hex_free_for_companion(cur):
+			return cur
+		for n: Vector2i in HexGrid.neighbors(cur):
+			if seen.has(n) or not _terrain.has(n):
+				continue
+			seen[n] = true
+			if not TerrainDB.is_blocked(_terrain.get(n, "obstacle")):
+				frontier.append(n)
+	return NO_HEX
+
+
+func _hex_free_for_companion(hex: Vector2i) -> bool:
+	if not _terrain.has(hex) or TerrainDB.is_blocked(_terrain.get(hex, "obstacle")):
+		return false
+	return hex != _player_hex and not _actor_hex.has(hex)
+
+
+# Player just stepped off `vacated_hex`; each companion advances into the spot the
+# unit ahead of it just left. Every destination is a hex a unit stood on this frame,
+# so it is guaranteed walkable and collision-free.
+func _advance_companion_line(vacated_hex: Vector2i) -> void:
+	var dest := vacated_hex
+	for uid: String in _explore_companions:
+		var old: Vector2i = _companion_hex.get(uid, dest)
+		_move_companion_node(uid, dest)
+		dest = old
+
+
+func _move_companion_node(uid: String, dest: Vector2i) -> void:
+	var old: Vector2i = _companion_hex.get(uid, dest)
+	if _actor_hex.get(old, "") == uid:
+		_actor_hex.erase(old)
+	_actor_hex[dest] = uid
+	_companion_hex[uid] = dest
+	var d: Dictionary = _actor_data.get(uid, {})
+	d["q"] = dest.x
+	d["r"] = dest.y
+	if old == dest:
+		return
+	var node: Node2D = _actor_nodes.get(uid)
+	if is_instance_valid(node):
+		var tw := create_tween()
+		tw.tween_property(node, "position", HexGrid.hex_to_pixel(dest), MOVE_STEP_TIME)\
+			.set_trans(Tween.TRANS_LINEAR)
 
 
 func _attach_hp_bars() -> void:
@@ -1501,6 +1672,8 @@ func _resume_explore() -> void:
 	_combat_hud.visible = false
 	_explore_bar.visible = true
 	_clear_highlights()
+	# Survivors regroup: rebuild the trailing line behind the player's final position.
+	_sync_explore_companions()
 	_recompute_fog()
 	_refresh_explore_hud()
 
@@ -1855,7 +2028,10 @@ func _instantiate_overlays() -> void:
 		_ui.add_child(_dialogue_box)
 		DialogueManager.conversation_ended.connect(
 			func(_npc: String, _done: bool) -> void:
-				if _dialogue_box: _dialogue_box.visible = false)
+				if _dialogue_box: _dialogue_box.visible = false
+				# A conversation may have recruited or dismissed a companion; reflect it.
+				if _mode == Mode.EXPLORE:
+					_sync_explore_companions())
 	# A dialogue choice/node flagged open_shop ends the conversation and asks us to
 	# open the vendor's trade screen.
 	DialogueManager.shop_requested.connect(_open_shop)

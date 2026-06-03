@@ -139,12 +139,14 @@ body { font-family: 'Courier New', monospace; background: #111; color: #ccc; hei
     <input type="text" id="campaign-id" value="my_game" oninput="campaignId=this.value.trim()||'my_game'"
       style="background:#1c1c1c;border:1px solid #333;color:#c8a84b;padding:4px 8px;font-family:inherit;font-size:12px;width:160px">
   </label>
-  <button onclick="importFolder()">&#x1F4C1; Import Campaign Folder</button>
+  <button onclick="openFolder()" title="Open a campaign folder you can edit and save back to (Chrome/Edge)">&#x1F4C2; Open Folder</button>
+  <button id="save-folder-btn" onclick="saveToFolder()" title="Overwrite the opened folder with the current editor contents" style="display:none">&#x1F4BE; Save to Folder</button>
+  <button onclick="importFolder()" title="Read-only import (any browser)">&#x1F4C1; Import Folder</button>
   <input type="file" id="folder-input" webkitdirectory directory multiple onchange="handleFolderImport(event)">
-  <button onclick="importJSON()">&#x1F4C2; Import File(s)</button>
+  <button onclick="importJSON()">&#x1F4C4; Import File(s)</button>
   <input type="file" id="file-input" accept=".json" multiple onchange="handleImport(event)">
-  <button onclick="exportAll()">&#x1F4BE; Export Campaign</button>
-  <button onclick="saveToLocal()">&#x1F4BB; Save to LocalStorage</button>
+  <button onclick="exportAll()" title="Download a .zip that extracts to a campaign folder">&#x1F4E6; Export .zip</button>
+  <button onclick="saveToLocal()">&#x1F4BB; Save to Browser</button>
   <button onclick="loadFromLocal()">&#x21BA; Load Saved</button>
 </div>
 
@@ -160,6 +162,7 @@ body { font-family: 'Courier New', monospace; background: #111; color: #ccc; hei
   <div class="tab" onclick="switchTab('dialogue')">Dialogue</div>
   <div class="tab" onclick="switchTab('perks')">Perks</div>
   <div class="tab" onclick="switchTab('traits')">Traits</div>
+  <div class="tab" onclick="switchTab('endings')">Endings</div>
 </div>
 
 <div id="main">
@@ -199,15 +202,20 @@ const DB = {
   perks: {},         // keyed by id
   traits: {},        // keyed by id
   world: { nodes: [] },
+  endings: { slides: [] },  // endings/endings.json — epilogue slideshow
 };
 
 // Ordered tab ids — index-aligned with the .tab elements in the DOM.
-const TABS = ['campaign','world','factions','items','locations','maps','npcs','quests','dialogue','perks','traits'];
+const TABS = ['campaign','world','factions','items','locations','maps','npcs','quests','dialogue','perks','traits','endings'];
 
 let currentTab = 'factions';
 let selectedId = null;
 let dialogueNpcId = null;
 let campaignId = 'my_game';
+// File System Access state: the campaign folder opened for editing (writable), and the set of
+// relative .json paths that were present when we opened it (so Save can delete ones removed in-editor).
+let dirHandle = null;
+let loadedPaths = new Set();
 
 // Terrain palette — mirrors scripts/systems/TerrainDB.gd. char is what gets written
 // into a map's terrain rows; color is editor-only styling.
@@ -295,6 +303,41 @@ const HELP = {
   'stage-title': ['Stage Title', 'Shown in the journal when this stage is active.'],
   'objective-text': ['Objective Text', 'What the player needs to do, in plain English.'],
   'objective-flag_complete': ['Completion Flag', 'This objective is ticked off when this flag is set anywhere in the game (dialogue, combat, etc.).'],
+  // Weapon / ammo extras
+  'item-burst': ['Burst (rounds/burst)', 'If > 0, this weapon can fire a burst of this many rounds in one attack, each rolling to hit at a penalty. 0 = single-shot only. SMGs ~5, combat shotguns ~3.'],
+  'item-burst_ap_cost': ['Burst AP Cost', 'AP a burst costs. 0 = auto (normal AP cost + 3). Set explicitly to tune.'],
+  'item-dr_mod': ['Ammo DR Mod', 'Set on an ammo (misc) item. Changes the target\'s effective Damage Resistance when fired. Negative = armour-piercing (e.g. −2), positive = stopped more by armour (buckshot).'],
+  'item-dmg_mult': ['Ammo Damage Mult', 'Set on an ammo (misc) item. Multiplies damage. 1.0 = normal, 1.2 = hollow-point. The weapon\'s Ammo Type must match this item\'s id.'],
+  // Quest rewards / ending
+  'quest-xp_reward': ['XP Reward', 'Experience granted once when the whole quest is completed.'],
+  'quest-caps_reward': ['Caps Reward', 'Caps granted once when the whole quest is completed.'],
+  'quest-karma_reward': ['Karma Reward', 'Karma change applied on full completion. Positive = good deed, negative = ruthless.'],
+  'quest-ends_game': ['Ends Game', 'If checked, completing this quest rolls the ending slideshow. Use for a main/finale quest.'],
+  'quest-ending_id': ['Ending ID', 'Optional id passed to the ending screen when this quest ends the game. Leave blank for the default slide set.'],
+  // Dialogue reward block (node + on_complete)
+  'reward-xp_reward': ['XP Reward', 'Experience granted when this line/conversation is reached. Leave 0 for none.'],
+  'reward-caps_reward': ['Caps Reward', 'Caps granted here. Leave 0 for none.'],
+  'reward-karma_change': ['Karma Change', 'Karma added (or subtracted, if negative) at this point. Drives karma-gated content and endings.'],
+  'reward-quests_started': ['Quests Started', 'Comma-separated quest IDs to begin here. The way most quests get handed out.'],
+  'reward-flags_cleared': ['Flags Cleared', 'Comma-separated flags to set FALSE here (the opposite of Flags Set). Used to re-arm repeatable conversations.'],
+  'reward-recruit_companion': ['Recruit Companion', 'NPC id to add to the player\'s party here. The NPC needs a combat profile to fight. They then follow the player.'],
+  'reward-dismiss_companion': ['Dismiss Companion', 'NPC id to remove from the party here.'],
+  'reward-end_game': ['End Game (ending id)', 'Type an ending id to roll the epilogue when the player passes this line (blank = no). Use "default" for the generic ending.'],
+  'reward-item_rewards': ['Item Rewards', 'Comma-separated "item_id:qty" pairs given here, e.g. "stimpak:2, ammo_9mm:30". Omit ":qty" for 1.'],
+  'reward-faction_rep_change': ['Faction Rep Change', 'Comma-separated "faction_id:±n" pairs, e.g. "the_council:10, iron_covenant:-5". (On_complete only.)'],
+  'choice-karma_value': ['Karma Value', 'For karma_min/karma_max conditions: the karma threshold. karma_min shows the choice when karma ≥ value; karma_max when karma ≤ value.'],
+  // Map extras
+  'actor-active_hours': ['Active Hours', 'Optional [from, to] hour window (0–23) when this actor is present. Wraps midnight (20→6 = night only). Blank = always present. Don\'t hide a quest-critical NPC behind unreachable hours.'],
+  'examine-skill_use': ['Skill-Use Action', 'Adds a "[Use Skill]" button to this examine spot — a repair/hack/etc. roll that grants rewards and sets a done-flag on success.'],
+  'skilluse-skill': ['Skill', 'Which skill is rolled against the difficulty (Tech to repair, Lockpick to crack, etc.).'],
+  'skilluse-done_flag': ['Done Flag', 'Flag set on success. Once set, the action is spent and the button is hidden so it can\'t be repeated.'],
+  // Endings
+  'slide-title': ['Slide Title', 'Heading shown on this epilogue slide.'],
+  'slide-always': ['Always Show', 'If checked, this slide always appears (no conditions). Use for the opening and closing narration that frames every ending.'],
+  'slide-flags_all': ['Flags All', 'Comma-separated flags that must ALL be set for this slide to appear.'],
+  'slide-karma_min': ['Karma Min', 'Slide shows only if the player\'s karma is at least this. Leave blank to ignore.'],
+  'slide-faction_rep': ['Faction Rep Min', 'Comma-separated "faction_id:n" — slide shows only if rep with each is at least n. Use for "ally" endings.'],
+  'slide-faction_rep_max': ['Faction Rep Max', 'Comma-separated "faction_id:n" — slide shows only if rep with each is at most n. Use for "enemy" endings.'],
 };
 
 function showHelp(key) {
@@ -332,6 +375,8 @@ function switchTab(tab) {
   renderList();
   // The manifest is a singleton — open it straight away rather than make the user click.
   if (tab === 'campaign') { selectItem('__manifest__'); return; }
+  // Endings is likewise a single file (slides list) — open it directly.
+  if (tab === 'endings') { selectItem('__endings__'); return; }
   document.getElementById('form-panel').innerHTML = '<div class="placeholder">Select an item from the left, or click &ldquo;+ Add New&rdquo;</div>';
 }
 
@@ -355,6 +400,8 @@ function getListItems() {
   switch (currentTab) {
     case 'campaign':
       return [{ id: '__manifest__', label: DB.manifest.name || 'Campaign Manifest', sub: DB.manifest.id }];
+    case 'endings':
+      return [{ id: '__endings__', label: 'Ending Slides', sub: (DB.endings.slides||[]).length + ' slide(s)' }];
     case 'world':
       return (DB.world.nodes||[]).map(n => ({ id: n.id, label: n.display_name || n.id, sub: n.type }));
     case 'maps':
@@ -404,6 +451,7 @@ function renderForm() {
     case 'npcs': panel.innerHTML = renderNpcForm(DB.npcs[selectedId]); break;
     case 'quests': panel.innerHTML = renderQuestForm(DB.quests[selectedId]); break;
     case 'dialogue': panel.innerHTML = renderDialogueTab(DB.npcs[selectedId]); break;
+    case 'endings': panel.innerHTML = renderEndingsForm(); break;
   }
   attachHelpListeners();
 }
@@ -527,6 +575,7 @@ function renderItemForm(item) {
   ${cat === 'weapons' ? renderWeaponFields(item) : ''}
   ${cat === 'armor' ? renderArmorFields(item) : ''}
   ${cat === 'consumables' ? renderConsumableFields(item) : ''}
+  ${cat === 'misc' ? renderMiscFields(item) : ''}
   <div style="margin-top:20px">
     <button class="btn-danger" onclick="deleteItem('${item.id}')">Delete Item</button>
   </div>`;
@@ -559,6 +608,29 @@ function renderWeaponFields(item) {
     </div>
     <div class="form-group"><label>Ammo Type</label>
       <input type="text" value="${esc(item.ammo_type||'')}" onchange="updateItem('${item.id}','ammo_type',this.value||null)">
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Burst (rounds/burst)</label>
+      <input type="number" min="0" value="${item.burst||0}" onchange="updateItem('${item.id}','burst',+this.value)" data-help="item-burst">
+    </div>
+    <div class="form-group"><label>Burst AP Cost</label>
+      <input type="number" min="0" value="${item.burst_ap_cost||0}" onchange="updateItem('${item.id}','burst_ap_cost',+this.value)" data-help="item-burst_ap_cost">
+    </div>
+  </div>`;
+}
+
+// Misc items double as ammo: dr_mod / dmg_mult tune how the weapon that fires them
+// performs against armour (matched by the weapon's ammo_type).
+function renderMiscFields(item) {
+  return `
+  <div class="form-section-header">Ammo Modifiers (optional — set on ammo items)</div>
+  <div class="form-row">
+    <div class="form-group"><label>DR Mod (− = armor-piercing)</label>
+      <input type="number" value="${item.dr_mod||0}" onchange="updateItem('${item.id}','dr_mod',+this.value)" data-help="item-dr_mod">
+    </div>
+    <div class="form-group"><label>Damage Mult (1.0 = normal)</label>
+      <input type="number" step="0.05" value="${item.dmg_mult||1}" onchange="updateItem('${item.id}','dmg_mult',+this.value)" data-help="item-dmg_mult">
     </div>
   </div>`;
 }
@@ -794,6 +866,26 @@ function renderQuestForm(quest) {
   <div class="form-group"><label>Summary</label>
     <textarea onchange="updateQuest('${quest.id}','summary',this.value)" data-help="quest-summary">${esc(quest.summary||'')}</textarea>
   </div>
+  <div class="form-section-header">Rewards on Full Completion (optional)</div>
+  <div class="form-row">
+    <div class="form-group"><label>XP Reward</label>
+      <input type="number" value="${quest.xp_reward||0}" onchange="updateQuestNum('${quest.id}','xp_reward',this.value)" data-help="quest-xp_reward">
+    </div>
+    <div class="form-group"><label>Caps Reward</label>
+      <input type="number" value="${quest.caps_reward||0}" onchange="updateQuestNum('${quest.id}','caps_reward',this.value)" data-help="quest-caps_reward">
+    </div>
+    <div class="form-group"><label>Karma Reward (± )</label>
+      <input type="number" value="${quest.karma_reward||0}" onchange="updateQuestNum('${quest.id}','karma_reward',this.value)" data-help="quest-karma_reward">
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group" style="flex:0;min-width:200px"><label>Ends Game on Complete</label>
+      <label><input type="checkbox" ${quest.ends_game?'checked':''} onchange="updateQuest('${quest.id}','ends_game',this.checked)" data-help="quest-ends_game"> roll the ending</label>
+    </div>
+    <div class="form-group" style="flex:2"><label>Ending ID (slide set to show)</label>
+      <input type="text" value="${esc(quest.ending_id||'')}" onchange="updateQuest('${quest.id}','ending_id',this.value)" data-help="quest-ending_id">
+    </div>
+  </div>
   <div class="form-section-header">Stages</div>
   ${stages.map((stage,si) => `
   <div style="background:#191919;border:1px solid #2a2a2a;padding:12px;margin-bottom:12px">
@@ -849,6 +941,12 @@ function renderQuestForm(quest) {
 }
 
 function updateQuest(id, key, val) { if (DB.quests[id]) DB.quests[id][key] = val; }
+// Numeric reward fields: drop the key when zeroed so untouched quests stay clean.
+function updateQuestNum(id, key, val) {
+  if (!DB.quests[id]) return;
+  const n = +val;
+  if (n) DB.quests[id][key] = n; else delete DB.quests[id][key];
+}
 function updateQuestId(oldId, newId) { DB.quests[newId] = DB.quests[oldId]; DB.quests[newId].id = newId; delete DB.quests[oldId]; selectedId = newId; renderList(); }
 function updateStage(qid, si, key, val) { DB.quests[qid].stages[si][key] = val; }
 function updateObjective(qid, si, oi, key, val) { DB.quests[qid].stages[si].objectives[oi][key] = val; }
@@ -925,6 +1023,7 @@ function renderConvoCard(npcId, convo, ci) {
               onchange="updateOnComplete('${npcId}',${ci},'relationship_change',+this.value)" data-help="on_complete-relationship">
           </div>
         </div>
+        ${rewardFieldsHTML(onComplete, `applyOnCompleteReward('${npcId}',${ci},`, true)}
       </div>
       <button class="btn-danger btn-small" style="margin-top:10px" onclick="removeConversation('${npcId}',${ci})">Remove Conversation</button>
     </div>
@@ -959,7 +1058,8 @@ function renderNodeCard(npcId, ci, nodeId, node, nodeOptions) {
     </div>
     <div class="form-group">
       <label><input type="checkbox" ${node.open_shop?'checked':''} onchange="updateNode('${npcId}',${ci},'${nodeId}','open_shop',this.checked)" data-help="node-open_shop"> Opens this NPC's trade/shop screen when the player continues past this line</label>
-    </div>` : `
+    </div>
+    ${rewardFieldsHTML(node, `applyNodeReward('${npcId}',${ci},'${nodeId}',`, false)}` : `
     <div style="margin-bottom:6px;color:#666;font-size:12px">${choices.length} choice(s):</div>
     ${choices.map((c,chi) => `
     <div class="choice-row">
@@ -969,7 +1069,7 @@ function renderNodeCard(npcId, ci, nodeId, node, nodeOptions) {
       <div class="form-row">
         <div class="form-group"><label>Condition Type</label>
           <select onchange="updateChoiceCondType('${npcId}',${ci},'${nodeId}',${chi},this.value)">
-            ${['none','skill_check','flag_required','flag_excluded','faction_rep_min'].map(t=>`<option ${(c.condition?c.condition.type:'none')===t?'selected':''}>${t}</option>`).join('')}
+            ${['none','skill_check','flag_required','flag_excluded','faction_rep_min','karma_min','karma_max'].map(t=>`<option ${(c.condition?c.condition.type:'none')===t?'selected':''}>${t}</option>`).join('')}
           </select>
         </div>
         ${c.condition?.type==='skill_check' ? `
@@ -989,6 +1089,17 @@ function renderNodeCard(npcId, ci, nodeId, node, nodeOptions) {
         ${(c.condition?.type==='flag_required'||c.condition?.type==='flag_excluded') ? `
         <div class="form-group"><label>Flag</label>
           <input type="text" value="${esc(c.condition.flag||'')}" onchange="updateChoiceCond('${npcId}',${ci},'${nodeId}',${chi},'flag',this.value)">
+        </div>` : ''}
+        ${c.condition?.type==='faction_rep_min' ? `
+        <div class="form-group"><label>Faction ID</label>
+          <input type="text" value="${esc(c.condition.faction||'')}" onchange="updateChoiceCond('${npcId}',${ci},'${nodeId}',${chi},'faction',this.value)">
+        </div>
+        <div class="form-group"><label>Min Rep</label>
+          <input type="number" value="${c.condition.value||0}" onchange="updateChoiceCond('${npcId}',${ci},'${nodeId}',${chi},'value',+this.value)">
+        </div>` : ''}
+        ${(c.condition?.type==='karma_min'||c.condition?.type==='karma_max') ? `
+        <div class="form-group"><label>Karma Value</label>
+          <input type="number" value="${c.condition.value||0}" onchange="updateChoiceCond('${npcId}',${ci},'${nodeId}',${chi},'value',+this.value)" data-help="choice-karma_value">
         </div>` : ''}
         <div class="form-group"><label>Next Node</label>
           <select onchange="updateChoice('${npcId}',${ci},'${nodeId}',${chi},'next',this.value==='END'?null:this.value)">
@@ -1076,6 +1187,160 @@ function removeConversation(npcId, ci) {
 }
 function ensureDialogue(npcId) {
   if (!DB.dialogues[npcId]) DB.dialogues[npcId] = {conversations:[]};
+}
+
+// ── Shared reward / effect block (works on any dialogue node OR an on_complete block) ──
+// `fn` is the leading part of the update call up to and including the trailing comma,
+// e.g. "applyNodeReward('ava',0,'node_001'," — the field key/value/kind get appended.
+function rewardFieldsHTML(block, fn, withFactionRep) {
+  const b = block || {};
+  const endGameVal = typeof b.end_game === 'string' ? b.end_game : (b.end_game ? 'default' : '');
+  return `
+  <div class="form-section-header" style="margin-top:8px">Rewards / Effects (optional)</div>
+  <div class="form-row">
+    <div class="form-group"><label>XP Reward</label>
+      <input type="number" value="${b.xp_reward||0}" onchange="${fn}'xp_reward',this.value,'num')" data-help="reward-xp_reward"></div>
+    <div class="form-group"><label>Caps Reward</label>
+      <input type="number" value="${b.caps_reward||0}" onchange="${fn}'caps_reward',this.value,'num')" data-help="reward-caps_reward"></div>
+    <div class="form-group"><label>Karma Change (±)</label>
+      <input type="number" value="${b.karma_change||0}" onchange="${fn}'karma_change',this.value,'num')" data-help="reward-karma_change"></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Quests Started (ids, comma-sep)</label>
+      <input type="text" value="${esc((b.quests_started||[]).join(','))}" onchange="${fn}'quests_started',this.value,'csv')" data-help="reward-quests_started"></div>
+    <div class="form-group"><label>Flags Cleared (set false, comma-sep)</label>
+      <input type="text" value="${esc((b.flags_cleared||[]).join(','))}" onchange="${fn}'flags_cleared',this.value,'csv')" data-help="reward-flags_cleared"></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Recruit Companion (npc id)</label>
+      <input type="text" value="${esc(b.recruit_companion||'')}" onchange="${fn}'recruit_companion',this.value,'str')" data-help="reward-recruit_companion"></div>
+    <div class="form-group"><label>Dismiss Companion (npc id)</label>
+      <input type="text" value="${esc(b.dismiss_companion||'')}" onchange="${fn}'dismiss_companion',this.value,'str')" data-help="reward-dismiss_companion"></div>
+    <div class="form-group"><label>End Game (ending id, blank = no)</label>
+      <input type="text" value="${esc(endGameVal)}" onchange="${fn}'end_game',this.value,'str')" data-help="reward-end_game"></div>
+  </div>
+  <div class="form-group"><label>Item Rewards (id:qty, comma-sep)</label>
+    <input type="text" value="${esc(itemRewardsToStr(b.item_rewards))}" onchange="${fn}'item_rewards',this.value,'items')" data-help="reward-item_rewards"></div>
+  ${withFactionRep ? `
+  <div class="form-group"><label>Faction Rep Change (id:±n, comma-sep)</label>
+    <input type="text" value="${esc(factionRepToStr(b.faction_rep_change))}" onchange="${fn}'faction_rep_change',this.value,'factionrep')" data-help="reward-faction_rep_change"></div>` : ''}`;
+}
+
+function applyNodeReward(npcId, ci, nodeId, key, valStr, kind) {
+  ensureDialogue(npcId);
+  const node = DB.dialogues[npcId].conversations[ci].nodes[nodeId];
+  if (node) applyRewardField(node, key, valStr, kind);
+}
+function applyOnCompleteReward(npcId, ci, key, valStr, kind) {
+  ensureDialogue(npcId);
+  const conv = DB.dialogues[npcId].conversations[ci];
+  if (!conv.on_complete) conv.on_complete = {};
+  applyRewardField(conv.on_complete, key, valStr, kind);
+}
+// Write a reward field onto a block, deleting it when emptied so JSON stays clean.
+function applyRewardField(block, key, valStr, kind) {
+  if (kind === 'num') { const n = +valStr; if (n) block[key] = n; else delete block[key]; }
+  else if (kind === 'str') { const s = String(valStr).trim(); if (s) block[key] = s; else delete block[key]; }
+  else if (kind === 'csv') { const a = String(valStr).split(',').map(s=>s.trim()).filter(Boolean); if (a.length) block[key] = a; else delete block[key]; }
+  else if (kind === 'items') { const a = parseItemRewards(valStr); if (a.length) block[key] = a; else delete block[key]; }
+  else if (kind === 'factionrep') { const o = parseFactionRep(valStr); if (Object.keys(o).length) block[key] = o; else delete block[key]; }
+}
+function itemRewardsToStr(arr) { return (arr||[]).map(r => `${r.item_id}:${r.quantity||1}`).join(','); }
+function parseItemRewards(str) {
+  return String(str).split(',').map(s=>s.trim()).filter(Boolean).map(tok => {
+    const parts = tok.split(':').map(x=>x.trim());
+    return { item_id: parts[0], quantity: parts[1] ? +parts[1] : 1 };
+  });
+}
+function factionRepToStr(obj) { return Object.entries(obj||{}).map(([k,v]) => `${k}:${v}`).join(','); }
+function parseFactionRep(str) {
+  const o = {};
+  String(str).split(',').map(s=>s.trim()).filter(Boolean).forEach(tok => {
+    const parts = tok.split(':').map(x=>x.trim());
+    if (parts[0]) o[parts[0]] = +parts[1] || 0;
+  });
+  return o;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  ENDINGS (endings/endings.json) — epilogue slideshow
+// ═══════════════════════════════════════════════════════════════
+function renderEndingsForm() {
+  const slides = DB.endings.slides || (DB.endings.slides = []);
+  return `
+  <h2>ENDINGS — Epilogue Slides</h2>
+  <p style="color:#666;font-size:12px;margin-bottom:16px">Shown in order at game end (triggered by a quest's "Ends Game" or a dialogue "End Game"). Each slide displays only if its conditions pass — mark intro/outro slides "Always Show".</p>
+  ${slides.map((s,i) => renderSlideCard(s,i)).join('')}
+  <button class="btn-primary" onclick="addSlide()">+ Add Slide</button>`;
+}
+
+function renderSlideCard(s, i) {
+  const c = s.conditions || {};
+  return `
+  <div style="background:#191919;border:1px solid #2a2a2a;padding:12px;margin-bottom:12px">
+    <div class="form-row">
+      <div class="form-group"><label>Slide ID</label>
+        <input value="${esc(s.id||'')}" onchange="updateSlide(${i},'id',this.value)"></div>
+      <div class="form-group" style="flex:2"><label>Title</label>
+        <input value="${esc(s.title||'')}" onchange="updateSlide(${i},'title',this.value)" data-help="slide-title"></div>
+      <div class="form-group" style="flex:0;min-width:110px"><label>Always Show</label>
+        <label><input type="checkbox" ${s.always?'checked':''} onchange="updateSlideAlways(${i},this.checked)" data-help="slide-always"> always</label></div>
+    </div>
+    <div class="form-group"><label>Text</label>
+      <textarea onchange="updateSlide(${i},'text',this.value)">${esc(s.text||'')}</textarea></div>
+    ${s.always ? '' : `
+    <div class="form-section-header">Conditions (all must pass to show)</div>
+    <div class="form-row">
+      <div class="form-group"><label>Flags All (comma-sep)</label>
+        <input value="${esc((c.flags_all||[]).join(','))}" onchange="updateSlideCond(${i},'flags_all',this.value,'csv')" data-help="slide-flags_all"></div>
+      <div class="form-group"><label>Flags Excluded (comma-sep)</label>
+        <input value="${esc((c.flags_excluded||[]).join(','))}" onchange="updateSlideCond(${i},'flags_excluded',this.value,'csv')"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group" style="flex:0"><label>Karma Min</label>
+        <input type="number" value="${c.karma_min??''}" onchange="updateSlideCond(${i},'karma_min',this.value,'num')" data-help="slide-karma_min"></div>
+      <div class="form-group" style="flex:0"><label>Karma Max</label>
+        <input type="number" value="${c.karma_max??''}" onchange="updateSlideCond(${i},'karma_max',this.value,'num')"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Faction Rep Min (id:n, comma-sep)</label>
+        <input value="${esc(factionRepToStr(c.faction_rep))}" onchange="updateSlideCond(${i},'faction_rep',this.value,'factionrep')" data-help="slide-faction_rep"></div>
+      <div class="form-group"><label>Faction Rep Max (id:n, comma-sep)</label>
+        <input value="${esc(factionRepToStr(c.faction_rep_max))}" onchange="updateSlideCond(${i},'faction_rep_max',this.value,'factionrep')" data-help="slide-faction_rep_max"></div>
+    </div>`}
+    <div style="margin-top:8px;display:flex;gap:6px">
+      <button class="btn-small" onclick="moveSlide(${i},-1)">↑ Up</button>
+      <button class="btn-small" onclick="moveSlide(${i},1)">↓ Down</button>
+      <button class="btn-danger btn-small" onclick="removeSlide(${i})">Remove Slide</button>
+    </div>
+  </div>`;
+}
+
+function updateSlide(i, key, val) { DB.endings.slides[i][key] = val; }
+function updateSlideAlways(i, on) {
+  const s = DB.endings.slides[i];
+  if (on) { s.always = true; delete s.conditions; } else { delete s.always; }
+  renderForm();
+}
+function updateSlideCond(i, key, valStr, kind) {
+  const s = DB.endings.slides[i];
+  if (!s.conditions) s.conditions = {};
+  const c = s.conditions;
+  if (kind === 'csv') { const a = valStr.split(',').map(x=>x.trim()).filter(Boolean); if (a.length) c[key]=a; else delete c[key]; }
+  else if (kind === 'num') { if (String(valStr).trim()==='') delete c[key]; else c[key] = +valStr; }
+  else if (kind === 'factionrep') { const o = parseFactionRep(valStr); if (Object.keys(o).length) c[key]=o; else delete c[key]; }
+  if (Object.keys(c).length === 0) delete s.conditions;
+}
+function addSlide() {
+  DB.endings.slides.push({ id:'slide_'+(DB.endings.slides.length+1), title:'', text:'' });
+  renderList(); renderForm();
+}
+function removeSlide(i) { DB.endings.slides.splice(i,1); renderList(); renderForm(); }
+function moveSlide(i, dir) {
+  const a = DB.endings.slides, j = i+dir;
+  if (j < 0 || j >= a.length) return;
+  [a[i], a[j]] = [a[j], a[i]];
+  renderForm();
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1354,6 +1619,11 @@ function renderMapEntities(map) {
         <div class="form-group" style="flex:0"><label>r</label><input type="number" value="${a.r}" onchange="updateMapEntity('${map.id}','actors',${i},'r',+this.value)"></div>
       </div>
       ${a.type==='enemy'?`<div class="form-group"><label>Dead Flag (set when killed)</label><input value="${esc(a.dead_flag||'')}" onchange="updateMapEntity('${map.id}','actors',${i},'dead_flag',this.value)"></div>`:''}
+      <div class="form-row">
+        <div class="form-group" style="flex:0"><label>Active From (hr)</label><input type="number" min="0" max="23" value="${a.active_hours?a.active_hours[0]:''}" onchange="updateActiveHours('${map.id}',${i},0,this.value)" data-help="actor-active_hours"></div>
+        <div class="form-group" style="flex:0"><label>Active To (hr)</label><input type="number" min="0" max="23" value="${a.active_hours?a.active_hours[1]:''}" onchange="updateActiveHours('${map.id}',${i},1,this.value)"></div>
+        <div class="form-group"><label style="color:#666;font-size:11px;text-transform:none">Blank = always present. Wraps midnight (e.g. 20 → 6 = night only).</label></div>
+      </div>
     </div>`).join('');
   const containers = (map.containers||[]).map((c,i) => `
     <div class="ent-row">
@@ -1387,6 +1657,8 @@ function renderMapEntities(map) {
         <div class="form-group" style="flex:0"><label>r</label><input type="number" value="${e.r}" onchange="updateMapEntity('${map.id}','examine_spots',${i},'r',+this.value)"></div>
       </div>
       <div class="form-group"><label>Text</label><textarea onchange="updateMapEntity('${map.id}','examine_spots',${i},'text',this.value)">${esc(e.text||'')}</textarea></div>
+      <div class="form-group"><label><input type="checkbox" ${e.skill_use?'checked':''} onchange="toggleSkillUse('${map.id}',${i},this.checked)" data-help="examine-skill_use"> Has a skill-use action (repair / hack / etc.)</label></div>
+      ${e.skill_use ? renderSkillUse(map.id, i, e.skill_use) : ''}
     </div>`).join('');
   const exits = (map.exit_zones||[]).map((x,i) => `
     <div class="ent-row">
@@ -1485,6 +1757,66 @@ function addLoot(id, ci) { const c = DB.maps[id].containers[ci]; (c.loot_table||
 function updateLoot(id, ci, li, key, val) { DB.maps[id].containers[ci].loot_table[li][key] = val; }
 function removeLoot(id, ci, li) { DB.maps[id].containers[ci].loot_table.splice(li,1); renderForm(); }
 
+// Actor day/night schedule: [start_hr, end_hr], wraps midnight. Clearing either end
+// removes the gate so the actor is always present.
+function updateActiveHours(mapId, i, idx, val) {
+  const a = DB.maps[mapId].actors[i];
+  if (val === '') { delete a.active_hours; return; }
+  const arr = a.active_hours ? a.active_hours.slice() : [6, 22];
+  arr[idx] = +val;
+  a.active_hours = arr;
+}
+
+// Examine-spot skill check (repair/hack/etc.): success applies rewards + sets done_flag.
+function renderSkillUse(mapId, i, su) {
+  const s = su.success || (su.success = {});
+  const f = su.fail || (su.fail = {});
+  const fn = `updateSkillUse('${mapId}',${i},`;
+  const sfn = `updateSkillSuccess('${mapId}',${i},`;
+  const skills = ['speech','intimidate','barter','medicine','lockpick','tech','stealth','guns','melee'];
+  return `
+  <div style="border-left:2px solid #3a3a2a;padding-left:10px;margin:6px 0 10px">
+    <div class="form-row">
+      <div class="form-group"><label>Skill</label>
+        <select onchange="${fn}'skill',this.value)" data-help="skilluse-skill">
+          ${skills.map(sk=>`<option ${su.skill===sk?'selected':''}>${sk}</option>`).join('')}</select></div>
+      <div class="form-group" style="flex:0"><label>Difficulty</label><input type="number" value="${su.difficulty||40}" onchange="${fn}'difficulty',+this.value)"></div>
+      <div class="form-group"><label>Done Flag</label><input value="${esc(su.done_flag||'')}" onchange="${fn}'done_flag',this.value)" data-help="skilluse-done_flag"></div>
+    </div>
+    <div class="form-group"><label>Prompt (button label)</label><input value="${esc(su.prompt||'')}" onchange="${fn}'prompt',this.value)"></div>
+    <div class="form-group"><label>Success Text</label><textarea onchange="${sfn}'text',this.value,'str')">${esc(s.text||'')}</textarea></div>
+    <div class="form-row">
+      <div class="form-group" style="flex:0"><label>Success XP</label><input type="number" value="${s.xp_reward||0}" onchange="${sfn}'xp_reward',this.value,'num')"></div>
+      <div class="form-group" style="flex:0"><label>Success Caps</label><input type="number" value="${s.caps_reward||0}" onchange="${sfn}'caps_reward',this.value,'num')"></div>
+      <div class="form-group" style="flex:0"><label>Success Karma (±)</label><input type="number" value="${s.karma_change||0}" onchange="${sfn}'karma_change',this.value,'num')"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Success Flags Set (comma-sep)</label><input value="${esc((s.flags_set||[]).join(','))}" onchange="${sfn}'flags_set',this.value,'csv')"></div>
+      <div class="form-group"><label>Success Item Rewards (id:qty)</label><input value="${esc(itemRewardsToStr(s.item_rewards))}" onchange="${sfn}'item_rewards',this.value,'items')"></div>
+    </div>
+    <div class="form-group"><label>Fail Text</label><textarea onchange="updateSkillFail('${mapId}',${i},this.value)">${esc(f.text||'')}</textarea></div>
+  </div>`;
+}
+function toggleSkillUse(mapId, i, on) {
+  const e = DB.maps[mapId].examine_spots[i];
+  if (on) e.skill_use = e.skill_use || {skill:'tech',difficulty:40,prompt:'',done_flag:'',success:{text:''},fail:{text:''}};
+  else delete e.skill_use;
+  renderForm();
+}
+function updateSkillUse(mapId, i, key, val) {
+  const su = DB.maps[mapId].examine_spots[i].skill_use; if (su) su[key] = val;
+}
+function updateSkillSuccess(mapId, i, key, valStr, kind) {
+  const su = DB.maps[mapId].examine_spots[i].skill_use; if (!su) return;
+  if (!su.success) su.success = {};
+  applyRewardField(su.success, key, valStr, kind);
+}
+function updateSkillFail(mapId, i, val) {
+  const su = DB.maps[mapId].examine_spots[i].skill_use; if (!su) return;
+  if (!su.fail) su.fail = {};
+  if (val.trim()) su.fail.text = val; else delete su.fail.text;
+}
+
 // ═══════════════════════════════════════════════════════════════
 //  PERKS & TRAITS (perks/perks.json, traits/traits.json)
 // ═══════════════════════════════════════════════════════════════
@@ -1569,6 +1901,7 @@ function removeEffect(kind, id, i) { carrierStore(kind)[id].effects.splice(i,1);
 // ═══════════════════════════════════════════════════════════════
 function addItem() {
   if (currentTab === 'campaign') { alert('The campaign manifest is a single file — edit it directly.'); return; }
+  if (currentTab === 'endings') { addSlide(); return; }
   const id = prompt('Enter a unique ID (lowercase, underscores):');
   if (!id || !id.trim()) return;
   const cleanId = id.trim().replace(/\s+/g,'_').toLowerCase();
@@ -1646,6 +1979,7 @@ function importJSON() { document.getElementById('file-input').click(); }
 function handleImport(event) {
   const files = Array.from(event.target.files || []);
   if (!files.length) return;
+  detachFolder();  // read-only import — not the writable folder
   let done = 0, names = [];
   files.forEach(file => {
     const reader = new FileReader();
@@ -1665,6 +1999,7 @@ function importOne(data, filename) {
   // before the manifest (whose player_start carries stats/location/inventory).
   if (Array.isArray(data.terrain)) { DB.maps[data.id] = data; }      // local_map
   else if (Array.isArray(data.nodes)) { DB.world = data; }           // world.json
+  else if (Array.isArray(data.slides)) { DB.endings = data; }        // endings.json
   else if (data.player_start) {                  // campaign.json manifest
     DB.manifest = data;
     campaignId = (data.id || 'my_game').trim();
@@ -1692,7 +2027,7 @@ function resetDB() {
     default_unarmed_weapon:'' };
   DB.factions = {}; DB.items = { weapons:[], armor:[], consumables:[], misc:[] };
   DB.locations = {}; DB.maps = {}; DB.npcs = {}; DB.dialogues = {}; DB.quests = {};
-  DB.perks = {}; DB.traits = {}; DB.world = { nodes: [] };
+  DB.perks = {}; DB.traits = {}; DB.world = { nodes: [] }; DB.endings = { slides: [] };
 }
 
 // Import an entire campaign folder at once (Chromium/Edge/Firefox support webkitdirectory).
@@ -1704,6 +2039,7 @@ function handleFolderImport(event) {
   if (!confirm(`Import ${files.length} JSON file(s) as a campaign?\nThis REPLACES the editor's current contents.`)) return;
   Promise.all(files.map(f => f.text().then(txt => ({ name: f.name, path: f.webkitRelativePath || f.name, txt }))))
     .then(entries => {
+      detachFolder();  // read-only import — not the writable folder
       resetDB();
       const problems = [];
       for (const e of entries) {
@@ -1721,39 +2057,176 @@ function handleFolderImport(event) {
     });
 }
 
-function exportAll() {
-  const root = `campaigns/${campaignId}`;
+// Detach the writable folder (after a read-only import / localStorage load) so "Save to Folder"
+// can't overwrite an unrelated folder with mismatched content.
+function detachFolder() {
+  dirHandle = null; loadedPaths = new Set();
+  const btn = document.getElementById('save-folder-btn'); if (btn) btn.style.display = 'none';
+}
+
+// ── File System Access API: open a folder you can edit AND save back to (Chrome/Edge). ──
+// Recursively read every .json under a directory handle, returning [{name, path, txt}].
+async function readDirJson(handle, prefix='') {
+  const out = [];
+  for await (const [name, child] of handle.entries()) {
+    const path = prefix ? prefix + '/' + name : name;
+    if (child.kind === 'directory') out.push(...await readDirJson(child, path));
+    else if (name.endsWith('.json')) out.push({ name, path, txt: await (await child.getFile()).text() });
+  }
+  return out;
+}
+
+// Write a string to relPath inside a directory handle, creating intermediate folders as needed.
+async function writeFileToDir(handle, relPath, contents) {
+  const parts = relPath.split('/');
+  const fileName = parts.pop();
+  let dir = handle;
+  for (const part of parts) dir = await dir.getDirectoryHandle(part, { create: true });
+  const fh = await dir.getFileHandle(fileName, { create: true });
+  const w = await fh.createWritable();
+  await w.write(contents);
+  await w.close();
+}
+
+// Delete relPath inside a directory handle (best-effort; ignores missing files).
+async function deleteFileInDir(handle, relPath) {
+  const parts = relPath.split('/');
+  const fileName = parts.pop();
+  let dir = handle;
+  try {
+    for (const part of parts) dir = await dir.getDirectoryHandle(part);
+    await dir.removeEntry(fileName);
+  } catch (e) { /* already gone */ }
+}
+
+async function openFolder() {
+  if (!window.showDirectoryPicker) {
+    alert('This browser can\'t open folders for editing. Use Chrome or Edge for "Open Folder", or use "Import Folder" (read-only) + "Export .zip" in any browser.');
+    return;
+  }
+  let handle;
+  try { handle = await window.showDirectoryPicker({ mode: 'readwrite' }); }
+  catch (e) { return; } // user cancelled
+  const entries = await readDirJson(handle);
+  if (!entries.some(e => e.name === 'campaign.json')) {
+    if (!confirm('No campaign.json found at the top of that folder.\nPick the campaign folder itself (the one directly containing campaign.json). Continue anyway?')) return;
+  }
+  resetDB();
+  const problems = [];
+  for (const e of entries) {
+    try { importOne(JSON.parse(e.txt), e.name); }
+    catch (err) { problems.push(`${e.path} — ${err.message}`); }
+  }
+  dirHandle = handle;
+  loadedPaths = new Set(entries.map(e => e.path));
+  if (DB.manifest && DB.manifest.id) { campaignId = DB.manifest.id; document.getElementById('campaign-id').value = campaignId; }
+  document.getElementById('save-folder-btn').style.display = '';
+  renderList();
+  switchTab('campaign');
+  alert(`Opened "${handle.name}" for editing — ${entries.length - problems.length}/${entries.length} files loaded.\n\nUse "Save to Folder" to overwrite this folder with your changes.`
+    + (problems.length ? `\n\nSkipped:\n${problems.join('\n')}` : ''));
+}
+
+async function saveToFolder() {
+  if (!dirHandle) { alert('No folder is open. Use "Open Folder" first (Chrome/Edge), or "Export .zip" in any browser.'); return; }
+  // Re-confirm we still have write permission (it can lapse between sessions).
+  if (dirHandle.queryPermission && await dirHandle.queryPermission({ mode: 'readwrite' }) !== 'granted') {
+    if (await dirHandle.requestPermission({ mode: 'readwrite' }) !== 'granted') { alert('Write permission denied.'); return; }
+  }
+  const files = buildCampaignFiles('');  // write relative to the opened campaign folder
+  const newPaths = new Set(Object.keys(files));
+  if (!confirm(`Overwrite "${dirHandle.name}" with the editor's current contents?\n${newPaths.size} files will be written.`)) return;
+  try {
+    for (const path of newPaths) await writeFileToDir(dirHandle, path, files[path]);
+    // Remove .json files that existed when we opened the folder but are gone now.
+    let removed = 0;
+    for (const old of loadedPaths) if (!newPaths.has(old)) { await deleteFileInDir(dirHandle, old); removed++; }
+    loadedPaths = newPaths;
+    alert(`Saved to "${dirHandle.name}" — ${newPaths.size} files written` + (removed ? `, ${removed} stale file(s) removed.` : '.'));
+  } catch (e) {
+    alert('Save failed: ' + e.message);
+  }
+}
+
+// Build the campaign's files as a { path: jsonString } map. `prefix` is prepended to every
+// path: use "campaigns/<id>/" for a zip export, or "" to write straight into an opened folder.
+function buildCampaignFiles(prefix) {
   const files = {};
   const J = o => JSON.stringify(o, null, '\t');
+  const p = path => prefix + path;
 
-  files[`${root}/campaign.json`] = J(DB.manifest);
-  if ((DB.world.nodes||[]).length) files[`${root}/world.json`] = J(DB.world);
-  Object.values(DB.factions).forEach(f => { files[`${root}/factions/${f.id}.json`] = J(f); });
-  Object.values(DB.locations).forEach(l => { files[`${root}/locations/${l.id}.json`] = J(l); });
-  Object.values(DB.maps).forEach(m => { ensureMapShape(m); files[`${root}/local_maps/${m.id}.json`] = J(m); });
-  Object.values(DB.npcs).forEach(n => { files[`${root}/npcs/${n.id}.json`] = J(n); });
-  Object.keys(DB.dialogues).forEach(npcId => { files[`${root}/npcs/dialogues/${npcId}.json`] = J(DB.dialogues[npcId]); });
-  Object.values(DB.quests).forEach(q => { files[`${root}/quests/${q.id}.json`] = J(q); });
-  files[`${root}/items/weapons.json`] = J({weapons: DB.items.weapons});
-  files[`${root}/items/armor.json`] = J({armor: DB.items.armor});
-  files[`${root}/items/consumables.json`] = J({consumables: DB.items.consumables});
-  files[`${root}/items/misc.json`] = J({misc: DB.items.misc});
-  files[`${root}/perks/perks.json`] = J({perks: Object.values(DB.perks)});
-  files[`${root}/traits/traits.json`] = J({traits: Object.values(DB.traits)});
+  files[p('campaign.json')] = J(DB.manifest);
+  if ((DB.world.nodes||[]).length) files[p('world.json')] = J(DB.world);
+  Object.values(DB.factions).forEach(f => { files[p(`factions/${f.id}.json`)] = J(f); });
+  Object.values(DB.locations).forEach(l => { files[p(`locations/${l.id}.json`)] = J(l); });
+  Object.values(DB.maps).forEach(m => { ensureMapShape(m); files[p(`local_maps/${m.id}.json`)] = J(m); });
+  Object.values(DB.npcs).forEach(n => { files[p(`npcs/${n.id}.json`)] = J(n); });
+  Object.keys(DB.dialogues).forEach(npcId => { files[p(`npcs/dialogues/${npcId}.json`)] = J(DB.dialogues[npcId]); });
+  Object.values(DB.quests).forEach(q => { files[p(`quests/${q.id}.json`)] = J(q); });
+  files[p('items/weapons.json')] = J({weapons: DB.items.weapons});
+  files[p('items/armor.json')] = J({armor: DB.items.armor});
+  files[p('items/consumables.json')] = J({consumables: DB.items.consumables});
+  files[p('items/misc.json')] = J({misc: DB.items.misc});
+  files[p('perks/perks.json')] = J({perks: Object.values(DB.perks)});
+  files[p('traits/traits.json')] = J({traits: Object.values(DB.traits)});
+  if ((DB.endings.slides||[]).length) files[p('endings/endings.json')] = J(DB.endings);
+  return files;
+}
 
-  const bundle = {_export_info: `ETT campaign export for "${campaignId}". Each key under "files" is a path; write its string value to that path in your project, then put "${campaignId}" in campaigns/active.txt.`, files};
-  const blob = new Blob([JSON.stringify(bundle, null, '\t')], {type: 'application/json'});
+// ── Minimal store-only (uncompressed) ZIP writer — no dependencies, works offline. ──
+const _crcTable = (() => { const t = new Uint32Array(256);
+  for (let n=0;n<256;n++){ let c=n; for (let k=0;k<8;k++) c = c&1 ? 0xEDB88320 ^ (c>>>1) : c>>>1; t[n]=c>>>0; } return t; })();
+function _crc32(bytes){ let crc = 0xFFFFFFFF; for (let i=0;i<bytes.length;i++) crc = (crc>>>8) ^ _crcTable[(crc ^ bytes[i]) & 0xFF]; return (crc ^ 0xFFFFFFFF) >>> 0; }
+
+// files: { path: stringContent } → Blob of a valid .zip archive.
+function makeZipBlob(files) {
+  const enc = new TextEncoder();
+  const chunks = [], central = [];
+  let offset = 0;
+  for (const path of Object.keys(files)) {
+    const nameBytes = enc.encode(path);
+    const data = enc.encode(files[path]);
+    const crc = _crc32(data);
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true);
+    lh.setUint16(8, 0, true); lh.setUint16(10, 0, true); lh.setUint16(12, 0x21, true);
+    lh.setUint32(14, crc, true); lh.setUint32(18, data.length, true); lh.setUint32(22, data.length, true);
+    lh.setUint16(26, nameBytes.length, true); lh.setUint16(28, 0, true);
+    chunks.push(new Uint8Array(lh.buffer), nameBytes, data);
+    const ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true);
+    ch.setUint16(8, 0x0800, true); ch.setUint16(10, 0, true); ch.setUint16(12, 0, true); ch.setUint16(14, 0x21, true);
+    ch.setUint32(16, crc, true); ch.setUint32(20, data.length, true); ch.setUint32(24, data.length, true);
+    ch.setUint16(28, nameBytes.length, true); ch.setUint16(30, 0, true); ch.setUint16(32, 0, true);
+    ch.setUint16(34, 0, true); ch.setUint16(36, 0, true); ch.setUint32(38, 0, true); ch.setUint32(42, offset, true);
+    central.push(new Uint8Array(ch.buffer), nameBytes);
+    offset += 30 + nameBytes.length + data.length;
+  }
+  const cdStart = offset; let cdSize = 0;
+  for (const c of central) { chunks.push(c); cdSize += c.length; }
+  const eocd = new DataView(new ArrayBuffer(22));
+  eocd.setUint32(0, 0x06054b50, true);
+  eocd.setUint16(8, Object.keys(files).length, true); eocd.setUint16(10, Object.keys(files).length, true);
+  eocd.setUint32(12, cdSize, true); eocd.setUint32(16, cdStart, true);
+  chunks.push(new Uint8Array(eocd.buffer));
+  return new Blob(chunks, {type: 'application/zip'});
+}
+
+function exportAll() {
+  const files = buildCampaignFiles(`campaigns/${campaignId}/`);
+  const blob = makeZipBlob(files);
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `${campaignId}_export_` + new Date().toISOString().slice(0,10) + '.json';
+  a.download = `${campaignId}_` + new Date().toISOString().slice(0,10) + '.zip';
   a.click();
   URL.revokeObjectURL(url);
-  alert(`Exported campaign "${campaignId}" — ${Object.keys(files).length} files in the bundle.\n\nTo use: open the downloaded file and write each entry under "files" to its path in your project, then set campaigns/active.txt to "${campaignId}".`);
+  alert(`Exported "${campaignId}" as a .zip (${Object.keys(files).length} files).\n\n`
+    + `Extract it into your project so you get the "campaigns/${campaignId}/" folder, then put "${campaignId}" in campaigns/active.txt.`);
 }
 
 function saveToLocal() {
-  const snapshot = JSON.stringify({campaignId, manifest:DB.manifest, world:DB.world, factions:DB.factions, items:DB.items, locations:DB.locations, maps:DB.maps, npcs:DB.npcs, dialogues:DB.dialogues, quests:DB.quests, perks:DB.perks, traits:DB.traits});
+  const snapshot = JSON.stringify({campaignId, manifest:DB.manifest, world:DB.world, factions:DB.factions, items:DB.items, locations:DB.locations, maps:DB.maps, npcs:DB.npcs, dialogues:DB.dialogues, quests:DB.quests, perks:DB.perks, traits:DB.traits, endings:DB.endings});
   localStorage.setItem('ett_editor_data', snapshot);
   alert('Saved to browser storage. Your work will persist if you reopen this file in the same browser.');
 }
@@ -1762,6 +2235,7 @@ function loadFromLocal() {
   const saved = localStorage.getItem('ett_editor_data');
   if (!saved) { alert('No saved data found.'); return; }
   try {
+    detachFolder();  // browser-storage load isn't tied to the writable folder
     restoreSnapshot(JSON.parse(saved));
     renderList();
     document.getElementById('form-panel').innerHTML = '<div class="placeholder">Data loaded from local storage.</div>';
@@ -1773,7 +2247,7 @@ function loadFromLocal() {
 // pollute DB, and tolerating older snapshots that lack the newer collections.
 function restoreSnapshot(data) {
   if (data.campaignId) { campaignId = data.campaignId; const el = document.getElementById('campaign-id'); if (el) el.value = campaignId; }
-  ['manifest','world','factions','items','locations','maps','npcs','dialogues','quests','perks','traits'].forEach(k => {
+  ['manifest','world','factions','items','locations','maps','npcs','dialogues','quests','perks','traits','endings'].forEach(k => {
     if (data[k] !== undefined) DB[k] = data[k];
   });
 }

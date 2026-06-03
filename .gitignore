@@ -1,0 +1,9 @@
+# Claude Code local/harness state (local permissions, agent worktrees, locks)
+.claude/
+
+# Node dependencies (reconstructable from package.json / package-lock.json)
+node_modules/
+
+# OS junk
+Thumbs.db
+.DS_Store

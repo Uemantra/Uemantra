@@ -1,0 +1,15 @@
+{
+	"armor": [
+		{
+			"id": "worn_clothes",
+			"name": "Worn Clothes",
+			"type": "armor",
+			"subtype": "light",
+			"description": "The clothes on your back. Better than nothing, barely.",
+			"weight": 1.0,
+			"value": 5,
+			"defense_bonus": 0,
+			"evasion_mod": 0
+		}
+	]
+}

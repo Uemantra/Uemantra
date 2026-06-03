@@ -37,7 +37,7 @@ horizontal_alignment = 1
 [node name="Subtitle" type="Label" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2
 text = "a post-apocalyptic tactical RPG"
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 20
 theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
 horizontal_alignment = 1
 
@@ -49,16 +49,16 @@ custom_minimum_size = Vector2(0, 20)
 layout_mode = 2
 text = "NEW GAME"
 custom_minimum_size = Vector2(0, 48)
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 22
 
 [node name="ContinueButton" type="Button" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2
 text = "CONTINUE"
 custom_minimum_size = Vector2(0, 48)
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 22
 
 [node name="QuitButton" type="Button" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2
 text = "QUIT"
 custom_minimum_size = Vector2(0, 48)
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 22

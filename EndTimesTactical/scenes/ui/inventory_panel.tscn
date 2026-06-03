@@ -21,13 +21,13 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 text = "INVENTORY"
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 26
 theme_override_colors/font_color = Color(0.9, 0.8, 0.4, 1)
 
 [node name="CapsLabel" type="Label" parent="Contents/TitleRow"]
 layout_mode = 2
 text = "Caps: 50"
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 20
 theme_override_colors/font_color = Color(0.8, 0.7, 0.2, 1)
 
 [node name="CloseBtn" type="Button" parent="Contents/TitleRow"]
@@ -48,5 +48,5 @@ theme_override_constants/separation = 4
 [node name="StatsLabel" type="Label" parent="Contents"]
 layout_mode = 2
 text = "Weight: 0.0 / 55.0 kg"
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 17
 theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)

@@ -184,6 +184,11 @@ const HELP = {
   'npc-stats-nerve': ['Nerve', 'Affects Intimidate and Guns accuracy. Coolness under fire and aggressive precision.'],
   'npc-stats-presence': ['Presence', 'Affects Barter and Speech (secondary). Charm and force of personality.'],
   'npc-has_combat': ['Has Combat Profile', 'Check this if the NPC can appear in tactical combat. If unchecked, they are dialogue-only.'],
+  'npc-vendor': ['Vendor / Shop', 'Check this if the NPC can buy and sell with the player. You also need a dialogue line marked "Opens trade/shop" so the player can reach the shop.'],
+  'vendor-sells': ['Items For Sale', 'Comma-separated item IDs this NPC stocks (e.g. stimpak, ammo_9mm). The player buys these at base value × markup.'],
+  'vendor-markup': ['Price Markup', 'Multiplier on base item value for buying. 1.0 = base price, 1.25 = 25% more expensive. Players always sell back at half base value.'],
+  'vendor-buys': ['Buys From Player', 'If checked, the player can sell their own items here. If unchecked, the shop is buy-only.'],
+  'node-open_shop': ['Opens Trade/Shop', 'When the player continues past this NPC line, the conversation ends and this NPC\'s shop opens. The NPC must have a Vendor profile set.'],
   // Location
   'location-name': ['Location Name', 'The display name shown on the world map and in the location header.'],
   'location-type': ['Type', '"settlement" = safe hub. "hostile_zone" = combat likely. "dungeon" = structured dungeon encounter.'],
@@ -577,6 +582,8 @@ function renderNpcForm(npc) {
   const stats = npc.stats || {grit:5,reflex:5,mind:5,body:5,nerve:5,presence:5};
   const cp = npc.combat_profile || {};
   const hasCombat = npc.combat_profile !== null && npc.combat_profile !== undefined;
+  const vendor = npc.vendor || {};
+  const hasVendor = npc.vendor !== null && npc.vendor !== undefined;
   return `
   <h2>NPC</h2>
   <div class="form-row">
@@ -631,6 +638,23 @@ function renderNpcForm(npc) {
       <input type="text" value="${esc(cp.armor_id||'')}" onchange="updateNpcCombat('${npc.id}','armor_id',this.value)">
     </div>
   </div>` : ''}
+  <div class="form-section-header">Vendor / Shop</div>
+  <div class="form-group">
+    <label><input type="checkbox" ${hasVendor?'checked':''} onchange="toggleVendor('${npc.id}',this.checked)" data-help="npc-vendor"> This NPC can trade with the player</label>
+  </div>
+  ${hasVendor ? `
+  <div class="form-group"><label>Items For Sale (comma-separated item IDs)</label>
+    <input type="text" value="${esc((vendor.sells||[]).join(','))}" onchange="updateNpcVendor('${npc.id}','sells',this.value.split(',').map(s=>s.trim()).filter(Boolean))" data-help="vendor-sells">
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Price Markup (1.0 = base value)</label>
+      <input type="number" step="0.05" value="${vendor.markup??1.0}" onchange="updateNpcVendor('${npc.id}','markup',+this.value)" data-help="vendor-markup">
+    </div>
+    <div class="form-group">
+      <label><input type="checkbox" ${vendor.buys!==false?'checked':''} onchange="updateNpcVendor('${npc.id}','buys',this.checked)" data-help="vendor-buys"> Buys items from the player</label>
+    </div>
+  </div>
+  <p style="color:#666;font-size:12px">To open this shop, give one of the NPC's dialogue lines the "Opens trade/shop" option on the Dialogue tab.</p>` : ''}
   <div style="margin-top:20px">
     <button class="btn-danger" onclick="deleteItem('${npc.id}')">Delete NPC</button>
   </div>`;
@@ -642,6 +666,11 @@ function updateNpcStat(id, stat, val) { if (!DB.npcs[id].stats) DB.npcs[id].stat
 function updateNpcCombat(id, key, val) { if (!DB.npcs[id].combat_profile) DB.npcs[id].combat_profile = {}; DB.npcs[id].combat_profile[key] = val; }
 function toggleCombatProfile(id, on) {
   DB.npcs[id].combat_profile = on ? {max_hp:20,ap_per_turn:5,weapon_id:'pistol_9mm',armor_id:'worn_clothes'} : null;
+  renderForm();
+}
+function updateNpcVendor(id, key, val) { if (!DB.npcs[id].vendor) DB.npcs[id].vendor = {sells:[],markup:1.0,buys:true}; DB.npcs[id].vendor[key] = val; }
+function toggleVendor(id, on) {
+  DB.npcs[id].vendor = on ? {sells:[],markup:1.0,buys:true} : null;
   renderForm();
 }
 
@@ -826,6 +855,9 @@ function renderNodeCard(npcId, ci, nodeId, node, nodeOptions) {
       <div class="form-group"><label>Relationship Change</label>
         <input type="number" value="${node.relationship_change||0}" onchange="updateNode('${npcId}',${ci},'${nodeId}','relationship_change',+this.value)">
       </div>
+    </div>
+    <div class="form-group">
+      <label><input type="checkbox" ${node.open_shop?'checked':''} onchange="updateNode('${npcId}',${ci},'${nodeId}','open_shop',this.checked)" data-help="node-open_shop"> Opens this NPC's trade/shop screen when the player continues past this line</label>
     </div>` : `
     <div style="margin-bottom:6px;color:#666;font-size:12px">${choices.length} choice(s):</div>
     ${choices.map((c,chi) => `

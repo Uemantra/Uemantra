@@ -19,6 +19,33 @@
 			"value": 18
 		},
 		{
+			"id": "ammo_shotgun",
+			"name": "Shotgun Shells (x8)",
+			"type": "misc",
+			"subtype": "ammo",
+			"description": "12-gauge shells. Short range, memorable impact.",
+			"weight": 0.25,
+			"value": 12
+		},
+		{
+			"id": "ammo_10mm",
+			"name": "10mm Rounds (x24)",
+			"type": "misc",
+			"subtype": "ammo",
+			"description": "Stubby pistol-calibre rounds. Common enough to spray around.",
+			"weight": 0.2,
+			"value": 12
+		},
+		{
+			"id": "salvage_toolkit",
+			"name": "Salvage Toolkit",
+			"type": "misc",
+			"subtype": "quest_item",
+			"description": "A roll of well-kept tools — wrenches, a torque driver, a working multimeter. Marl's been looking for these.",
+			"weight": 2.0,
+			"value": 0
+		},
+		{
 			"id": "scrap_metal",
 			"name": "Scrap Metal",
 			"type": "misc",

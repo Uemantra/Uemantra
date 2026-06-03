@@ -35,13 +35,20 @@
 							"text": "[Barter 40] I know what things are worth out here. Don't try to gouge me.",
 							"condition": { "type": "skill_check", "skill": "barter", "difficulty": 40, "on_fail": "rex_fm_002c_fail" },
 							"next": "rex_fm_002c_pass"
+						},
+						{
+							"id": "c_signal_origin",
+							"text": "That signal everyone's nervous about — you've scouted the wastes. Where's it coming from?",
+							"condition": { "type": "flag_required", "flag": "heard_about_signal" },
+							"next": "rex_fm_signal_origin"
 						}
 					]
 				},
 				"rex_fm_002a": {
 					"type": "npc_line",
 					"speaker": "rex_hollowell",
-					"text": "Ammo, medical basics, a couple of weapons I liberated from people who no longer needed them. Caps or trade. I don't do credit.",
+					"text": "Ammo, medical basics, a couple of weapons I liberated from people who no longer needed them. Caps or trade. I don't do credit. Go on — look.",
+					"open_shop": true,
 					"next": null
 				},
 				"rex_fm_002b": {
@@ -61,13 +68,22 @@
 				"rex_fm_002c_pass": {
 					"type": "npc_line",
 					"speaker": "rex_hollowell",
-					"text": "*studies you* You've been around. Fair enough. Union discount — fifteen percent off posted prices. Don't tell anyone.",
+					"text": "*studies you* You've been around. Fair enough. Union discount — fifteen percent off posted prices. Don't tell anyone. Here's the stock.",
+					"open_shop": true,
 					"next": null
 				},
 				"rex_fm_002c_fail": {
 					"type": "npc_line",
 					"speaker": "rex_hollowell",
-					"text": "Posted prices are what they are. You want it, pay for it. You don't, walk on.",
+					"text": "Posted prices are what they are. You want it, pay for it. You don't, walk on. Take a look.",
+					"open_shop": true,
+					"next": null
+				},
+				"rex_fm_signal_origin": {
+					"type": "npc_line",
+					"speaker": "rex_hollowell",
+					"text": "...You didn't hear it from me. The old Silo Complex, east-northeast past the Scrapfield. The Covenant's been crawling all over it for weeks. That's where your radio ghost lives. Whatever you do with that, leave my name out of it.",
+					"flags_set": ["discovered_silo", "talked_rex_signal"],
 					"next": null
 				}
 			},
@@ -76,6 +92,59 @@
 				"relationship_change": 2,
 				"faction_rep_change": { "scavengers_union": 2 }
 			}
+		},
+		{
+			"id": "rex_trading",
+			"trigger_conditions": {
+				"flags_required": ["met_rex"],
+				"flags_excluded": [],
+				"faction_rep": {}
+			},
+			"entry_node": "rex_tr_001",
+			"nodes": {
+				"rex_tr_001": {
+					"type": "npc_line",
+					"speaker": "rex_hollowell",
+					"text": "Back again. What do you need?",
+					"next": "rex_tr_choice"
+				},
+				"rex_tr_choice": {
+					"type": "player_choice",
+					"choices": [
+						{ "id": "c_trade", "text": "Let me see your stock.", "condition": null, "next": "rex_tr_trade" },
+						{ "id": "c_signal_origin", "text": "The signal — where did you say it's coming from?", "condition": { "type": "flag_required", "flag": "heard_about_signal" }, "next": "rex_tr_signal_origin" },
+						{ "id": "c_silo", "text": "The silo job — tell me the rate again.", "condition": { "type": "flag_required", "flag": "rex_offered_silo_info" }, "next": "rex_tr_silo" },
+						{ "id": "c_leave", "text": "Nothing right now.", "condition": null, "next": "rex_tr_bye" }
+					]
+				},
+				"rex_tr_trade": {
+					"type": "npc_line",
+					"speaker": "rex_hollowell",
+					"text": "Caps or trade. Same rules as always.",
+					"open_shop": true,
+					"next": null
+				},
+				"rex_tr_signal_origin": {
+					"type": "npc_line",
+					"speaker": "rex_hollowell",
+					"text": "The old Silo Complex, east-northeast past the Scrapfield. Covenant territory now. Like I said — my name stays out of it.",
+					"flags_set": ["discovered_silo", "talked_rex_signal"],
+					"next": "rex_tr_choice"
+				},
+				"rex_tr_silo": {
+					"type": "npc_line",
+					"speaker": "rex_hollowell",
+					"text": "Three hundred caps plus ten percent of the haul. The Covenant's still squatting in there — that price doesn't move.",
+					"next": null
+				},
+				"rex_tr_bye": {
+					"type": "npc_line",
+					"speaker": "rex_hollowell",
+					"text": "Then don't touch the merchandise on your way out.",
+					"next": null
+				}
+			},
+			"on_complete": { "flags_set": [], "relationship_change": 0 }
 		}
 	]
 }

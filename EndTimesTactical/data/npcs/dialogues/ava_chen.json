@@ -175,6 +175,51 @@
 				"relationship_change": 2,
 				"faction_rep_change": {}
 			}
+		},
+		{
+			"id": "ava_trading",
+			"trigger_conditions": {
+				"flags_required": ["met_ava"],
+				"flags_excluded": [],
+				"faction_rep": {}
+			},
+			"entry_node": "ava_tr_001",
+			"nodes": {
+				"ava_tr_001": {
+					"type": "npc_line",
+					"speaker": "ava_chen",
+					"text": "Need patching up, or restocking? I keep medical supplies and ammo on hand. What can I do for you?",
+					"next": "ava_tr_choice"
+				},
+				"ava_tr_choice": {
+					"type": "player_choice",
+					"choices": [
+						{ "id": "c_trade", "text": "Show me what supplies you have.", "condition": null, "next": "ava_tr_trade" },
+						{ "id": "c_signal", "text": "Any more word on that signal?", "condition": { "type": "flag_required", "flag": "talked_ava_signal" }, "next": "ava_tr_signal" },
+						{ "id": "c_leave", "text": "Just checking in.", "condition": null, "next": "ava_tr_bye" }
+					]
+				},
+				"ava_tr_trade": {
+					"type": "npc_line",
+					"speaker": "ava_chen",
+					"text": "Fair prices — I don't gouge people who keep this place alive. Take a look.",
+					"open_shop": true,
+					"next": null
+				},
+				"ava_tr_signal": {
+					"type": "npc_line",
+					"speaker": "ava_chen",
+					"text": "Same as ever — it repeats, then silence. If you find where it's coming from, you tell me first. Not Falk.",
+					"next": null
+				},
+				"ava_tr_bye": {
+					"type": "npc_line",
+					"speaker": "ava_chen",
+					"text": "Stay in one piece out there.",
+					"next": null
+				}
+			},
+			"on_complete": { "flags_set": [], "relationship_change": 0 }
 		}
 	]
 }

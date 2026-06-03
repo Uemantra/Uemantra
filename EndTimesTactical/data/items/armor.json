@@ -43,6 +43,28 @@
 			"value": 120,
 			"defense_bonus": 6,
 			"evasion_mod": -3
+		},
+		{
+			"id": "reinforced_vest",
+			"name": "Reinforced Vest",
+			"type": "armor",
+			"subtype": "medium",
+			"description": "Ceramic trauma plates lashed into a salvage harness. A fair trade of weight for protection.",
+			"weight": 5.0,
+			"value": 95,
+			"defense_bonus": 4,
+			"evasion_mod": -2
+		},
+		{
+			"id": "combat_armor",
+			"name": "Combat Armor",
+			"type": "armor",
+			"subtype": "heavy",
+			"description": "Pre-war military issue, painstakingly restored. The best protection caps can buy in the wastes.",
+			"weight": 9.0,
+			"value": 220,
+			"defense_bonus": 8,
+			"evasion_mod": -4
 		}
 	]
 }

@@ -20,5 +20,10 @@
 		"weapon_id": "pistol_9mm",
 		"armor_id": "leather_jacket"
 	},
-	"relationship": 0
+	"relationship": 0,
+	"vendor": {
+		"sells": ["pistol_9mm", "pipe_sledge", "combat_knife", "ammo_9mm", "ammo_308", "ammo_shotgun", "scrap_metal"],
+		"markup": 1.2,
+		"buys": true
+	}
 }

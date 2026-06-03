@@ -1,0 +1,18 @@
+Item icons sourced from game-icons.net and licensed under CC BY 3.0
+(https://creativecommons.org/licenses/by/3.0/).
+
+The icons in this folder were recoloured (foreground tinted, background removed)
+from the originals. Attribution by artist:
+
+  Lorc        — https://lorcblog.blogspot.com/
+                stimpak, field_dressing, scrap_metal, signal_fragment,
+                combat_knife, bare_hands, scav_vest, leather_jacket,
+                iron_covenant_plate
+  Delapouite  — https://delapouite.com/
+                sawed_off_shotgun, pipe_sledge, ammo_9mm, ammo_308,
+                ammo_shotgun, council_pass, rad_tabs, cram_tin, worn_clothes
+  John Colburn (john-colburn) — pistol_9mm
+  Sbed        — pipe_rifle, stim_shot_adrenaline
+
+Original icon set: https://game-icons.net/
+If you ship the game, keep this attribution (CC BY requires credit).

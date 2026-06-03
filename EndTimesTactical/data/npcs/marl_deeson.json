@@ -1,0 +1,29 @@
+{
+	"id": "marl_deeson",
+	"name": "Marl Deeson",
+	"portrait": "res://art/portraits/marl_deeson.png",
+	"faction": "the_council",
+	"role": "Haven Ridge quartermaster and fixer — knows where everything is, for a price",
+	"location_default": "haven_ridge",
+	"stats": {
+		"grit":     4,
+		"reflex":   4,
+		"mind":     6,
+		"body":     4,
+		"nerve":    4,
+		"presence": 6
+	},
+	"skills_override": { "barter": 5, "speech": 5 },
+	"combat_profile": {
+		"max_hp": 28,
+		"ap_per_turn": 5,
+		"weapon_id": "pistol_9mm",
+		"armor_id": "scav_vest"
+	},
+	"relationship": 0,
+	"vendor": {
+		"sells": ["smg_10mm", "machete", "combat_shotgun", "reinforced_vest", "super_stimpak", "antivenom", "jet", "ammo_10mm", "ammo_9mm", "ammo_shotgun", "ammo_308"],
+		"markup": 1.25,
+		"buys": true
+	}
+}

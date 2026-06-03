@@ -1,0 +1,104 @@
+{
+	"perks": [
+		{
+			"id": "gunslinger",
+			"name": "Gunslinger",
+			"description": "Years on the trigger. +15 to hit with firearms.",
+			"requirements": { "level": 3, "skills": { "guns": 70 } },
+			"effects": [ { "type": "hit_bonus", "subtype": "guns", "value": 15 } ]
+		},
+		{
+			"id": "brawler",
+			"name": "Brawler",
+			"description": "You hit like a falling wall. +3 melee damage.",
+			"requirements": { "level": 3, "skills": { "melee": 70 } },
+			"effects": [ { "type": "damage_flat_bonus", "subtype": "melee", "value": 3 } ]
+		},
+		{
+			"id": "toughness",
+			"name": "Toughness",
+			"description": "Scar tissue and stubbornness. +2 damage resistance.",
+			"requirements": { "level": 3, "stats": { "grit": 6 } },
+			"effects": [ { "type": "dr_bonus", "value": 2 } ]
+		},
+		{
+			"id": "pack_rat",
+			"name": "Pack Rat",
+			"description": "You never throw anything away. +30 carry weight.",
+			"requirements": { "level": 3 },
+			"effects": [ { "type": "carry_bonus", "value": 30 } ]
+		},
+		{
+			"id": "fast_metabolism",
+			"name": "Fast Metabolism",
+			"description": "Stimpaks and food do +50% healing on you.",
+			"requirements": { "level": 3, "stats": { "grit": 5 } },
+			"effects": [ { "type": "bonus_heal_pct", "value": 50 } ]
+		},
+		{
+			"id": "bloody_mess",
+			"name": "Bloody Mess",
+			"description": "Things die messy around you. +2 damage, +25% critical damage.",
+			"requirements": { "level": 3 },
+			"effects": [
+				{ "type": "damage_flat_bonus", "subtype": "all", "value": 2 },
+				{ "type": "crit_damage_bonus", "value": 25 }
+			]
+		},
+		{
+			"id": "lifegiver",
+			"name": "Lifegiver",
+			"description": "Hard to kill. +20 maximum HP.",
+			"requirements": { "level": 6, "stats": { "body": 6 } },
+			"effects": [ { "type": "max_hp_bonus", "value": 20 } ]
+		},
+		{
+			"id": "action_boy",
+			"name": "Quickened",
+			"description": "You move while others think. +1 AP per turn.",
+			"requirements": { "level": 6, "stats": { "reflex": 7 } },
+			"effects": [ { "type": "max_ap_bonus", "value": 1 } ]
+		},
+		{
+			"id": "educated",
+			"name": "Educated",
+			"description": "You learn fast. +5 to every skill.",
+			"requirements": { "level": 4, "stats": { "mind": 6 } },
+			"effects": [ { "type": "skill_bonus_all", "value": 5 } ]
+		},
+		{
+			"id": "field_medic",
+			"name": "Field Medic",
+			"description": "Battlefield triage. +20 Medicine and +25% healing.",
+			"requirements": { "level": 4, "skills": { "medicine": 60 } },
+			"effects": [
+				{ "type": "skill_bonus", "skill": "medicine", "value": 20 },
+				{ "type": "bonus_heal_pct", "value": 25 }
+			]
+		},
+		{
+			"id": "sharpshooter",
+			"name": "Sharpshooter",
+			"description": "Steady hands, steady eyes. +5 firearm accuracy and +10% crit chance.",
+			"requirements": { "level": 6, "skills": { "guns": 90 } },
+			"effects": [
+				{ "type": "hit_bonus", "subtype": "guns", "value": 5 },
+				{ "type": "crit_chance_bonus", "value": 10 }
+			]
+		},
+		{
+			"id": "commando",
+			"name": "Commando",
+			"description": "A soldier's discipline. Ranged attacks cost 1 less AP.",
+			"requirements": { "level": 9, "skills": { "guns": 100 } },
+			"effects": [ { "type": "ranged_ap_reduction", "value": 1 } ]
+		},
+		{
+			"id": "executioner",
+			"name": "Executioner",
+			"description": "You finish what you start. +50% critical damage.",
+			"requirements": { "level": 9, "stats": { "nerve": 7 } },
+			"effects": [ { "type": "crit_damage_bonus", "value": 50 } ]
+		}
+	]
+}

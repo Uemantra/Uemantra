@@ -24,5 +24,6 @@
 		}
 	],
 	"combat_arena": null,
+	"exploration_map": "haven_ridge_map",
 	"ambient_description": "The smell of cooked grain and rust. A child chasing a dog between the market stalls. Someone hammering in the distance."
 }

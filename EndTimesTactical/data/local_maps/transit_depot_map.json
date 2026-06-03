@@ -1,0 +1,168 @@
+{
+	"id": "transit_depot_map",
+	"display_name": "Transit Depot",
+	"width": 30,
+	"height": 18,
+	"vision_radius": 7,
+	"player_start": {
+		"q": 1,
+		"r": 8
+	},
+	"actors": [
+		{
+			"id": "vale_spot",
+			"type": "npc",
+			"npc_id": "sgt_vale",
+			"q": 7,
+			"r": 7,
+			"glyph": "V",
+			"color": "#88bbee"
+		},
+		{
+			"id": "depot_grunt_1",
+			"type": "enemy",
+			"npc_id": "iron_grunt",
+			"q": 22,
+			"r": 9,
+			"glyph": "E",
+			"color": "#cc3322",
+			"dead_flag": "depot_grunt1_dead"
+		},
+		{
+			"id": "depot_grunt_2",
+			"type": "enemy",
+			"npc_id": "iron_grunt_b",
+			"q": 25,
+			"r": 13,
+			"glyph": "E",
+			"color": "#cc3322",
+			"dead_flag": "depot_grunt2_dead"
+		}
+	],
+	"containers": [
+		{
+			"id": "depot_crate",
+			"q": 6,
+			"r": 11,
+			"glyph": "▫",
+			"color": "#aaaa44",
+			"opened_flag": "depot_crate_opened",
+			"locked": false,
+			"loot_table": [
+				{
+					"item_id": "ammo_9mm",
+					"quantity": 14,
+					"chance": 0.9
+				},
+				{
+					"item_id": "stimpak",
+					"quantity": 1,
+					"chance": 0.6
+				}
+			]
+		}
+	],
+	"examine_spots": [
+		{
+			"id": "departure_board",
+			"q": 9,
+			"r": 7,
+			"glyph": "?",
+			"color": "#aaaaaa",
+			"title": "Departure Board",
+			"text": "A mechanical split-flap board, frozen mid-update. One route still legible: NORTHBOUND — SILO JUNCTION — DELAYED."
+		}
+	],
+	"exit_zones": [
+		{
+			"id": "exit_west",
+			"q": 0,
+			"r": 7,
+			"w": 1,
+			"h": 3,
+			"target": "world"
+		}
+	],
+	"props": [
+		{
+			"prop": "shack",
+			"q": 7,
+			"r": 3
+		},
+		{
+			"prop": "wreck",
+			"q": 16,
+			"r": 8
+		},
+		{
+			"prop": "wreck",
+			"q": 22,
+			"r": 12
+		},
+		{
+			"prop": "generator",
+			"q": 25,
+			"r": 4
+		},
+		{
+			"prop": "fence",
+			"q": 3,
+			"r": 10
+		},
+		{
+			"prop": "fence",
+			"q": 28,
+			"r": 10
+		},
+		{
+			"prop": "crate",
+			"q": 6,
+			"r": 11
+		},
+		{
+			"prop": "barrel",
+			"q": 12,
+			"r": 9
+		},
+		{
+			"prop": "sign",
+			"q": 9,
+			"r": 7
+		},
+		{
+			"prop": "dead_tree",
+			"q": 2,
+			"r": 1
+		},
+		{
+			"prop": "dead_tree",
+			"q": 27,
+			"r": 16
+		},
+		{
+			"prop": "campfire",
+			"q": 24,
+			"r": 11
+		}
+	],
+	"terrain": [
+		"gggggggggggggggggggggggggggggg",
+		"..............................",
+		"....WWWWWWWW..................",
+		"....W______W..................",
+		"....W______W............+++...",
+		"....W______W............+++...",
+		"....WWW.WWWW..................",
+		"..............................",
+		"..rrrrrrrrrrrrr###rrrrrrrrrr..",
+		"..rrrrrrrrrrrrr###rrrrrrrrrr..",
+		".....o...o...o...o...o...o....",
+		".......o...o...o...o...o...o..",
+		"..rrrrrrrrrrrrrrrrrrr###rrrr..",
+		"..rrrrrrrrrrrrrrrrrrr###rrrr..",
+		"..............................",
+		".............~~~..............",
+		".............~~~..............",
+		"gggggggggggggggggggggggggggggg"
+	]
+}

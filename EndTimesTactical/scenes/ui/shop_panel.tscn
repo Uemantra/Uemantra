@@ -1,0 +1,89 @@
+[gd_scene load_steps=2 format=3 uid="uid://shop_panel"]
+
+[ext_resource type="Script" path="res://scenes/ui/shop_panel.gd" id="1"]
+
+[node name="ShopPanel" type="PanelContainer"]
+script = ExtResource("1")
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -370.0
+offset_top = -280.0
+offset_right = 370.0
+offset_bottom = 280.0
+
+[node name="VBox" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 10
+offset_left = 10.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = -10.0
+
+[node name="TitleRow" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="TitleLabel" type="Label" parent="VBox/TitleRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "TRADE"
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.9, 0.75, 0.25, 1)
+
+[node name="CapsLabel" type="Label" parent="VBox/TitleRow"]
+layout_mode = 2
+text = "Caps: 0"
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.85, 0.85, 0.45, 1)
+
+[node name="CloseBtn" type="Button" parent="VBox/TitleRow"]
+layout_mode = 2
+text = "✕"
+custom_minimum_size = Vector2(36, 36)
+
+[node name="ColumnsRow" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+
+[node name="BuyColumn" type="VBoxContainer" parent="VBox/ColumnsRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="BuyHeader" type="Label" parent="VBox/ColumnsRow/BuyColumn"]
+layout_mode = 2
+text = "VENDOR SELLS"
+theme_override_font_sizes/font_size = 17
+theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
+
+[node name="BuyScroll" type="ScrollContainer" parent="VBox/ColumnsRow/BuyColumn"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="BuyVBox" type="VBoxContainer" parent="VBox/ColumnsRow/BuyColumn/BuyScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="SellColumn" type="VBoxContainer" parent="VBox/ColumnsRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="SellHeader" type="Label" parent="VBox/ColumnsRow/SellColumn"]
+layout_mode = 2
+text = "YOUR ITEMS"
+theme_override_font_sizes/font_size = 17
+theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
+
+[node name="SellScroll" type="ScrollContainer" parent="VBox/ColumnsRow/SellColumn"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="SellVBox" type="VBoxContainer" parent="VBox/ColumnsRow/SellColumn/SellScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6

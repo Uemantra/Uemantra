@@ -8,8 +8,20 @@
 			"unlocked_by_default": true,
 			"unlock_flag": null,
 			"connections": [
-				{ "to": "scrapfield",    "distance_km": 12, "travel_hours": 4 },
-				{ "to": "transit_depot", "distance_km": 28, "travel_hours": 8 }
+				{ "to": "scrapfield",      "distance_km": 12, "travel_hours": 4 },
+				{ "to": "transit_depot",   "distance_km": 28, "travel_hours": 8 },
+				{ "to": "rustwater_wells", "distance_km": 9,  "travel_hours": 3 }
+			]
+		},
+		{
+			"id": "rustwater_wells",
+			"display_name": "Rustwater Wells",
+			"position": { "x": 180, "y": 320 },
+			"type": "hostile_zone",
+			"unlocked_by_default": true,
+			"unlock_flag": null,
+			"connections": [
+				{ "to": "haven_ridge", "distance_km": 9, "travel_hours": 3 }
 			]
 		},
 		{

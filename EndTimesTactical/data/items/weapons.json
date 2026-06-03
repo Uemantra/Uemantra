@@ -15,6 +15,7 @@
 			"skill_used": "melee",
 			"ammo_type": null,
 			"ammo_per_shot": 0,
+			"clip_size": 0,
 			"effects": []
 		},
 		{
@@ -32,6 +33,7 @@
 			"skill_used": "guns",
 			"ammo_type": "ammo_9mm",
 			"ammo_per_shot": 1,
+			"clip_size": 7,
 			"effects": []
 		},
 		{
@@ -49,7 +51,26 @@
 			"skill_used": "guns",
 			"ammo_type": "ammo_308",
 			"ammo_per_shot": 1,
+			"clip_size": 1,
 			"effects": []
+		},
+		{
+			"id": "sawed_off_shotgun",
+			"name": "Sawed-Off Shotgun",
+			"type": "weapon",
+			"subtype": "guns",
+			"description": "Short range. Very short patience.",
+			"weight": 3.0,
+			"value": 35,
+			"ap_cost": 3,
+			"damage_dice": "2d8",
+			"damage_bonus": 0,
+			"range_tiles": 3,
+			"skill_used": "guns",
+			"ammo_type": "ammo_shotgun",
+			"ammo_per_shot": 1,
+			"clip_size": 2,
+			"effects": [{ "type": "stun_chance", "value": 0.25 }]
 		},
 		{
 			"id": "pipe_sledge",
@@ -66,7 +87,8 @@
 			"skill_used": "melee",
 			"ammo_type": null,
 			"ammo_per_shot": 0,
-			"effects": [{ "type": "stun_chance", "value": 0.15 }]
+			"clip_size": 0,
+			"effects": [{ "type": "stun_chance", "value": 0.20 }]
 		},
 		{
 			"id": "combat_knife",
@@ -83,7 +105,98 @@
 			"skill_used": "melee",
 			"ammo_type": null,
 			"ammo_per_shot": 0,
-			"effects": [{ "type": "bleed_chance", "value": 0.20 }]
+			"clip_size": 0,
+			"effects": [{ "type": "bleed_chance", "value": 0.25 }]
+		},
+		{
+			"id": "machete",
+			"name": "Machete",
+			"type": "weapon",
+			"subtype": "melee",
+			"description": "A long blade ground from a leaf-spring. Opens wounds that don't close.",
+			"weight": 1.5,
+			"value": 60,
+			"ap_cost": 3,
+			"damage_dice": "1d10",
+			"damage_bonus": 2,
+			"range_tiles": 1,
+			"skill_used": "melee",
+			"ammo_type": null,
+			"ammo_per_shot": 0,
+			"clip_size": 0,
+			"effects": [{ "type": "bleed_chance", "value": 0.4 }]
+		},
+		{
+			"id": "venom_spear",
+			"name": "Venom Spear",
+			"type": "weapon",
+			"subtype": "melee",
+			"description": "A scrap-iron spear, its tip black with rendered radscorpion toxin.",
+			"weight": 2.5,
+			"value": 75,
+			"ap_cost": 3,
+			"damage_dice": "1d8",
+			"damage_bonus": 1,
+			"range_tiles": 1,
+			"skill_used": "melee",
+			"ammo_type": null,
+			"ammo_per_shot": 0,
+			"clip_size": 0,
+			"effects": [{ "type": "poison_chance", "value": 0.5 }]
+		},
+		{
+			"id": "smg_10mm",
+			"name": "10mm SMG",
+			"type": "weapon",
+			"subtype": "guns",
+			"description": "Cheap, rattly, and quick on the trigger. Eats ammo like candy.",
+			"weight": 3.0,
+			"value": 90,
+			"ap_cost": 2,
+			"damage_dice": "1d6",
+			"damage_bonus": 1,
+			"range_tiles": 7,
+			"skill_used": "guns",
+			"ammo_type": "ammo_10mm",
+			"ammo_per_shot": 1,
+			"clip_size": 12,
+			"effects": []
+		},
+		{
+			"id": "hunting_rifle",
+			"name": "Hunting Rifle",
+			"type": "weapon",
+			"subtype": "guns",
+			"description": "Bolt-action and scoped. Patient work, but it reaches a long way.",
+			"weight": 4.0,
+			"value": 110,
+			"ap_cost": 4,
+			"damage_dice": "2d8",
+			"damage_bonus": 3,
+			"range_tiles": 14,
+			"skill_used": "guns",
+			"ammo_type": "ammo_308",
+			"ammo_per_shot": 1,
+			"clip_size": 5,
+			"effects": []
+		},
+		{
+			"id": "combat_shotgun",
+			"name": "Combat Shotgun",
+			"type": "weapon",
+			"subtype": "guns",
+			"description": "Pump-action, drum-fed. Devastating up close and rattles the brave.",
+			"weight": 4.5,
+			"value": 130,
+			"ap_cost": 3,
+			"damage_dice": "2d6",
+			"damage_bonus": 2,
+			"range_tiles": 4,
+			"skill_used": "guns",
+			"ammo_type": "ammo_shotgun",
+			"ammo_per_shot": 1,
+			"clip_size": 6,
+			"effects": [{ "type": "stun_chance", "value": 0.3 }]
 		}
 	]
 }

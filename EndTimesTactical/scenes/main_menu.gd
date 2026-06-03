@@ -13,11 +13,11 @@ func _ready() -> void:
 
 
 func _on_new_game() -> void:
-	GameState.new_game()
-	QuestManager.start_quest("main_quest_the_signal")
-	get_tree().change_scene_to_file("res://scenes/overworld/overworld.tscn")
+	AudioManager.play_sfx("confirm")
+	get_tree().change_scene_to_file("res://scenes/character_creator/character_creator.tscn")
 
 
 func _on_continue() -> void:
+	AudioManager.play_sfx("confirm")
 	if SaveManager.load_save():
-		get_tree().change_scene_to_file("res://scenes/overworld/overworld.tscn")
+		get_tree().change_scene_to_file("res://scenes/world/worldmap.tscn")

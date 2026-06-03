@@ -5,7 +5,7 @@ signal load_completed
 signal load_failed(reason: String)
 
 const SAVE_PATH: String = "user://save.json"
-const SAVE_VERSION: int = 1
+const SAVE_VERSION: int = 2
 
 
 func save() -> void:

@@ -1,0 +1,30 @@
+{
+	"id": "sq_still_waters",
+	"title": "Still Waters",
+	"summary": "A raider chief called Skell holds the Rustwater wells and poisons everyone who comes for water. Marl wants her dead and the wells reopened.",
+	"xp_reward": 200,
+	"caps_reward": 120,
+	"item_rewards": [ { "item_id": "combat_armor", "quantity": 1 } ],
+	"stages": [
+		{
+			"id": "stage_hunt",
+			"title": "Kill Skell, the Well-Witch",
+			"description": "Return to the Rustwater wells and put down the raider chief Skell.",
+			"objectives": [
+				{ "id": "obj_kill_skell", "text": "Defeat Skell at Rustwater Wells", "flag_complete": "rustwater_boss_dead", "optional": false }
+			],
+			"completion_condition": { "flags_all": ["rustwater_boss_dead"] },
+			"on_complete": { "flags_set": ["skell_dead_confirmed"], "next_stage": "stage_report" }
+		},
+		{
+			"id": "stage_report",
+			"title": "Report to Marl",
+			"description": "Tell Marl the wells are clear.",
+			"objectives": [
+				{ "id": "obj_report_marl", "text": "Report Skell's death to Marl", "flag_complete": "sq_water_turned_in", "optional": false }
+			],
+			"completion_condition": { "flags_all": ["sq_water_turned_in"] },
+			"on_complete": { "flags_set": ["sq_water_complete"], "next_stage": null }
+		}
+	]
+}

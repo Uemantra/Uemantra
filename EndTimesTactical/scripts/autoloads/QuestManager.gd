@@ -2,6 +2,7 @@ extends Node
 
 signal quest_started(quest_id: String)
 signal quest_updated(quest_id: String, stage_id: String)
+@warning_ignore("unused_signal")
 signal objective_completed(quest_id: String, objective_id: String)
 signal quest_completed(quest_id: String)
 
@@ -91,8 +92,10 @@ func _advance_stage(quest_id: String, quest: Dictionary, current_index: int) -> 
 
 	for flag_id in on_complete.get("flags_set", []):
 		GameState.flags[flag_id] = true
+	_grant_rewards(on_complete)
 
-	var next_stage_id: String = on_complete.get("next_stage", "")
+	var next_stage_raw: Variant = on_complete.get("next_stage", "")
+	var next_stage_id: String = next_stage_raw if next_stage_raw is String else ""
 	var next_index := current_index + 1
 
 	if next_stage_id != "":
@@ -103,12 +106,23 @@ func _advance_stage(quest_id: String, quest: Dictionary, current_index: int) -> 
 
 	if next_index >= stages.size():
 		GameState.quest_states[quest_id]["state"] = "complete"
+		_grant_rewards(quest)  # quest-level rewards on full completion
 		quest_completed.emit(quest_id)
 	else:
 		GameState.quest_states[quest_id]["active_stage_index"] = next_index
 		quest_updated.emit(quest_id, stages[next_index].get("id", ""))
 
 	GameState.state_changed.emit()
+
+
+# Grant xp / caps / item rewards declared on a stage's on_complete or on a quest.
+func _grant_rewards(block: Dictionary) -> void:
+	for reward: Dictionary in block.get("item_rewards", []):
+		GameState.add_item(reward.get("item_id", ""), int(reward.get("quantity", 1)))
+	if block.has("caps_reward"):
+		GameState.caps += int(block["caps_reward"])
+	if block.has("xp_reward"):
+		GameState.add_xp(int(block["xp_reward"]))
 
 
 func _on_state_changed() -> void:

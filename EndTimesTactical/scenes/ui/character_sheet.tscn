@@ -21,7 +21,7 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 text = "CHARACTER"
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 26
 theme_override_colors/font_color = Color(0.9, 0.8, 0.4, 1)
 
 [node name="CloseBtn" type="Button" parent="Contents/TitleRow"]
@@ -32,7 +32,7 @@ custom_minimum_size = Vector2(36, 36)
 [node name="NameLabel" type="Label" parent="Contents"]
 layout_mode = 2
 text = "Drifter"
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 22
 
 [node name="HpApRow" type="HBoxContainer" parent="Contents"]
 layout_mode = 2
@@ -41,20 +41,38 @@ theme_override_constants/separation = 24
 [node name="HpLabel" type="Label" parent="Contents/HpApRow"]
 layout_mode = 2
 text = "HP: 40 / 40"
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 20
 theme_override_colors/font_color = Color(0.6, 0.9, 0.5, 1)
 
 [node name="ApLabel" type="Label" parent="Contents/HpApRow"]
 layout_mode = 2
 text = "AP / turn: 9"
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 20
 theme_override_colors/font_color = Color(0.5, 0.7, 0.9, 1)
 
 [node name="CapsLabel" type="Label" parent="Contents/HpApRow"]
 layout_mode = 2
 text = "Caps: 50"
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 20
 theme_override_colors/font_color = Color(0.8, 0.7, 0.2, 1)
+
+[node name="GearRow" type="HBoxContainer" parent="Contents"]
+layout_mode = 2
+theme_override_constants/separation = 32
+
+[node name="WeaponGearLabel" type="Label" parent="Contents/GearRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Weapon: —"
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.75, 0.6, 0.4, 1)
+
+[node name="ArmorGearLabel" type="Label" parent="Contents/GearRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Armor: —"
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.5, 0.7, 0.5, 1)
 
 [node name="ColumnsRow" type="HBoxContainer" parent="Contents"]
 layout_mode = 2
@@ -69,7 +87,7 @@ theme_override_constants/separation = 6
 [node name="StatsHeader" type="Label" parent="Contents/ColumnsRow/StatsColumn"]
 layout_mode = 2
 text = "STATS"
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 17
 theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
 
 [node name="SkillsColumn" type="VBoxContainer" parent="Contents/ColumnsRow"]
@@ -80,11 +98,11 @@ theme_override_constants/separation = 6
 [node name="SkillsHeader" type="Label" parent="Contents/ColumnsRow/SkillsColumn"]
 layout_mode = 2
 text = "SKILLS   (Pts to spend: 0)"
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 17
 theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
 
 [node name="XpLabel" type="Label" parent="Contents"]
 layout_mode = 2
 text = "Level 1 — XP: 0"
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 18
 theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)

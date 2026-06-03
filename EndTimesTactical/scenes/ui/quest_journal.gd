@@ -17,7 +17,7 @@ func _refresh() -> void:
 	if active_quests.is_empty():
 		var empty_lbl := Label.new()
 		empty_lbl.text = "No active quests."
-		empty_lbl.theme_override_colors = {"font_color": Color(0.5, 0.5, 0.5, 1)}
+		empty_lbl.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5, 1))
 		_quest_vbox.add_child(empty_lbl)
 		return
 
@@ -26,18 +26,18 @@ func _refresh() -> void:
 		if display.is_empty():
 			continue
 		var container := VBoxContainer.new()
-		container.theme_override_constants = {"separation": 6}
+		container.add_theme_constant_override("separation", 6)
 
 		var title_lbl := Label.new()
 		title_lbl.text = display.get("title", quest_id)
-		title_lbl.theme_override_font_sizes = {"font_size": 16}
-		title_lbl.theme_override_colors = {"font_color": Color(0.9, 0.8, 0.4, 1)}
+		title_lbl.add_theme_font_size_override("font_size", 22)
+		title_lbl.add_theme_color_override("font_color", Color(0.9, 0.8, 0.4, 1))
 		container.add_child(title_lbl)
 
 		var stage_lbl := Label.new()
 		stage_lbl.text = display.get("stage", "")
-		stage_lbl.theme_override_font_sizes = {"font_size": 13}
-		stage_lbl.theme_override_colors = {"font_color": Color(0.7, 0.7, 0.6, 1)}
+		stage_lbl.add_theme_font_size_override("font_size", 18)
+		stage_lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.6, 1))
 		container.add_child(stage_lbl)
 
 		for obj in display.get("objectives", []):
@@ -47,9 +47,9 @@ func _refresh() -> void:
 			var prefix := "[✓] " if complete else "[ ] "
 			var suffix := " (optional)" if optional else ""
 			obj_lbl.text = prefix + obj.get("text", "") + suffix
-			obj_lbl.theme_override_font_sizes = {"font_size": 13}
+			obj_lbl.add_theme_font_size_override("font_size", 18)
 			var color := Color(0.5, 0.8, 0.5, 1) if complete else Color(0.8, 0.8, 0.8, 1)
-			obj_lbl.theme_override_colors = {"font_color": color}
+			obj_lbl.add_theme_color_override("font_color", color)
 			container.add_child(obj_lbl)
 
 		_quest_vbox.add_child(container)
@@ -60,6 +60,6 @@ func _refresh() -> void:
 			var quest := DataManager.get_quest(quest_id)
 			var lbl := Label.new()
 			lbl.text = "[✓] %s — Completed" % quest.get("title", quest_id)
-			lbl.theme_override_font_sizes = {"font_size": 14}
-			lbl.theme_override_colors = {"font_color": Color(0.4, 0.6, 0.4, 1)}
+			lbl.add_theme_font_size_override("font_size", 20)
+			lbl.add_theme_color_override("font_color", Color(0.4, 0.6, 0.4, 1))
 			_quest_vbox.add_child(lbl)

@@ -5,6 +5,7 @@ signal conversation_ended(npc_id: String, completed: bool)
 signal node_ready(node: Dictionary)
 signal choices_ready(choices: Array)
 signal skill_check_resolved(skill: String, roll: int, difficulty: int, passed: bool)
+signal shop_requested(npc_id: String)
 
 enum State { IDLE, SHOWING_NPC_LINE, WAITING_FOR_CHOICE }
 
@@ -34,6 +35,13 @@ func advance() -> void:
 	if _state != State.SHOWING_NPC_LINE:
 		return
 	var node: Dictionary = _active_conversation["nodes"].get(_current_node_id, {})
+	# A node flagged open_shop hands off to the trade UI: the conversation completes
+	# (applying its on_complete effects) and then the listener opens the vendor's shop.
+	if node.get("open_shop", false):
+		var npc := _active_npc
+		end_conversation(true)
+		shop_requested.emit(npc)
+		return
 	var next = node.get("next", null)
 	if next == null or next == "":
 		end_conversation(true)
@@ -84,7 +92,7 @@ func _get_available_conversations(npc_id: String) -> Array:
 	return result
 
 
-func _check_trigger_conditions(conditions: Dictionary, npc_id: String) -> bool:
+func _check_trigger_conditions(conditions: Dictionary, _npc_id: String) -> bool:
 	for flag_id in conditions.get("flags_required", []):
 		if not GameState.get_flag(flag_id):
 			return false
@@ -137,7 +145,7 @@ func _filter_visible_choices(choices: Array) -> Array:
 				if not GameState.get_flag(condition.get("flag", "")):
 					visible.append(choice)
 			"faction_rep_min":
-				var faction := condition.get("faction", "")
+				var faction: String = condition.get("faction", "")
 				var min_rep: int = condition.get("value", 0)
 				if GameState.get_rep(faction) >= min_rep:
 					visible.append(choice)
@@ -164,6 +172,7 @@ func _apply_node_effects(node: Dictionary) -> void:
 	var rel_change: int = node.get("relationship_change", 0)
 	if rel_change != 0 and _active_npc != "":
 		GameState.change_npc_relationship(_active_npc, rel_change)
+	_apply_rewards(node)
 
 
 func _apply_completion_effects(convo: Dictionary) -> void:
@@ -175,3 +184,17 @@ func _apply_completion_effects(convo: Dictionary) -> void:
 		GameState.change_npc_relationship(_active_npc, rel_change)
 	for faction_id in on_complete.get("faction_rep_change", {}):
 		GameState.add_rep(faction_id, on_complete["faction_rep_change"][faction_id])
+	_apply_rewards(on_complete)
+
+
+# Shared reward/quest hooks usable on any node or on_complete block.
+func _apply_rewards(block: Dictionary) -> void:
+	for quest_id in block.get("quests_started", []):
+		QuestManager.start_quest(quest_id)
+	for reward: Dictionary in block.get("item_rewards", []):
+		GameState.add_item(reward.get("item_id", ""), int(reward.get("quantity", 1)))
+	if block.has("caps_reward"):
+		GameState.caps += int(block["caps_reward"])
+		GameState.state_changed.emit()
+	if block.has("xp_reward"):
+		GameState.add_xp(int(block["xp_reward"]))

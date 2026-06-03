@@ -24,12 +24,14 @@ func _refresh() -> void:
 			continue
 		total_weight += item.get("weight", 0.0) * entry.get("quantity", 1)
 		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 6)
+		row.add_child(IconMapper.make_item_icon(entry.get("item_id", ""), item.get("type", "")))
 		var name_lbl := Label.new()
-		var qty := entry.get("quantity", 1)
+		var qty: int = entry.get("quantity", 1)
 		var equipped: bool = entry.get("equipped", false)
 		name_lbl.text = "%s x%d%s" % [item.get("name", "?"), qty, " [E]" if equipped else ""]
 		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		name_lbl.theme_override_font_sizes = {"font_size": 14}
+		name_lbl.add_theme_font_size_override("font_size", 20)
 		row.add_child(name_lbl)
 
 		var type_str: String = item.get("type", "")

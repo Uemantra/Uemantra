@@ -10,6 +10,9 @@ var quests: Dictionary = {}
 var factions: Dictionary = {}
 var items: Dictionary = {}
 var world: Dictionary = {}
+var local_maps: Dictionary = {}
+var perks: Dictionary = {}
+var traits: Dictionary = {}
 
 
 func _ready() -> void:
@@ -19,11 +22,25 @@ func _ready() -> void:
 func _load_all() -> void:
 	world = _load_json("res://data/world.json")
 	_load_directory_into("res://data/npcs/", npcs, false)
-	_load_directory_into("res://data/npcs/dialogues/", dialogues, false)
+	_load_directory_into("res://data/npcs/dialogues/", dialogues, true)
 	_load_directory_into("res://data/locations/", locations, false)
 	_load_directory_into("res://data/factions/", factions, false)
 	_load_directory_into("res://data/quests/", quests, false)
+	_load_directory_into("res://data/local_maps/", local_maps, false)
+	_load_list_file("res://data/perks/perks.json", "perks", perks)
+	_load_list_file("res://data/traits/traits.json", "traits", traits)
 	_load_items()
+
+
+# Load a single file shaped like { "<list_key>": [ {id, ...}, ... ] } into a
+# dictionary keyed by each entry's "id".
+func _load_list_file(path: String, list_key: String, target: Dictionary) -> void:
+	var data := _load_json(path)
+	if data.is_empty():
+		return
+	for entry: Dictionary in data.get(list_key, []):
+		if entry.has("id"):
+			target[entry["id"]] = entry
 
 
 func _load_items() -> void:
@@ -61,8 +78,28 @@ func get_item(id: String) -> Dictionary:
 	return items.get(id, {})
 
 
+func get_perk(id: String) -> Dictionary:
+	return perks.get(id, {})
+
+
+func get_trait(id: String) -> Dictionary:
+	return traits.get(id, {})
+
+
+func get_all_perks() -> Array:
+	return perks.values()
+
+
+func get_all_traits() -> Array:
+	return traits.values()
+
+
 func get_world() -> Dictionary:
 	return world
+
+
+func get_local_map(id: String) -> Dictionary:
+	return local_maps.get(id, {})
 
 
 func _load_json(path: String) -> Dictionary:

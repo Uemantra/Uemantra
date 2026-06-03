@@ -15,5 +15,10 @@
 	},
 	"skills_override": { "medicine": 10 },
 	"combat_profile": null,
-	"relationship": 0
+	"relationship": 0,
+	"vendor": {
+		"sells": ["stimpak", "ammo_9mm", "ammo_308", "ammo_shotgun"],
+		"markup": 1.0,
+		"buys": true
+	}
 }
